@@ -1,0 +1,22 @@
+# Package managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+
+# Generated assets and output
+/static/*.png
+/.svelte-kit/
+/build/
+/dist/
+
+# Repository instructions and installed agent tooling are not application source.
+/.agents/
+/.codex/
+/.github/
+/.vscode/
+/AGENTS.md
+/README.md
+/docs/
+/skills-lock.json

@@ -1,0 +1,3 @@
+# The public landing page may be crawled. Authenticated routes are added later.
+User-agent: *
+Allow: /

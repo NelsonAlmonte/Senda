@@ -10,7 +10,7 @@ Implementa **una fase / historia pequeña por solicitud**. No anticipes otros m�
 
 - **SvelteKit `@sveltejs/kit@3.1.0` exactamente**, con Svelte 5, TypeScript y Tailwind CSS. Esta versión de SvelteKit es una decisión del equipo, no una opción abierta ni una autorización para retroceder de versión.
 - PWA desde el inicio. **Excepción aprobada el 2026-10-21:** usar `vite-plugin-pwa@1.3.0` directamente, porque `@vite-pwa/sveltekit@1.1.0` no declara compatibilidad con SvelteKit 3.1.0. Mantener el adaptador local documentado y probado; no usar `--force`/`--legacy-peer-deps` ni cambiar SvelteKit sin aprobación.
-- Renderizado **SSR con `adapter-auto`** y Netlify como destino previsto. La PWA, las rutas profundas y el service worker deben validarse en ese entorno antes de fijar un adaptador específico.
+- Renderizado **SSR con `@sveltejs/adapter-netlify@7.0.1`**. Netlify es el destino confirmado; usar funciones Node (`edge: false`) y validar allí la PWA, las cookies, las rutas profundas y el service worker.
 - Google Maps JS API con `@googlemaps/js-api-loader`, usando carga dinámica moderna.
 - Supabase: Auth, PostgreSQL, Realtime, RLS, funciones SQL/RPC, triggers y cron cuando convenga.
 - IoT y simulador por HTTPS; no implementar MQTT por defecto.

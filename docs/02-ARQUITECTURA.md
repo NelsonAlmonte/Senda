@@ -83,7 +83,7 @@ La ingestión puede ser una RPC protegida para simuladores autenticados en entor
 
 ## Despliegue confirmado y recomendaciones aún no cerradas
 
-- La aplicación mantiene SSR con `adapter-auto` y Netlify como destino previsto. Validar allí autenticación por cookies, rutas profundas, service worker, Google Maps y Push antes de fijar un adaptador específico.
+- La aplicación usa SSR con `@sveltejs/adapter-netlify@7.0.1`, función Node (`edge: false`) y salida pública `build`. Validar en Netlify autenticación por cookies, rutas profundas, service worker, Google Maps y Push.
 - Estrategia `generateSW` vs `injectManifest`: elegir al implementar Web Push, probando eventos push con el plugin elegido.
 - Cálculo de distancias mediante Haversine/PostGIS: comenzar por la opción correcta más simple y verificable; activar PostGIS si simplifica consultas y filtros.
 - Biblioteca de UI y tipografía: recomendaciones en `07-UI-UX.md`; no confundir con decisiones cerradas.

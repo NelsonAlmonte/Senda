@@ -12,7 +12,7 @@ El documento académico de referencia es **`Proyecto Final.pdf`** (capítulos I�
 
 - **PWA:** **SvelteKit `@sveltejs/kit@3.1.0` exactamente**, Svelte 5, TypeScript y Tailwind CSS.
 - **PWA plugin:** `vite-plugin-pwa@1.3.0` integrado directamente. Es la excepción aprobada para SvelteKit 3.1.0 porque `@vite-pwa/sveltekit@1.1.0` no declara un peer compatible; consultar `docs/09-DECISIONES-PENDIENTES.md`.
-- **Renderizado y despliegue:** SSR con `adapter-auto`; Netlify es el destino previsto y deberá validarse con rutas profundas, manifest y service worker.
+- **Renderizado y despliegue:** SSR con `@sveltejs/adapter-netlify@7.0.1`, funciones Node y directorio público `build`.
 - **Herramientas para Codex en VS Code:** MCP/skills de **Svelte oficial** y **Supabase**, y skill **UI UX Pro Max** para interfaz. Se consideran previstas en el entorno de desarrollo; el equipo las instala/configura aparte, no Codex ni la aplicación.
 - **Diseño:** usar **UI UX Pro Max** durante trabajos de interfaz y experiencia de usuario; identidad serena, pastel, accesible y mobile-first.
 - **Mapa:** Google Maps JavaScript API mediante `@googlemaps/js-api-loader`.
@@ -90,4 +90,4 @@ npm run build
 npm run preview
 ```
 
-El proyecto usa SSR con `adapter-auto` y Netlify como destino previsto. Antes del despliegue definitivo se validarán las rutas profundas, la sesión por cookies, el manifest y el service worker.
+El proyecto usa SSR con el adaptador oficial de Netlify. El build genera los activos públicos en `build` y la función SSR en `.netlify/functions-internal`; en el despliegue se validarán las rutas profundas, la sesión por cookies, el manifest y el service worker.

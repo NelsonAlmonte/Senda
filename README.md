@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fase 0 implementada el 2026-10-21. La base técnica y la PWA mínima están disponibles; autenticación, pacientes, mapas, alertas y demás fases funcionales aún no están implementados.
+> **Estado:** Fase 0 y la historia 1A de autenticación/perfil implementadas localmente el 2026-10-21. Falta configurar el proyecto Supabase de desarrollo, aplicar la migración versionada y ejecutar la prueba integral; pacientes, mapas y alertas aún no están implementados.
 
 ## Propósito
 
@@ -12,6 +12,7 @@ El documento académico de referencia es **`Proyecto Final.pdf`** (capítulos I�
 
 - **PWA:** **SvelteKit `@sveltejs/kit@3.1.0` exactamente**, Svelte 5, TypeScript y Tailwind CSS.
 - **PWA plugin:** `vite-plugin-pwa@1.3.0` integrado directamente. Es la excepción aprobada para SvelteKit 3.1.0 porque `@vite-pwa/sveltekit@1.1.0` no declara un peer compatible; consultar `docs/09-DECISIONES-PENDIENTES.md`.
+- **Renderizado y despliegue:** SSR con `adapter-auto`; Netlify es el destino previsto y deberá validarse con rutas profundas, manifest y service worker.
 - **Herramientas para Codex en VS Code:** MCP/skills de **Svelte oficial** y **Supabase**, y skill **UI UX Pro Max** para interfaz. Se consideran previstas en el entorno de desarrollo; el equipo las instala/configura aparte, no Codex ni la aplicación.
 - **Diseño:** usar **UI UX Pro Max** durante trabajos de interfaz y experiencia de usuario; identidad serena, pastel, accesible y mobile-first.
 - **Mapa:** Google Maps JavaScript API mediante `@googlemaps/js-api-loader`.
@@ -57,7 +58,28 @@ cp .env.example .env
 npm run dev
 ```
 
-La portada y el build funcionan sin credenciales reales. Las variables públicas de Supabase y Google Maps se validarán cuando sus funcionalidades se incorporen. Nunca colocar `service_role`, contraseñas, claves VAPID privadas ni secretos de simulación en variables `PUBLIC_*`.
+La portada y el build funcionan sin credenciales reales. Sin Supabase configurado, las pantallas de acceso se muestran deshabilitadas y las acciones rechazan solicitudes con `503`. Nunca colocar `service_role`, contraseñas, claves VAPID privadas ni secretos de simulación en variables `PUBLIC_*`.
+
+### Configuración de Supabase Auth
+
+Esta historia utiliza exclusivamente la URL y la publishable key públicas del proyecto de **desarrollo**:
+
+```dotenv
+PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
+
+Antes de probar el flujo integral:
+
+1. Revisar y aplicar al proyecto de desarrollo `supabase/migrations/20261021171855_auth_profiles.sql`. Codex no aplica SQL remoto sin autorización explícita.
+2. En Supabase Auth, configurar el `Site URL` y las Redirect URLs para el origen local y el de Netlify.
+3. Cambiar el enlace de la plantilla **Confirm signup** por:
+
+   ```text
+   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email
+   ```
+
+El alta crea el perfil mínimo mediante un trigger; RLS permite a cada usuario autenticado leer y actualizar únicamente su propia fila. Las sesiones se gestionan en SSR mediante cookies HTTP y las rutas `/dashboard` y `/settings` exigen una identidad validada.
 
 Comandos de verificación:
 
@@ -68,4 +90,4 @@ npm run build
 npm run preview
 ```
 
-El adaptador permanece en `adapter-auto`; Netlify es un destino probable, pero la elección definitiva entre SSR y SPA estática continúa abierta y debe validarse antes del despliegue.
+El proyecto usa SSR con `adapter-auto` y Netlify como destino previsto. Antes del despliegue definitivo se validarán las rutas profundas, la sesión por cookies, el manifest y el service worker.

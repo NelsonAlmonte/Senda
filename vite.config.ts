@@ -9,6 +9,9 @@ function createSvelteKitPwaPlugins() {
 		outDir: '.svelte-kit/output/client',
 		registerType: 'autoUpdate',
 		injectRegister: null,
+		devOptions: {
+			enabled: true
+		},
 		includeAssets: [
 			'favicon.ico',
 			'pwa-source.svg',

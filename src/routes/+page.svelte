@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
 	const foundations = [
 		{
@@ -11,9 +14,9 @@
 			description: 'Las credenciales privadas permanecen fuera del navegador y del repositorio.'
 		},
 		{
-			title: 'Integraciones diferidas',
+			title: 'Acceso protegido',
 			description:
-				'Supabase y Google Maps solo se inicializarán cuando una funcionalidad los necesite.'
+				'El registro, las sesiones SSR y los perfiles ya cuentan con una base segura y verificable.'
 		}
 	] as const;
 </script>
@@ -60,11 +63,21 @@
 				<span class="text-xl font-bold tracking-tight">Senda</span>
 			</a>
 
-			<span
-				class="shrink-0 rounded-full border border-brand/20 bg-white/80 px-3 py-2 text-sm font-semibold text-brand shadow-sm"
-			>
-				MVP académico
-			</span>
+			{#if data.user}
+				<a
+					href={resolve('/dashboard')}
+					class="inline-flex min-h-12 shrink-0 items-center rounded-xl bg-white px-4 text-sm font-bold text-brand shadow-sm focus:ring-4 focus:ring-focus/30 focus:outline-none"
+				>
+					Ir al panel
+				</a>
+			{:else}
+				<a
+					href={resolve('/auth/login')}
+					class="inline-flex min-h-12 shrink-0 items-center rounded-xl bg-white px-4 text-sm font-bold text-brand shadow-sm focus:ring-4 focus:ring-focus/30 focus:outline-none"
+				>
+					Iniciar sesión
+				</a>
+			{/if}
 		</header>
 
 		<section
@@ -80,9 +93,26 @@
 					Tecnología que acompaña el cuidado sin perder de vista a la persona.
 				</h1>
 				<p class="mt-6 max-w-2xl text-lg leading-8 text-muted sm:text-xl">
-					Senda prepara una experiencia clara para familiares y cuidadores. Esta primera fase
-					establece una base técnica segura; todavía no muestra pacientes ni ubicaciones reales.
+					Senda prepara una experiencia clara para familiares y cuidadores. El acceso seguro ya está
+					disponible; los pacientes y las ubicaciones se incorporarán de forma incremental.
 				</p>
+
+				{#if !data.user}
+					<div class="mt-8 flex flex-wrap gap-3">
+						<a
+							href={resolve('/auth/register')}
+							class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+						>
+							Crear cuenta
+						</a>
+						<a
+							href={resolve('/auth/login')}
+							class="inline-flex min-h-12 items-center justify-center rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink shadow-sm focus:ring-4 focus:ring-focus/30 focus:outline-none"
+						>
+							Ya tengo cuenta
+						</a>
+					</div>
+				{/if}
 
 				<div
 					class="mt-8 inline-flex items-center gap-3 rounded-2xl border border-brand/20 bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm"
@@ -93,7 +123,7 @@
 						></span>
 						<span class="relative inline-flex size-3 rounded-full bg-brand"></span>
 					</span>
-					Base técnica en preparación
+					Fase de autenticación preparada
 				</div>
 			</div>
 

@@ -10,6 +10,7 @@ Implementa **una fase / historia pequeña por solicitud**. No anticipes otros m�
 
 - **SvelteKit `@sveltejs/kit@3.1.0` exactamente**, con Svelte 5, TypeScript y Tailwind CSS. Esta versión de SvelteKit es una decisión del equipo, no una opción abierta ni una autorización para retroceder de versión.
 - PWA desde el inicio. **Excepción aprobada el 2026-10-21:** usar `vite-plugin-pwa@1.3.0` directamente, porque `@vite-pwa/sveltekit@1.1.0` no declara compatibilidad con SvelteKit 3.1.0. Mantener el adaptador local documentado y probado; no usar `--force`/`--legacy-peer-deps` ni cambiar SvelteKit sin aprobación.
+- Renderizado **SSR con `adapter-auto`** y Netlify como destino previsto. La PWA, las rutas profundas y el service worker deben validarse en ese entorno antes de fijar un adaptador específico.
 - Google Maps JS API con `@googlemaps/js-api-loader`, usando carga dinámica moderna.
 - Supabase: Auth, PostgreSQL, Realtime, RLS, funciones SQL/RPC, triggers y cron cuando convenga.
 - IoT y simulador por HTTPS; no implementar MQTT por defecto.
@@ -49,6 +50,7 @@ No pidas aprobación para decisiones triviales ya resueltas en la documentación
 
 1. `PATIENT` es la entidad central del sistema.
 2. `GROUP` solo distingue un contexto administrativo `FAMILY` o `CARE_CENTER`; no construir gestión de turnos, camas, nóminas, habitaciones o facturación.
+   Para el MVP inicial, cada grupo usa un único `owner_user_id`; no introducir `group_members` hasta que exista una necesidad aprobada de administración compartida.
 3. Un cuidador/familiar ve exclusivamente pacientes autorizados por `patient_access`, aunque pertenezca a un grupo.
 4. `ADMIN` y `MONITOR` ven ubicaciones e historial; ambos pueden configurar geocercas. Solo `ADMIN` gestiona invitaciones, accesos y los datos administrativos del paciente.
 5. Cada ubicación debe vincularse **a la asignación histórica del dispositivo** para no filtrar recorridos de pacientes anteriores si se reutiliza un equipo.

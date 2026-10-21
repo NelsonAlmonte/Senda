@@ -22,11 +22,11 @@ AUTH.USERS ── PROFILES
 id             uuid PK
 name           text not null
 type           FAMILY | CARE_CENTER
-owner_user_id  uuid FK -> auth.users (propuesta mínima para administrar)
+owner_user_id  uuid FK -> auth.users (administración mínima del MVP)
 created_at     timestamptz
 ```
 
-`GROUP` es **contexto organizativo**, no autorización de todas las ubicaciones. `owner_user_id` solo resuelve la creación/administración inicial; no concede lectura indiscriminada de datos de pacientes. Si el equipo necesita varios administradores del grupo, considerar `group_members` mínimo en otra fase.
+`GROUP` es **contexto organizativo**, no autorización de todas las ubicaciones. Para el MVP se confirmó un único `owner_user_id`, que resuelve la creación/administración inicial sin conceder lectura indiscriminada de pacientes. Si más adelante se aprueba administración compartida, se podrá añadir `group_members` sin sustituir `patient_access`.
 
 ### 2. `patients`
 

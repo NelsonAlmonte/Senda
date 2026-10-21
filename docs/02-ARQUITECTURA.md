@@ -81,9 +81,9 @@ La ingestión puede ser una RPC protegida para simuladores autenticados en entor
 - No publicar un canal global con geolocalizaciones privadas.
 - Revisar comportamiento de revocación en conexiones ya abiertas y forzar desuscripción/refresco de sesión cuando corresponda; no asumir corte instantáneo universal sin pruebas.
 
-## Elecciones y recomendaciones aún no cerradas
+## Despliegue confirmado y recomendaciones aún no cerradas
 
-- Despliegue PWA como SPA con `adapter-static` y fallback: **recomendación a validar** con autenticación, rutas profundas, service worker, Google Maps y Push.
+- La aplicación mantiene SSR con `adapter-auto` y Netlify como destino previsto. Validar allí autenticación por cookies, rutas profundas, service worker, Google Maps y Push antes de fijar un adaptador específico.
 - Estrategia `generateSW` vs `injectManifest`: elegir al implementar Web Push, probando eventos push con el plugin elegido.
 - Cálculo de distancias mediante Haversine/PostGIS: comenzar por la opción correcta más simple y verificable; activar PostGIS si simplifica consultas y filtros.
 - Biblioteca de UI y tipografía: recomendaciones en `07-UI-UX.md`; no confundir con decisiones cerradas.

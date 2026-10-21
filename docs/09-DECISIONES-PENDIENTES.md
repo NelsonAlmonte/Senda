@@ -9,6 +9,7 @@ Esta página distingue **acuerdos explícitos** de **recomendaciones** y evita q
 | UI                         | **SvelteKit `@sveltejs/kit@3.1.0` exactamente**, Svelte 5 + TypeScript + Tailwind CSS                                                                                                                                                      |
 | PWA                        | Integración PWA desde el inicio; no cambiar la versión decidida de SvelteKit                                                                                                                                                               |
 | Excepción PWA Fase 0       | El 2026-10-21 se aprobó usar `vite-plugin-pwa@1.3.0` directamente porque `@vite-pwa/sveltekit@1.1.0` no declara compatibilidad con SvelteKit 3.1.0. La integración debe validarse con build, manifest y service worker, sin ignorar peers. |
+| Renderizado y despliegue   | El 2026-10-21 se confirmó SSR con `adapter-auto` y Netlify como destino previsto. Antes del despliegue definitivo se probarán cookies de Auth, rutas profundas, manifest y service worker.                                   |
 | Herramientas Codex VS Code | MCP/skills oficiales de Svelte y de Supabase, y skill `ui-ux-pro-max`: el usuario las instalará aparte y Codex debe utilizarlas cuando estén accesibles, sin gestionar su instalación                                                      |
 | Skill de UI                | `ui-ux-pro-max` al diseñar/implementar UI y UX                                                                                                                                                                                             |
 | Identidad visual           | Pasteles sobrios, calma, accesibilidad y claridad; mobile-first                                                                                                                                                                            |
@@ -18,6 +19,7 @@ Esta página distingue **acuerdos explícitos** de **recomendaciones** y evita q
 | Hardware                   | Compra e integración física posterior; pairing físico pospuesto                                                                                                                                                                            |
 | Simulación                 | Click en mapa + script Node.js; persistir/validar en backend, no solo animar                                                                                                                                                               |
 | Datos                      | Paciente central; grupos FAMILY/CARE_CENTER como contexto ligero                                                                                                                                                                           |
+| Administración de grupos  | Para el MVP cada grupo tendrá un único `owner_user_id`. `group_members` queda aplazado hasta que se apruebe una necesidad real de varios administradores; nunca sustituirá `patient_access`.                                                |
 | Permisos                   | `patient_access` por paciente; `ADMIN` y `MONITOR` pueden configurar geocercas                                                                                                                                                             |
 | Invitación                 | PENDING → ACCEPTED o DECLINED; sin estado EXPIRED                                                                                                                                                                                          |
 | Geofencing                 | Círculos; confirmar salida con dos lecturas válidas y tolerancia de GPS                                                                                                                                                                    |
@@ -29,17 +31,15 @@ Esta página distingue **acuerdos explícitos** de **recomendaciones** y evita q
 ## B. Abierto: requiere validación antes de su fase
 
 1. **Compatibilidad de integraciones PWA:** **SvelteKit 3.1.0 ya está decidido y no debe sustituirse unilateralmente**. Se verificó que `@vite-pwa/sveltekit@1.1.0` solo declara peers para SvelteKit 1/2; por aprobación del equipo, Fase 0 usa `vite-plugin-pwa@1.3.0` directamente. Revisar futuras versiones del wrapper antes de reconsiderarlo; no cambiar a SvelteKit 2 ni forzar dependencias.
-2. **SPA vs SSR:** se mantiene SSR con `adapter-auto` como base provisional. Netlify es un destino probable ya conocido por el equipo, pero el adaptador definitivo y la alternativa SPA estática siguen pendientes de una prueba de despliegue/rutas profundas.
-3. **Alertas:** todavía no se han ratificado umbrales 5/15/30 min, 500/1000 m, precisión GPS aceptable ni margen/histeresis exacto. Solo es seguro afirmar que habrá niveles y reglas basadas en tiempo/distancia.
-4. **Geocercas:** una o varias zonas activas por paciente; la propuesta actual soporta múltiples con regla de unión.
-5. **Lecturas:** idempotencia, datos retrasados/futuros, saltos físicamente imposibles y confirmación de reingreso.
-6. **Invitaciones:** decidir cómo enviar correos personalizados con Supabase + Gmail y cómo un ADMIN invalida una invitación PENDING; no crear estado EXPIRED.
-7. **Notificaciones:** nivel mínimo de envío Web Push, estrategia antispam/reintento y mecanismo de envío de servidor.
-8. **Administración de grupos:** decidir si `owner_user_id` es suficiente en el MVP o se requiere `group_members` mínimo para varios administradores. En ningún caso heredar acceso a todas las ubicaciones.
-9. **Aspecto visual:** colores definitivos, tipografía y componentes (shadcn-svelte/Lucide son recomendaciones, no confirmaciones explícitas).
-10. **Privacidad:** retención de historial, exportación/eliminación de datos y procedimiento de consentimiento/autorización para uso real (en simulaciones, trabajar con datos ficticios).
-11. **Hardware real:** modelo exacto comprado, alimentación, modem, SIM, provisioning, autenticación de dispositivo, claim y asignación física.
-12. **Métricas objetivo:** fijar criterios cuantitativos para latencia de alertas, errores tolerables y rendimiento con pruebas controladas.
+2. **Alertas:** todavía no se han ratificado umbrales 5/15/30 min, 500/1000 m, precisión GPS aceptable ni margen/histeresis exacto. Solo es seguro afirmar que habrá niveles y reglas basadas en tiempo/distancia.
+3. **Geocercas:** una o varias zonas activas por paciente; la propuesta actual soporta múltiples con regla de unión.
+4. **Lecturas:** idempotencia, datos retrasados/futuros, saltos físicamente imposibles y confirmación de reingreso.
+5. **Invitaciones:** decidir cómo enviar correos personalizados con Supabase + Gmail y cómo un ADMIN invalida una invitación PENDING; no crear estado EXPIRED.
+6. **Notificaciones:** nivel mínimo de envío Web Push, estrategia antispam/reintento y mecanismo de envío de servidor.
+7. **Aspecto visual:** colores definitivos, tipografía y componentes (shadcn-svelte/Lucide son recomendaciones, no confirmaciones explícitas).
+8. **Privacidad:** retención de historial, exportación/eliminación de datos y procedimiento de consentimiento/autorización para uso real (en simulaciones, trabajar con datos ficticios).
+9. **Hardware real:** modelo exacto comprado, alimentación, modem, SIM, provisioning, autenticación de dispositivo, claim y asignación física.
+10. **Métricas objetivo:** fijar criterios cuantitativos para latencia de alertas, errores tolerables y rendimiento con pruebas controladas.
 
 ## C. Divergencia con el texto de tesis — requiere conciliación
 

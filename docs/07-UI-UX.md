@@ -50,6 +50,14 @@ Riesgo alto: fuera de zona segura
 
 No usar únicamente un punto verde/rojo para comunicar estado; incluir texto. El estado `UBICACIÓN DESACTUALIZADA` tiene prioridad incluso si el riesgo anterior era `NORMAL`.
 
+## Onboarding y estados incompletos
+
+- Después del registro, presentar dos acciones claras: configurar un dispositivo o ingresar un código de acceso. No tratarlas como roles permanentes de la cuenta.
+- Aplicar divulgación progresiva: contexto `FAMILY`/`CARE_CENTER`, paciente y dispositivo en pasos separados, con indicador de progreso y navegación hacia atrás.
+- Permitir **Configurar dispositivo después**. El dashboard mostrará **Sin dispositivo configurado**, una explicación breve y el botón **Configurar ahora** junto al paciente correspondiente.
+- Un paciente sin dispositivo no debe mostrarse como seguro, conectado ni monitoreado. Usar un estado informativo neutral, no una alerta clínica.
+- Al canjear un código, mostrar antes de aceptar únicamente el nombre mínimo del paciente y su contexto; dejar claro que el acceso será `MONITOR` sobre ese paciente, no sobre todo el grupo.
+
 ## Experiencia PWA
 
 - Compatibilidad de instalación según capacidades reales del navegador/OS.

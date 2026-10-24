@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fase 0 y la historia 1A de autenticación/perfil implementadas localmente el 2026-10-21. Falta configurar el proyecto Supabase de desarrollo, aplicar la migración versionada y ejecutar la prueba integral; pacientes, mapas y alertas aún no están implementados.
+> **Estado:** Fase 0, autenticación/perfil y el alta mínima de grupo + paciente están implementadas y verificadas en Supabase de desarrollo. La creación desde la PWA fue validada manualmente y la suite RLS pasa 22 casos. El onboarding de dispositivos, los códigos de acceso, mapas y alertas aún no están implementados.
 
 ## Propósito
 
@@ -48,6 +48,15 @@ GROUP (FAMILY | CARE_CENTER)
 
 **La pertenencia a un grupo NO autoriza automáticamente a ver las ubicaciones de todos sus pacientes.** La visibilidad privada se obtiene por `patient_access`.
 
+## Flujo de producto acordado
+
+Después de crear su cuenta, el usuario puede iniciar dos acciones sin quedar limitado a un tipo permanente de cuenta:
+
+1. **Configurar un dispositivo:** crea o selecciona un contexto `FAMILY`/`CARE_CENTER`, registra al paciente y decide entre configurar el dispositivo simulado ahora o hacerlo después. Si lo aplaza, el paciente queda disponible en el dashboard con el estado explícito **Sin dispositivo configurado** y una acción **Configurar ahora**.
+2. **Ingresar un código de acceso:** canjea un código de un solo uso que concede `MONITOR` exclusivamente sobre el paciente asociado. No convierte al usuario en miembro general del grupo.
+
+Un grupo puede contener varios pacientes. Al configurar dispositivos adicionales se debe poder reutilizar un grupo existente; trabajar o colaborar con un centro nunca concede por sí solo acceso a todos sus pacientes.
+
 ## Desarrollo local
 
 Requisitos: Node.js 22.17 o superior y npm.
@@ -80,6 +89,18 @@ Antes de probar el flujo integral:
    ```
 
 El alta crea el perfil mínimo mediante un trigger; RLS permite a cada usuario autenticado leer y actualizar únicamente su propia fila. Las sesiones se gestionan en SSR mediante cookies HTTP y las rutas `/dashboard` y `/settings` exigen una identidad validada.
+
+> **Estado temporal de desarrollo (2026-10-24):** la confirmación de correo está desactivada en Supabase porque el enlace de confirmación todavía no funciona en el entorno actual. Esto permite probar el alta inicial, pero no elimina el requisito de correo verificado: debe resolverse antes de implementar invitaciones o preparar una demostración/despliegue definitivo.
+
+### Flujo Git del equipo
+
+Cada historia se desarrolla en una rama independiente con nombres como `feat/patient-onboarding` o `fix/auth-redirect`. Antes de empezar se revisan `git status` y los cambios existentes para evitar mezclar trabajo ajeno. Los commits siguen Conventional Commits, por ejemplo:
+
+```text
+feat(patients): add group and patient onboarding
+```
+
+Después de verificar la historia se realiza commit, push y, preferentemente, un pull request. No iniciar otra historia en la misma rama ni ejecutar cambios de rama, pull, merge, rebase, commit o push sin coordinarlos con el responsable del repositorio.
 
 Comandos de verificación:
 

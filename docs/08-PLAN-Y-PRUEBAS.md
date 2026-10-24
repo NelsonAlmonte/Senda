@@ -4,6 +4,16 @@
 
 Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, permisos adecuados, casos de prueba y reporte de resultados reales. Codex no debe empezar fases posteriores sin solicitud. Esta secuencia prioriza un MVP tangible, pero sin abrir datos sensibles durante el desarrollo.
 
+### Flujo Git por historia
+
+1. Revisar que `main` esté actualizado y que cualquier cambio previo del árbol de trabajo esté identificado.
+2. Crear una rama por historia con prefijo semántico (`feat/`, `fix/`, `docs/`, `refactor/`, `test/` o `chore/`) y nombre kebab-case.
+3. Mantener la rama limitada a una historia o corrección; no incorporar cambios ajenos accidentalmente.
+4. Ejecutar las verificaciones disponibles y revisar `git diff` antes de cerrar el trabajo.
+5. Usar Conventional Commits en inglés, con alcance cuando aporte contexto.
+6. Coordinar con el usuario antes de commit, push, pull, merge, rebase o cambio de rama. Preferir revisión mediante pull request.
+7. Si colaboran varios desarrolladores o agentes, usar ramas/historias separadas y acordar previamente cambios sobre migraciones o archivos compartidos.
+
 ## Fases
 
 ### Fase 0 — Preparación y prueba del stack
@@ -24,13 +34,19 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Aceptación:** se puede crear paciente con cuenta A; cuenta B no accede sin `patient_access`.
 
+**Estado de implementación (2026-10-24):** la historia 1A cubre Auth y perfil. Las migraciones de `feat/patient-onboarding` están aplicadas en Supabase de desarrollo. La suite pgTAP pasa 22 casos, incluido el aislamiento entre dos cuentas y el rechazo de inserciones en grupos ajenos. La creación de grupo + paciente también fue validada manualmente desde la PWA.
+
 ### Fase 2 — Dispositivo simulado e ingestión
 
 - `devices`, `device_assignments`, `locations` con referencia **histórica** a la asignación.
+- Onboarding con dos acciones no excluyentes: configurar un dispositivo o ingresar un código de acceso a un paciente.
+- Permitir configurar el dispositivo ahora o después del alta. El dashboard debe mostrar el estado **Sin dispositivo configurado** y permitir retomar la asignación.
+- Reutilizar un grupo existente al registrar pacientes o dispositivos adicionales; no crear un nuevo centro/familia obligatoriamente.
+- Código de un solo uso asociado a un paciente y rol `MONITOR`; no crear `group_members` ni heredar acceso al grupo.
 - Endpoint/RPC autorizada para simulación de posiciones.
 - Click en Google Maps y script Node.js con rutas; ambos usan procesamiento compartido.
 
-**Aceptación:** movimientos se guardan, se ven en mapa y no pueden falsificarse por usuarios no autorizados.
+**Aceptación:** un paciente puede quedar sin dispositivo y retomar la configuración; un código concede acceso únicamente al paciente correcto; los movimientos se guardan y no pueden falsificarse por usuarios no autorizados.
 
 ### Fase 3 — Mapa e historial
 
@@ -49,7 +65,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 ### Fase 5 — Compartición e invitaciones
 
-- `invitations`, invitación PENDING, aceptar/rechazar y revocación de `patient_access`.
+- Extender el código inicial con invitación por email y enlace, manteniendo `PENDING`, aceptar/rechazar y revocación de `patient_access`.
 - Integración de correo con configuración Supabase Auth/Gmail y mecanismo específico de emails de paciente.
 
 **Aceptación:** email y token correctos permiten acceso; email erróneo/token reutilizado/usuario sin permiso no.

@@ -54,10 +54,12 @@ No pidas aprobación para decisiones triviales ya resueltas en la documentación
 3. Un cuidador/familiar ve exclusivamente pacientes autorizados por `patient_access`, aunque pertenezca a un grupo.
 4. `ADMIN` y `MONITOR` ven ubicaciones e historial; ambos pueden configurar geocercas. Solo `ADMIN` gestiona invitaciones, accesos y los datos administrativos del paciente.
 5. Cada ubicación debe vincularse **a la asignación histórica del dispositivo** para no filtrar recorridos de pacientes anteriores si se reutiliza un equipo.
-6. El MVP usa dispositivos simulados; el ciclo de provisioning/claiming/pairing físico está **aplazado**, no eliminado del diseño futuro.
+6. El MVP usa dispositivos simulados y permite representar su registro y asignación dentro del onboarding. El provisioning/claiming/pairing **físico** está aplazado, no eliminado del diseño futuro.
 7. Las invitaciones de paciente pasan de `PENDING` a `ACCEPTED` o `DECLINED`; no introducir estado `EXPIRED` contra lo acordado.
 8. Geocercas circulares; riesgo y conectividad son estados diferentes; no asumir `NORMAL` sin datos recientes válidos.
 9. El motor de alertas se ejecuta del lado confiable del backend para funcionar con la PWA cerrada. El frontend realiza renderizado y validaciones de UX, sin convertirse en fuente autorizada de alertas.
+10. Las opciones iniciales de configurar un dispositivo o ingresar un código son acciones, no tipos permanentes de cuenta. Un paciente puede registrarse sin dispositivo y configurarlo después.
+11. El código de acceso inicial concede `MONITOR` sobre un paciente concreto. No crea membresía general del grupo ni acceso a otros pacientes.
 
 ## 3. Seguridad mínima desde el primer día
 
@@ -68,7 +70,7 @@ No pidas aprobación para decisiones triviales ya resueltas en la documentación
 - Los formularios validan en cliente por UX; los constraints/RLS y las operaciones sensibles se validan también en backend.
 - La simulación manual por click o script debe estar **limitada a un entorno de prueba o usuarios autorizados**. Nunca dejar una ruta pública para falsificar la ubicación de pacientes reales.
 - No almacenar ubicación/historial de pacientes en caché PWA indiscriminadamente. No poner información identificable del paciente en payloads de push por defecto.
-- Las operaciones de invitación/aceptación deben validar por email verificado, token de un solo uso, autorización del invitador y contexto correcto del paciente.
+- Los códigos de acceso compartidos manualmente deben ser de un solo uso, estar asociados a un paciente concreto y validarse en backend. Las invitaciones enviadas por email deben validar además el mismo email verificado, la autorización del invitador y el contexto del paciente.
 
 ## 4. Distribución de responsabilidades
 
@@ -99,6 +101,16 @@ Aplicar `docs/07-UI-UX.md`: pastel sereno, legibilidad por encima de decoración
 ## 7. Coherencia académica
 
 Las directrices del MVP exigen una demostración **funcional**, no un mockup. La tesis anterior menciona MQTT, mientras la decisión técnica actual es HTTPS. Registrar esa divergencia en `docs/09-DECISIONES-PENDIENTES.md`; no afirmar que se usó una tecnología que no se implementó y no modificar el contenido académico sin petición expresa.
+
+## 8. Flujo Git colaborativo
+
+- Trabajar una historia pequeña por rama, partiendo de `main` actualizado y con el árbol de trabajo revisado.
+- Nombrar ramas con un prefijo coherente con el cambio: `feat/`, `fix/`, `docs/`, `refactor/`, `test/` o `chore/`, seguido de una descripción breve en kebab-case.
+- No mezclar cambios previos o ajenos con la historia activa. Revisar `git status` y `git diff` antes de editar y antes de cerrar la rama.
+- Usar Conventional Commits en inglés con la forma `type(optional-scope): description`; por ejemplo, `feat(patients): add group and patient onboarding`.
+- Al terminar la historia, ejecutar las verificaciones disponibles, informar resultados reales y pedir al usuario realizar o autorizar el commit y el push. No hacer commit, push, pull, merge, rebase ni cambiar de rama silenciosamente.
+- Preferir un pull request para revisar y fusionar la rama. Después del merge, actualizar `main` antes de crear la siguiente rama.
+- Si otra persona o agente trabaja en paralelo, asignar ramas e historias distintas y coordinar explícitamente cualquier archivo compartido o migración para evitar solapamientos.
 
 # La siguiente sección es boilerplate de sveltekit
 

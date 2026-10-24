@@ -23,7 +23,7 @@
 
 <svelte:head>
 	<title>Crear cuenta | Senda</title>
-	<meta name="description" content="Crea una cuenta de Senda y confirma tu correo electrónico." />
+	<meta name="description" content="Crea una cuenta para comenzar a usar Senda." />
 </svelte:head>
 
 <main id="contenido-principal" class="grid min-h-dvh place-items-center px-5 py-10 sm:px-8">
@@ -40,7 +40,7 @@
 		<p class="mt-7 text-sm font-bold tracking-[0.14em] text-brand uppercase">Nueva cuenta</p>
 		<h1 class="mt-2 text-3xl font-bold tracking-tight text-ink">Crea tu acceso</h1>
 		<p class="mt-3 leading-7 text-muted">
-			Usaremos tu correo verificado para proteger futuras invitaciones y accesos.
+			Después de crearla podrás registrar un dispositivo o introducir un código para monitorear.
 		</p>
 
 		{#if !data.supabaseConfigured}

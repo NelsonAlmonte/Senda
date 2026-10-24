@@ -84,6 +84,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		devicesAvailable,
 		patientCreated: url.searchParams.get('created') === 'patient',
 		deviceConfigured: url.searchParams.get('configured') === 'device',
+		accessAccepted: url.searchParams.get('access') === 'accepted',
 		user: locals.user
 	};
 };

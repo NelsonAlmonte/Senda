@@ -11,7 +11,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 3. Mantener la rama limitada a una historia o corrección; no incorporar cambios ajenos accidentalmente.
 4. Ejecutar las verificaciones disponibles y revisar `git diff` antes de cerrar el trabajo.
 5. Usar Conventional Commits en inglés, con alcance cuando aporte contexto.
-6. Coordinar con el usuario antes de commit, push, pull, merge, rebase o cambio de rama. Preferir revisión mediante pull request.
+6. Avisar al usuario antes de commit, push, pull, merge, rebase o cambio de rama. Codex puede ejecutar las operaciones directamente por consola sin una confirmación conversacional adicional; preferir revisión mediante pull request.
 7. Si colaboran varios desarrolladores o agentes, usar ramas/historias separadas y acordar previamente cambios sobre migraciones o archivos compartidos.
 
 ## Fases
@@ -48,7 +48,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Aceptación:** un paciente puede quedar sin dispositivo y retomar la configuración; un código concede acceso únicamente al paciente correcto; los movimientos se guardan y no pueden falsificarse por usuarios no autorizados.
 
-**Estado parcial (2026-10-24, historia 2A):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. Tras crear grupo + paciente, la PWA permite configurar ahora o después; el dashboard permite retomar la configuración. La suite pgTAP de esta historia pasa 23 casos, incluidos aislamiento entre cuentas, inventario no asignado oculto y bloqueo de escrituras directas. Aún faltan código de acceso, ubicaciones, simulación de movimientos y reutilización de grupos en altas posteriores.
+**Estado parcial (2026-10-24, historias 2A–2B):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. Tras crear grupo + paciente, la PWA permite configurar ahora o después; el dashboard permite retomar la configuración. El registro redirige al selector entre registrar y monitorear; un `ADMIN` puede generar un código manual de un solo uso y otra cuenta puede revisarlo y obtener `MONITOR` exclusivamente sobre ese paciente. Las suites pgTAP pasan 23 casos para dispositivos y 17 para códigos, además de los 22 de pacientes. Aún faltan ubicaciones, simulación de movimientos y reutilización de grupos en altas posteriores.
 
 ### Fase 3 — Mapa e historial
 

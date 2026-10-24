@@ -65,6 +65,8 @@ No confiar únicamente en la presencia del código o en el estado visual de un b
 
 La entrega por email y enlace seguro permanece como ampliación posterior. En ese flujo se valida además que la cuenta use el mismo email verificado de la invitación.
 
+**Estado implementado (2026-10-24):** las RPC de generación, vista previa y aceptación validan la sesión y los permisos en PostgreSQL. Solo se guarda el hash del código, la vista previa revela nombre mínimo del paciente y contexto, y la aceptación crea `patient_access MONITOR` y marca la invitación `ACCEPTED` en una misma transacción.
+
 ## Revocación
 
 - Revocar `patient_access` impide lecturas futuras y operaciones del paciente.

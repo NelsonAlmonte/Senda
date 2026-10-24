@@ -60,6 +60,15 @@
 				</div>
 			{/if}
 
+			{#if data.accessAccepted}
+				<div
+					class="mt-7 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
+					role="status"
+				>
+					Código aceptado. Ya puedes monitorear al paciente autorizado.
+				</div>
+			{/if}
+
 			{#if !data.profileAvailable}
 				<div
 					class="mt-7 max-w-2xl rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
@@ -76,10 +85,10 @@
 					<p class="mt-2 leading-7 text-muted">Solo aparecen pacientes con un acceso activo.</p>
 				</div>
 				<a
-					href={resolve('/groups')}
+					href={resolve('/onboarding')}
 					class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 				>
-					Crear grupo y paciente
+					Añadir a Senda
 				</a>
 			</div>
 
@@ -143,6 +152,14 @@
 										</a>
 									{/if}
 								</div>
+							{/if}
+							{#if patient.accessRole === 'ADMIN'}
+								<a
+									href={resolve('/patients/[id]/access', { id: patient.id })}
+									class="mt-4 inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								>
+									Compartir acceso
+								</a>
 							{/if}
 						</li>
 					{/each}

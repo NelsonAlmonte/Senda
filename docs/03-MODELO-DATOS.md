@@ -161,6 +161,8 @@ declined_at  timestamptz null
 
 No agregar estado `EXPIRED`. El token puede representarse como código introducido manualmente o entregarse mediante un enlace; solo se almacena su hash y se acepta una vez. El flujo inicial por código concede `MONITOR` exclusivamente sobre `patient_id` y no crea membresía del grupo. `email` es obligatorio cuando el envío sea por correo y puede ser nulo para un código compartido manualmente. Para cancelar una invitación pendiente sin alterar el vocabulario de estados, definir más adelante una invalidación controlada de token o eliminación autorizada (ver `09-DECISIONES-PENDIENTES.md`).
 
+**Implementado el 2026-10-24:** código manual de un solo uso con `email = null`, hash SHA-256 persistido y aceptación transaccional. La tabla no se expone directamente a `anon` ni `authenticated`; las operaciones se realizan mediante RPC con autorización interna. El envío por email, `DECLINED` y la invalidación administrativa permanecen para una historia posterior.
+
 ### 11. `push_subscriptions` (cuando se implemente Web Push)
 
 ```text

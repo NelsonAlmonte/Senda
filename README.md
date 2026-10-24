@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fase 0, autenticación/perfil, el alta mínima de grupo + paciente y la asignación de un dispositivo simulado están implementadas en Supabase de desarrollo. La suite de pacientes pasa 22 casos RLS y la suite de dispositivos pasa 23. Los códigos de acceso, la ingestión de ubicaciones, los mapas y las alertas aún no están implementados.
+> **Estado:** Fase 0, autenticación/perfil, el alta mínima de grupo + paciente, la asignación de un dispositivo simulado y el acceso `MONITOR` mediante código están implementados en Supabase de desarrollo. Las suites pgTAP pasan 22 casos para pacientes, 23 para dispositivos y 17 para códigos de acceso. La ingestión de ubicaciones, los mapas y las alertas aún no están implementados.
 
 ## Propósito
 
@@ -92,7 +92,7 @@ Antes de probar el flujo integral:
 
 El alta crea el perfil mínimo mediante un trigger; RLS permite a cada usuario autenticado leer y actualizar únicamente su propia fila. Las sesiones se gestionan en SSR mediante cookies HTTP y las rutas `/dashboard` y `/settings` exigen una identidad validada.
 
-> **Estado temporal de desarrollo (2026-10-24):** la confirmación de correo está desactivada en Supabase porque el enlace de confirmación todavía no funciona en el entorno actual. Esto permite probar el alta inicial, pero no elimina el requisito de correo verificado: debe resolverse antes de implementar invitaciones o preparar una demostración/despliegue definitivo.
+> **Estado temporal de desarrollo (2026-10-24):** la confirmación de correo está desactivada en Supabase porque el enlace de confirmación todavía no funciona en el entorno actual. Esto permite probar el alta inicial y el código compartido manualmente, pero no elimina el requisito de correo verificado: debe resolverse antes de implementar invitaciones por email o preparar una demostración/despliegue definitivo.
 
 ### Flujo Git del equipo
 
@@ -102,7 +102,7 @@ Cada historia se desarrolla en una rama independiente con nombres como `feat/pat
 feat(patients): add group and patient onboarding
 ```
 
-Después de verificar la historia se realiza commit, push y, preferentemente, un pull request. No iniciar otra historia en la misma rama ni ejecutar cambios de rama, pull, merge, rebase, commit o push sin coordinarlos con el responsable del repositorio.
+Después de verificar la historia se realiza commit, push y, preferentemente, un pull request. Codex avisa antes de las operaciones Git y puede ejecutarlas directamente por consola, sin solicitar una confirmación conversacional adicional; una autorización técnica del entorno puede seguir apareciendo si la plataforma la exige. No iniciar otra historia en la misma rama ni mezclar cambios ajenos.
 
 Comandos de verificación:
 

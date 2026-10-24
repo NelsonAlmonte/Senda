@@ -58,6 +58,8 @@ No usar únicamente un punto verde/rojo para comunicar estado; incluir texto. El
 - Un paciente sin dispositivo no debe mostrarse como seguro, conectado ni monitoreado. Usar un estado informativo neutral, no una alerta clínica.
 - Al canjear un código, mostrar antes de aceptar únicamente el nombre mínimo del paciente y su contexto; dejar claro que el acceso será `MONITOR` sobre ese paciente, no sobre todo el grupo.
 
+**Estado implementado (2026-10-24):** `/onboarding` presenta las dos acciones como opciones equivalentes y no permanentes; `/access-code` usa divulgación progresiva para revisar la información mínima antes de aceptar.
+
 ## Experiencia PWA
 
 - Compatibilidad de instalación según capacidades reales del navegador/OS.

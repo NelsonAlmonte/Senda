@@ -7,6 +7,8 @@
 ```text
 /auth/login
 /auth/register
+/onboarding
+/access-code
 /dashboard
 /groups
 /groups/:id
@@ -21,6 +23,8 @@
 ```
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
+
+**Estado implementado (2026-10-24):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`.
 
 ## Flujo A — Registro e inicio de sesión
 
@@ -84,11 +88,11 @@ ADMIN → /patients/:id/access → generar código MONITOR para ese paciente
     → invitación PENDING → compartir código fuera de la aplicación
     → destinatario crea cuenta o inicia sesión
     → “Ingresar un código de acceso” → revisar información mínima
-    → ACCEPTED / DECLINED
-    → si ACCEPTED, crear patient_access MONITOR solo para ese paciente
+    → ACCEPTED
+    → crear patient_access MONITOR solo para ese paciente
 ```
 
-No usar el mero código como autorización definitiva ni como membresía del grupo. En el UI, revelar solo información mínima antes de la aceptación. La invitación por email y enlace se conserva como ampliación posterior.
+No usar el mero código como autorización definitiva ni como membresía del grupo. En el UI, revelar solo información mínima antes de la aceptación. La invitación por email/enlace y la acción explícita `DECLINED` se conservan como ampliaciones posteriores sin cambiar el vocabulario aprobado.
 
 ## Flujo F — Consulta de alertas
 
@@ -105,6 +109,8 @@ Alertas abiertas deben mostrar nivel, última lectura válida, cuándo comenzó 
 
 | Ruta | Contenido imprescindible |
 |---|---|
+| `/onboarding` | Elección inicial entre registrar dispositivo o monitorear con un código; ambas acciones siguen disponibles después |
+| `/access-code` | Entrada, vista previa mínima y aceptación de un código de acceso `MONITOR` |
 | `/dashboard` | Pacientes autorizados, riesgo conocido, conectividad, última actualización y aviso accionable cuando falta dispositivo |
 | `/groups` | Lista/creación de contextos FAMILY o CARE_CENTER |
 | `/groups/:id` | Datos básicos del grupo y pacientes del contexto que el usuario está autorizado a administrar/ver |

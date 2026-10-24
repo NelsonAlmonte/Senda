@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(22);
+select plan(25);
 
 select has_table('public', 'groups', 'groups table exists');
 select has_table('public', 'patients', 'patients table exists');
@@ -92,6 +92,24 @@ select set_config(
 	'test.group_a_id',
 	(select id::text from public.groups limit 1),
 	true
+);
+
+select lives_ok(
+	$$
+		insert into public.patients (group_id, first_name, last_name)
+		values (current_setting('test.group_a_id')::uuid, 'Alicia', 'Prueba')
+	$$,
+	'user A can add a patient to their existing group'
+);
+select results_eq(
+	$$select count(*) from public.patients$$,
+	$$values (2::bigint)$$,
+	'user A sees both patients in the group'
+);
+select results_eq(
+	$$select count(*) from public.patient_access where access_role = 'ADMIN'$$,
+	$$values (2::bigint)$$,
+	'user A receives ADMIN access to the additional patient'
 );
 
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000002', true);

@@ -25,7 +25,7 @@
 				<p class="text-sm font-bold text-brand">Opción 1</p>
 				<h2 class="mt-2 text-2xl font-bold text-ink">Registrar dispositivo</h2>
 				<p class="mt-3 leading-7 text-muted">
-					Crea una familia o centro, registra al paciente y asigna el serial simulado.
+					Elige o crea una familia o centro, registra al paciente y asigna el serial simulado.
 				</p>
 				<span class="mt-6 inline-flex min-h-12 items-center font-bold text-brand">Continuar →</span>
 			</a>

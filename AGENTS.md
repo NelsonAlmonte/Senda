@@ -108,7 +108,7 @@ Las directrices del MVP exigen una demostración **funcional**, no un mockup. La
 - Nombrar ramas con un prefijo coherente con el cambio: `feat/`, `fix/`, `docs/`, `refactor/`, `test/` o `chore/`, seguido de una descripción breve en kebab-case.
 - No mezclar cambios previos o ajenos con la historia activa. Revisar `git status` y `git diff` antes de editar y antes de cerrar la rama.
 - Usar Conventional Commits en inglés con la forma `type(optional-scope): description`; por ejemplo, `feat(patients): add group and patient onboarding`.
-- Al terminar la historia, ejecutar las verificaciones disponibles e informar resultados reales. Avisar antes de commit, push, pull, merge, rebase o cambio de rama; Codex puede ejecutar estas operaciones directamente por consola sin pedir una confirmación conversacional adicional. Las autorizaciones técnicas que imponga el entorno no pueden omitirse.
+- Al terminar la historia, ejecutar las verificaciones disponibles e informar resultados reales. Codex no debe ejecutar `git add`, commit, push, pull, merge, rebase ni cambios de rama hasta que el usuario lo indique explícitamente; cuando lo indique, puede usar la consola normal. Las autorizaciones técnicas que imponga el entorno no pueden omitirse.
 - Preferir un pull request para revisar y fusionar la rama. Después del merge, actualizar `main` antes de crear la siguiente rama.
 - Si otra persona o agente trabaja en paralelo, asignar ramas e historias distintas y coordinar explícitamente cualquier archivo compartido o migración para evitar solapamientos.
 

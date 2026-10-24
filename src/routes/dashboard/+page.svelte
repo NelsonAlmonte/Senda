@@ -47,7 +47,7 @@
 					class="mt-7 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
 					role="status"
 				>
-					Grupo y paciente creados correctamente. Ya tienes acceso de administrador.
+					Paciente registrado correctamente. Ya tienes acceso de administrador sobre este paciente.
 				</div>
 			{/if}
 
@@ -84,12 +84,26 @@
 					<h2 class="text-2xl font-bold text-ink">Pacientes autorizados</h2>
 					<p class="mt-2 leading-7 text-muted">Solo aparecen pacientes con un acceso activo.</p>
 				</div>
-				<a
-					href={resolve('/onboarding')}
-					class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-				>
-					Añadir a Senda
-				</a>
+				<div class="flex flex-wrap gap-3" aria-label="Acciones de pacientes y grupos">
+					<a
+						href={resolve('/groups?mode=patient')}
+						class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+					>
+						Agregar paciente
+					</a>
+					<a
+						href={resolve('/groups?mode=new')}
+						class="inline-flex min-h-12 items-center justify-center rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					>
+						Crear grupo
+					</a>
+					<a
+						href={resolve('/access-code')}
+						class="inline-flex min-h-12 items-center justify-center rounded-xl px-3 font-bold text-brand transition hover:bg-white/60 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					>
+						Ingresar código
+					</a>
+				</div>
 			</div>
 
 			{#if !data.patientsAvailable}
@@ -111,19 +125,18 @@
 				<ul class="mt-6 grid gap-5 md:grid-cols-2">
 					{#each data.patients as patient (patient.id)}
 						<li class="rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
-							<div class="flex flex-wrap items-start justify-between gap-3">
-								<div class="min-w-0">
-									<h3 class="text-xl font-bold break-words text-ink">
-										{patient.firstName}
-										{patient.lastName}
-									</h3>
-									<p class="mt-1 text-sm break-words text-muted">
-										{patient.group?.name ?? 'Grupo no disponible'}
-									</p>
-								</div>
-								<span class="rounded-full bg-lavender px-3 py-1 text-xs font-bold text-ink">
+							<div class="min-w-0">
+								<h3 class="text-xl font-bold break-words text-ink">
+									{patient.firstName}
+									{patient.lastName}
+								</h3>
+								<p class="mt-1 text-sm break-words text-muted">
+									{patient.group?.name ?? 'Grupo no disponible'}
+								</p>
+								<p class="mt-3 text-sm font-semibold text-ink">
+									<span class="text-muted">Tu acceso:</span>
 									{patient.accessRole === 'ADMIN' ? 'Administrador' : 'Monitor'}
-								</span>
+								</p>
 							</div>
 							{#if patient.assignment}
 								<div class="mt-5 rounded-2xl border border-brand/15 bg-surface-muted p-4">

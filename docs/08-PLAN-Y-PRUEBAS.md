@@ -11,7 +11,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 3. Mantener la rama limitada a una historia o corrección; no incorporar cambios ajenos accidentalmente.
 4. Ejecutar las verificaciones disponibles y revisar `git diff` antes de cerrar el trabajo.
 5. Usar Conventional Commits en inglés, con alcance cuando aporte contexto.
-6. Avisar al usuario antes de commit, push, pull, merge, rebase o cambio de rama. Codex puede ejecutar las operaciones directamente por consola sin una confirmación conversacional adicional; preferir revisión mediante pull request.
+6. No ejecutar `git add`, commit, push, pull, merge, rebase ni cambios de rama hasta que el usuario lo indique explícitamente. Cuando lo indique, Codex puede usar la consola normal; preferir revisión mediante pull request.
 7. Si colaboran varios desarrolladores o agentes, usar ramas/historias separadas y acordar previamente cambios sobre migraciones o archivos compartidos.
 
 ## Fases
@@ -34,7 +34,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Aceptación:** se puede crear paciente con cuenta A; cuenta B no accede sin `patient_access`.
 
-**Estado de implementación (2026-10-24):** la historia 1A cubre Auth y perfil. Las migraciones de `feat/patient-onboarding` están aplicadas en Supabase de desarrollo. La suite pgTAP pasa 22 casos, incluido el aislamiento entre dos cuentas y el rechazo de inserciones en grupos ajenos. La creación de grupo + paciente también fue validada manualmente desde la PWA.
+**Estado de implementación (2026-10-24):** la historia 1A cubre Auth y perfil. Las migraciones de `feat/patient-onboarding` están aplicadas en Supabase de desarrollo. La suite pgTAP pasa 25 casos, incluido el aislamiento entre dos cuentas, el rechazo de inserciones en grupos ajenos y el alta de otro paciente en un grupo propio existente. La creación de grupo + paciente también fue validada manualmente desde la PWA.
 
 ### Fase 2 — Dispositivo simulado e ingestión
 
@@ -48,7 +48,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Aceptación:** un paciente puede quedar sin dispositivo y retomar la configuración; un código concede acceso únicamente al paciente correcto; los movimientos se guardan y no pueden falsificarse por usuarios no autorizados.
 
-**Estado parcial (2026-10-24, historias 2A–2B):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. Tras crear grupo + paciente, la PWA permite configurar ahora o después; el dashboard permite retomar la configuración. El registro redirige al selector entre registrar y monitorear; un `ADMIN` puede generar un código manual de un solo uso y otra cuenta puede revisarlo y obtener `MONITOR` exclusivamente sobre ese paciente. Las suites pgTAP pasan 23 casos para dispositivos y 17 para códigos, además de los 22 de pacientes. Aún faltan ubicaciones, simulación de movimientos y reutilización de grupos en altas posteriores.
+**Estado parcial (2026-10-24, historias 2A–2B):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. El alta guiada separa grupo, paciente y dispositivo; permite crear un grupo con su primer paciente, reutilizar un grupo propio, configurar ahora o después y retomar la configuración desde el dashboard. El registro redirige al selector entre registrar y monitorear; un `ADMIN` puede generar un código manual de un solo uso y otra cuenta puede revisarlo y obtener `MONITOR` exclusivamente sobre ese paciente. Las suites pgTAP pasan 23 casos para dispositivos y 17 para códigos, además de los 25 de pacientes. Aún faltan ubicaciones y simulación de movimientos.
 
 ### Fase 3 — Mapa e historial
 

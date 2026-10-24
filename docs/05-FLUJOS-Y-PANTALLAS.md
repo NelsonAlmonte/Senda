@@ -38,9 +38,9 @@ Registro → Supabase Auth → sesión → elegir acción inicial
 
 ```text
 Usuario autenticado → crear o seleccionar grupo (nombre, FAMILY o CARE_CENTER)
-  → decidir “Configurar dispositivo ahora” o “Configurar después”
   → alta paciente → crear patient_access ADMIN para creador autorizado
-  → si eligió ahora: continuar a registro simulado y asignación
+  → decidir “Configurar dispositivo ahora” o “Configurar después”
+  → si eligió ahora: introducir un serial simulado preexistente y crear la asignación
   → si eligió después: dashboard con paciente y estado SIN DISPOSITIVO
 ```
 
@@ -52,7 +52,7 @@ Posponer el dispositivo no revierte el alta del grupo ni del paciente. El dashbo
 
 ```text
 ADMIN elige configurar ahora durante el onboarding o retoma “Configurar ahora” desde Juan
-    → registra/activa una unidad simulada
+    → introduce el serial de una unidad simulada preexistente
     → asigna el dispositivo simulado a Juan
     → Juan tiene asignación activa
     → usuario autorizado abre /patients/:id/map
@@ -109,6 +109,7 @@ Alertas abiertas deben mostrar nivel, última lectura válida, cuándo comenzó 
 | `/groups` | Lista/creación de contextos FAMILY o CARE_CENTER |
 | `/groups/:id` | Datos básicos del grupo y pacientes del contexto que el usuario está autorizado a administrar/ver |
 | `/patients/:id` | Ficha mínima, últimos indicadores y accesos a módulos |
+| `/patients/:id/device` | Estado de asignación y formulario de serial simulado; solo para `ADMIN` |
 | `/patients/:id/map` | Posición, timestamp, radio/zonas, modo simulación controlado |
 | `/patients/:id/history` | Recorrido consultable en intervalo, origen de datos |
 | `/patients/:id/alerts` | Episodios, severidad, inicio, actualización y resolución |

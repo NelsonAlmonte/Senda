@@ -72,7 +72,7 @@ revoked_at   timestamptz null
 ```text
 id             uuid PK
 serial_number  text UNIQUE
-kind           SIMULATED | PHYSICAL (PHYSICAL reservado para futuro)
+device_kind    SIMULATED | PHYSICAL (PHYSICAL reservado para futuro)
 created_at     timestamptz
 ```
 
@@ -89,8 +89,10 @@ unassigned_at  timestamptz null
 ```
 
 - Un dispositivo no puede tener dos asignaciones activas: índice único parcial por `device_id WHERE unassigned_at IS NULL`.
-- Para el MVP, si se adopta un dispositivo por paciente, índice único parcial por `patient_id WHERE unassigned_at IS NULL`.
+- Para el MVP se confirmó un único dispositivo activo por paciente: índice único parcial por `patient_id WHERE unassigned_at IS NULL`.
 - `unassigned_at` es la fuente de verdad de activación; **no añadir `is_active` redundante** salvo necesidad demostrada.
+
+**Estado implementado (2026-10-24):** `devices` y `device_assignments` ya existen en Supabase de desarrollo. El registro inicial selecciona uno de tres seriales simulados preexistentes y crea la asignación mediante una RPC autorizada; no crea inventario desde el navegador.
 
 ### 7. `locations`
 

@@ -48,6 +48,8 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Aceptación:** un paciente puede quedar sin dispositivo y retomar la configuración; un código concede acceso únicamente al paciente correcto; los movimientos se guardan y no pueden falsificarse por usuarios no autorizados.
 
+**Estado parcial (2026-10-24, historia 2A):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. Tras crear grupo + paciente, la PWA permite configurar ahora o después; el dashboard permite retomar la configuración. La suite pgTAP de esta historia pasa 23 casos, incluidos aislamiento entre cuentas, inventario no asignado oculto y bloqueo de escrituras directas. Aún faltan código de acceso, ubicaciones, simulación de movimientos y reutilización de grupos en altas posteriores.
+
 ### Fase 3 — Mapa e historial
 
 - Último punto válido, horario de última actualización, trazado histórico y Realtime.

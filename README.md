@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fase 0, autenticación/perfil y el alta mínima de grupo + paciente están implementadas y verificadas en Supabase de desarrollo. La creación desde la PWA fue validada manualmente y la suite RLS pasa 22 casos. El onboarding de dispositivos, los códigos de acceso, mapas y alertas aún no están implementados.
+> **Estado:** Fase 0, autenticación/perfil, el alta mínima de grupo + paciente y la asignación de un dispositivo simulado están implementadas en Supabase de desarrollo. La suite de pacientes pasa 22 casos RLS y la suite de dispositivos pasa 23. Los códigos de acceso, la ingestión de ubicaciones, los mapas y las alertas aún no están implementados.
 
 ## Propósito
 
@@ -56,6 +56,8 @@ Después de crear su cuenta, el usuario puede iniciar dos acciones sin quedar li
 2. **Ingresar un código de acceso:** canjea un código de un solo uso que concede `MONITOR` exclusivamente sobre el paciente asociado. No convierte al usuario en miembro general del grupo.
 
 Un grupo puede contener varios pacientes. Al configurar dispositivos adicionales se debe poder reutilizar un grupo existente; trabajar o colaborar con un centro nunca concede por sí solo acceso a todos sus pacientes.
+
+La historia inicial de dispositivos usa un único equipo activo por paciente y seriales simulados preexistentes (`SENDA-DEMO-001` a `SENDA-DEMO-003`). Estos seriales son datos públicos de demostración, no credenciales. Solo un `ADMIN` del paciente puede realizar la asignación.
 
 ## Desarrollo local
 

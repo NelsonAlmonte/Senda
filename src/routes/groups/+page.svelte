@@ -205,8 +205,11 @@
 						disabled={submitting || !data.groupsAvailable}
 						class="min-h-12 w-full cursor-pointer rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 					>
-						{submitting ? 'Creando acceso…' : 'Crear grupo y paciente'}
+						{submitting ? 'Creando acceso…' : 'Crear y continuar'}
 					</button>
+					<p class="mt-3 text-sm leading-6 text-muted">
+						En el siguiente paso podrás configurar un dispositivo o dejarlo para después.
+					</p>
 				</form>
 			</section>
 

@@ -55,14 +55,15 @@ export const actions: Actions = {
 
 		if (Object.keys(errors).length > 0) return fail(400, { errors, values });
 
-		const { error } = await locals.supabase.rpc('create_patient_onboarding', {
+		const { data, error } = await locals.supabase.rpc('create_patient_onboarding', {
 			p_group_name: groupName,
 			p_group_type: groupType,
 			p_patient_first_name: patientFirstName,
 			p_patient_last_name: patientLastName
 		});
+		const createdPatientId = data?.[0]?.created_patient_id;
 
-		if (error) {
+		if (error || !createdPatientId) {
 			return fail(400, {
 				errors: {
 					form: 'No pudimos crear el grupo y el paciente. Revisa los datos e inténtalo nuevamente.'
@@ -71,6 +72,6 @@ export const actions: Actions = {
 			});
 		}
 
-		redirect(303, '/dashboard?created=patient');
+		redirect(303, `/patients/${createdPatientId}/device?onboarding=1`);
 	}
 };

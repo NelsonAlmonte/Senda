@@ -51,6 +51,15 @@
 				</div>
 			{/if}
 
+			{#if data.deviceConfigured}
+				<div
+					class="mt-7 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
+					role="status"
+				>
+					Dispositivo configurado correctamente. Ya puedes continuar con el panel.
+				</div>
+			{/if}
+
 			{#if !data.profileAvailable}
 				<div
 					class="mt-7 max-w-2xl rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
@@ -82,6 +91,13 @@
 					Los datos de pacientes aún no están disponibles. Aplica la migración de esta historia al
 					proyecto Supabase de desarrollo.
 				</div>
+			{:else if !data.devicesAvailable}
+				<div
+					class="mt-6 rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+					role="status"
+				>
+					No pudimos consultar el estado de los dispositivos. Inténtalo nuevamente en unos minutos.
+				</div>
 			{:else if data.patients.length > 0}
 				<ul class="mt-6 grid gap-5 md:grid-cols-2">
 					{#each data.patients as patient (patient.id)}
@@ -100,12 +116,34 @@
 									{patient.accessRole === 'ADMIN' ? 'Administrador' : 'Monitor'}
 								</span>
 							</div>
-							<div class="mt-5 rounded-2xl bg-canvas p-4">
-								<p class="font-bold text-ink">Sin monitoreo todavía</p>
-								<p class="mt-1 text-sm leading-6 text-muted">
-									No hay dispositivo ni ubicación registrados en esta fase.
-								</p>
-							</div>
+							{#if patient.assignment}
+								<div class="mt-5 rounded-2xl border border-brand/15 bg-surface-muted p-4">
+									<p class="font-bold text-ink">Dispositivo configurado</p>
+									<p class="mt-1 font-mono text-sm break-all text-ink">
+										{patient.assignment.device.serialNumber}
+									</p>
+									<p class="mt-2 text-sm leading-6 text-muted">
+										Aún no hay ubicaciones recibidas para este dispositivo.
+									</p>
+								</div>
+							{:else}
+								<div class="mt-5 rounded-2xl bg-canvas p-4">
+									<p class="font-bold text-ink">Sin dispositivo configurado</p>
+									<p class="mt-1 text-sm leading-6 text-muted">
+										{patient.accessRole === 'ADMIN'
+											? 'Puedes asignar un serial simulado ahora o hacerlo más adelante.'
+											: 'Un administrador del paciente debe configurar el dispositivo.'}
+									</p>
+									{#if patient.accessRole === 'ADMIN'}
+										<a
+											href={resolve('/patients/[id]/device', { id: patient.id })}
+											class="mt-3 inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+										>
+											Configurar ahora
+										</a>
+									{/if}
+								</div>
+							{/if}
 						</li>
 					{/each}
 				</ul>

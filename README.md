@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fase 0, autenticación/perfil y el alta mínima de grupo + paciente están implementadas y verificadas en Supabase de desarrollo. La creación desde la PWA fue validada manualmente y la suite RLS pasa 22 casos. El onboarding de dispositivos, los códigos de acceso, mapas y alertas aún no están implementados.
+> **Estado:** Fase 0, autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado y el acceso `MONITOR` mediante código están implementados en Supabase de desarrollo. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos y 17 para códigos de acceso. La ingestión de ubicaciones, los mapas y las alertas aún no están implementados.
 
 ## Propósito
 
@@ -52,10 +52,12 @@ GROUP (FAMILY | CARE_CENTER)
 
 Después de crear su cuenta, el usuario puede iniciar dos acciones sin quedar limitado a un tipo permanente de cuenta:
 
-1. **Configurar un dispositivo:** crea o selecciona un contexto `FAMILY`/`CARE_CENTER`, registra al paciente y decide entre configurar el dispositivo simulado ahora o hacerlo después. Si lo aplaza, el paciente queda disponible en el dashboard con el estado explícito **Sin dispositivo configurado** y una acción **Configurar ahora**.
+1. **Configurar un dispositivo:** recorre una sola pantalla guiada en tres pasos: crear o seleccionar un contexto `FAMILY`/`CARE_CENTER`, registrar al paciente y configurar el dispositivo simulado ahora o después. Con la alternativa simple aprobada, un grupo nuevo se guarda junto con su primer paciente, no como registro vacío independiente. Si el dispositivo se aplaza, el paciente queda disponible en el dashboard con el estado explícito **Sin dispositivo configurado** y una acción **Configurar ahora**.
 2. **Ingresar un código de acceso:** canjea un código de un solo uso que concede `MONITOR` exclusivamente sobre el paciente asociado. No convierte al usuario en miembro general del grupo.
 
-Un grupo puede contener varios pacientes. Al configurar dispositivos adicionales se debe poder reutilizar un grupo existente; trabajar o colaborar con un centro nunca concede por sí solo acceso a todos sus pacientes.
+Un grupo puede contener varios pacientes. El dashboard ofrece acciones separadas para **Agregar paciente**, **Crear grupo** e **Ingresar código**; las dos primeras abren el mismo registro guiado con el modo correspondiente preseleccionado. Al registrar pacientes adicionales se puede reutilizar un grupo existente. Trabajar o colaborar con un centro nunca concede por sí solo acceso a todos sus pacientes.
+
+La historia inicial de dispositivos usa un único equipo activo por paciente y seriales simulados preexistentes (`SENDA-DEMO-001` a `SENDA-DEMO-003`). Estos seriales son datos públicos de demostración, no credenciales. Solo un `ADMIN` del paciente puede realizar la asignación.
 
 ## Desarrollo local
 
@@ -90,7 +92,7 @@ Antes de probar el flujo integral:
 
 El alta crea el perfil mínimo mediante un trigger; RLS permite a cada usuario autenticado leer y actualizar únicamente su propia fila. Las sesiones se gestionan en SSR mediante cookies HTTP y las rutas `/dashboard` y `/settings` exigen una identidad validada.
 
-> **Estado temporal de desarrollo (2026-10-24):** la confirmación de correo está desactivada en Supabase porque el enlace de confirmación todavía no funciona en el entorno actual. Esto permite probar el alta inicial, pero no elimina el requisito de correo verificado: debe resolverse antes de implementar invitaciones o preparar una demostración/despliegue definitivo.
+> **Estado temporal de desarrollo (2026-10-24):** la confirmación de correo está desactivada en Supabase porque el enlace de confirmación todavía no funciona en el entorno actual. Esto permite probar el alta inicial y el código compartido manualmente, pero no elimina el requisito de correo verificado: debe resolverse antes de implementar invitaciones por email o preparar una demostración/despliegue definitivo.
 
 ### Flujo Git del equipo
 
@@ -100,7 +102,7 @@ Cada historia se desarrolla en una rama independiente con nombres como `feat/pat
 feat(patients): add group and patient onboarding
 ```
 
-Después de verificar la historia se realiza commit, push y, preferentemente, un pull request. No iniciar otra historia en la misma rama ni ejecutar cambios de rama, pull, merge, rebase, commit o push sin coordinarlos con el responsable del repositorio.
+Después de verificar la historia se realiza commit, push y, preferentemente, un pull request. Codex no ejecuta `git add`, commit, push, pull, merge, rebase ni cambios de rama hasta que el usuario lo indique explícitamente; cuando lo indique, puede hacerlo directamente por consola. Una autorización técnica del entorno puede seguir apareciendo si la plataforma la exige. No iniciar otra historia en la misma rama ni mezclar cambios ajenos.
 
 Comandos de verificación:
 

@@ -72,7 +72,7 @@ revoked_at   timestamptz null
 ```text
 id             uuid PK
 serial_number  text UNIQUE
-kind           SIMULATED | PHYSICAL (PHYSICAL reservado para futuro)
+device_kind    SIMULATED | PHYSICAL (PHYSICAL reservado para futuro)
 created_at     timestamptz
 ```
 
@@ -89,8 +89,10 @@ unassigned_at  timestamptz null
 ```
 
 - Un dispositivo no puede tener dos asignaciones activas: índice único parcial por `device_id WHERE unassigned_at IS NULL`.
-- Para el MVP, si se adopta un dispositivo por paciente, índice único parcial por `patient_id WHERE unassigned_at IS NULL`.
+- Para el MVP se confirmó un único dispositivo activo por paciente: índice único parcial por `patient_id WHERE unassigned_at IS NULL`.
 - `unassigned_at` es la fuente de verdad de activación; **no añadir `is_active` redundante** salvo necesidad demostrada.
+
+**Estado implementado (2026-10-24):** `devices` y `device_assignments` ya existen en Supabase de desarrollo. El registro inicial selecciona uno de tres seriales simulados preexistentes y crea la asignación mediante una RPC autorizada; no crea inventario desde el navegador.
 
 ### 7. `locations`
 
@@ -158,6 +160,8 @@ declined_at  timestamptz null
 ```
 
 No agregar estado `EXPIRED`. El token puede representarse como código introducido manualmente o entregarse mediante un enlace; solo se almacena su hash y se acepta una vez. El flujo inicial por código concede `MONITOR` exclusivamente sobre `patient_id` y no crea membresía del grupo. `email` es obligatorio cuando el envío sea por correo y puede ser nulo para un código compartido manualmente. Para cancelar una invitación pendiente sin alterar el vocabulario de estados, definir más adelante una invalidación controlada de token o eliminación autorizada (ver `09-DECISIONES-PENDIENTES.md`).
+
+**Implementado el 2026-10-24:** código manual de un solo uso con `email = null`, hash SHA-256 persistido y aceptación transaccional. La tabla no se expone directamente a `anon` ni `authenticated`; las operaciones se realizan mediante RPC con autorización interna. El envío por email, `DECLINED` y la invalidación administrativa permanecen para una historia posterior.
 
 ### 11. `push_subscriptions` (cuando se implemente Web Push)
 

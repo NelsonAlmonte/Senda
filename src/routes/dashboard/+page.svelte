@@ -47,7 +47,25 @@
 					class="mt-7 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
 					role="status"
 				>
-					Grupo y paciente creados correctamente. Ya tienes acceso de administrador.
+					Paciente registrado correctamente. Ya tienes acceso de administrador sobre este paciente.
+				</div>
+			{/if}
+
+			{#if data.deviceConfigured}
+				<div
+					class="mt-7 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
+					role="status"
+				>
+					Dispositivo configurado correctamente. Ya puedes continuar con el panel.
+				</div>
+			{/if}
+
+			{#if data.accessAccepted}
+				<div
+					class="mt-7 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
+					role="status"
+				>
+					Código aceptado. Ya puedes monitorear al paciente autorizado.
 				</div>
 			{/if}
 
@@ -66,12 +84,26 @@
 					<h2 class="text-2xl font-bold text-ink">Pacientes autorizados</h2>
 					<p class="mt-2 leading-7 text-muted">Solo aparecen pacientes con un acceso activo.</p>
 				</div>
-				<a
-					href={resolve('/groups')}
-					class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-				>
-					Crear grupo y paciente
-				</a>
+				<div class="flex flex-wrap gap-3" aria-label="Acciones de pacientes y grupos">
+					<a
+						href={resolve('/groups?mode=patient')}
+						class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+					>
+						Agregar paciente
+					</a>
+					<a
+						href={resolve('/groups?mode=new')}
+						class="inline-flex min-h-12 items-center justify-center rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					>
+						Crear grupo
+					</a>
+					<a
+						href={resolve('/access-code')}
+						class="inline-flex min-h-12 items-center justify-center rounded-xl px-3 font-bold text-brand transition hover:bg-white/60 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					>
+						Ingresar código
+					</a>
+				</div>
 			</div>
 
 			{#if !data.patientsAvailable}
@@ -82,30 +114,66 @@
 					Los datos de pacientes aún no están disponibles. Aplica la migración de esta historia al
 					proyecto Supabase de desarrollo.
 				</div>
+			{:else if !data.devicesAvailable}
+				<div
+					class="mt-6 rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+					role="status"
+				>
+					No pudimos consultar el estado de los dispositivos. Inténtalo nuevamente en unos minutos.
+				</div>
 			{:else if data.patients.length > 0}
 				<ul class="mt-6 grid gap-5 md:grid-cols-2">
 					{#each data.patients as patient (patient.id)}
 						<li class="rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
-							<div class="flex flex-wrap items-start justify-between gap-3">
-								<div class="min-w-0">
-									<h3 class="text-xl font-bold break-words text-ink">
-										{patient.firstName}
-										{patient.lastName}
-									</h3>
-									<p class="mt-1 text-sm break-words text-muted">
-										{patient.group?.name ?? 'Grupo no disponible'}
-									</p>
-								</div>
-								<span class="rounded-full bg-lavender px-3 py-1 text-xs font-bold text-ink">
+							<div class="min-w-0">
+								<h3 class="text-xl font-bold break-words text-ink">
+									{patient.firstName}
+									{patient.lastName}
+								</h3>
+								<p class="mt-1 text-sm break-words text-muted">
+									{patient.group?.name ?? 'Grupo no disponible'}
+								</p>
+								<p class="mt-3 text-sm font-semibold text-ink">
+									<span class="text-muted">Tu acceso:</span>
 									{patient.accessRole === 'ADMIN' ? 'Administrador' : 'Monitor'}
-								</span>
-							</div>
-							<div class="mt-5 rounded-2xl bg-canvas p-4">
-								<p class="font-bold text-ink">Sin monitoreo todavía</p>
-								<p class="mt-1 text-sm leading-6 text-muted">
-									No hay dispositivo ni ubicación registrados en esta fase.
 								</p>
 							</div>
+							{#if patient.assignment}
+								<div class="mt-5 rounded-2xl border border-brand/15 bg-surface-muted p-4">
+									<p class="font-bold text-ink">Dispositivo configurado</p>
+									<p class="mt-1 font-mono text-sm break-all text-ink">
+										{patient.assignment.device.serialNumber}
+									</p>
+									<p class="mt-2 text-sm leading-6 text-muted">
+										Aún no hay ubicaciones recibidas para este dispositivo.
+									</p>
+								</div>
+							{:else}
+								<div class="mt-5 rounded-2xl bg-canvas p-4">
+									<p class="font-bold text-ink">Sin dispositivo configurado</p>
+									<p class="mt-1 text-sm leading-6 text-muted">
+										{patient.accessRole === 'ADMIN'
+											? 'Puedes asignar un serial simulado ahora o hacerlo más adelante.'
+											: 'Un administrador del paciente debe configurar el dispositivo.'}
+									</p>
+									{#if patient.accessRole === 'ADMIN'}
+										<a
+											href={resolve('/patients/[id]/device', { id: patient.id })}
+											class="mt-3 inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+										>
+											Configurar ahora
+										</a>
+									{/if}
+								</div>
+							{/if}
+							{#if patient.accessRole === 'ADMIN'}
+								<a
+									href={resolve('/patients/[id]/access', { id: patient.id })}
+									class="mt-4 inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								>
+									Compartir acceso
+								</a>
+							{/if}
 						</li>
 					{/each}
 				</ul>

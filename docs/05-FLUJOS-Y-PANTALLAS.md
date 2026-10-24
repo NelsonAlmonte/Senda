@@ -7,6 +7,8 @@
 ```text
 /auth/login
 /auth/register
+/onboarding
+/access-code
 /dashboard
 /groups
 /groups/:id
@@ -21,6 +23,8 @@
 ```
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
+
+**Estado implementado (2026-10-24):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`.
 
 ## Flujo A — Registro e inicio de sesión
 
@@ -38,13 +42,15 @@ Registro → Supabase Auth → sesión → elegir acción inicial
 
 ```text
 Usuario autenticado → crear o seleccionar grupo (nombre, FAMILY o CARE_CENTER)
-  → decidir “Configurar dispositivo ahora” o “Configurar después”
   → alta paciente → crear patient_access ADMIN para creador autorizado
-  → si eligió ahora: continuar a registro simulado y asignación
+  → decidir “Configurar dispositivo ahora” o “Configurar después”
+  → si eligió ahora: introducir un serial simulado preexistente y crear la asignación
   → si eligió después: dashboard con paciente y estado SIN DISPOSITIVO
 ```
 
-Para un centro: `type=CARE_CENTER`; para hogar: `type=FAMILY`. No añadir administración hospitalaria. El primer paciente puede crear el contexto; los dispositivos o pacientes siguientes deben poder reutilizar un grupo existente. Un paciente forma parte de un contexto grupal, pero sus permisos no son heredados de todos los miembros del grupo.
+La interfaz presenta este recorrido en una sola página con tres pasos visibles: **Grupo**, **Paciente** y **Dispositivo**, y permite volver del segundo al primero. Para un centro: `type=CARE_CENTER`; para hogar: `type=FAMILY`. No añadir administración hospitalaria. Con la alternativa simple aprobada, un grupo nuevo se persiste atómicamente junto con su primer paciente; los pacientes siguientes pueden reutilizar un grupo existente. Un paciente forma parte de un contexto grupal, pero sus permisos no son heredados de todos los miembros del grupo.
+
+En el dashboard, **Agregar paciente** abre el asistente priorizando un grupo existente, mientras **Crear grupo** prioriza un contexto nuevo. Ambas acciones conservan el alta del paciente dentro del mismo recorrido, porque el MVP no mantiene grupos vacíos. **Ingresar código** permanece como una acción independiente.
 
 Posponer el dispositivo no revierte el alta del grupo ni del paciente. El dashboard debe mostrar un aviso pequeño y accionable bajo el paciente: **Sin dispositivo configurado** + **Configurar ahora**. No presentar ubicación, riesgo `NORMAL` ni monitoreo activo hasta que exista una asignación y datos válidos.
 
@@ -52,7 +58,7 @@ Posponer el dispositivo no revierte el alta del grupo ni del paciente. El dashbo
 
 ```text
 ADMIN elige configurar ahora durante el onboarding o retoma “Configurar ahora” desde Juan
-    → registra/activa una unidad simulada
+    → introduce el serial de una unidad simulada preexistente
     → asigna el dispositivo simulado a Juan
     → Juan tiene asignación activa
     → usuario autorizado abre /patients/:id/map
@@ -84,11 +90,11 @@ ADMIN → /patients/:id/access → generar código MONITOR para ese paciente
     → invitación PENDING → compartir código fuera de la aplicación
     → destinatario crea cuenta o inicia sesión
     → “Ingresar un código de acceso” → revisar información mínima
-    → ACCEPTED / DECLINED
-    → si ACCEPTED, crear patient_access MONITOR solo para ese paciente
+    → ACCEPTED
+    → crear patient_access MONITOR solo para ese paciente
 ```
 
-No usar el mero código como autorización definitiva ni como membresía del grupo. En el UI, revelar solo información mínima antes de la aceptación. La invitación por email y enlace se conserva como ampliación posterior.
+No usar el mero código como autorización definitiva ni como membresía del grupo. En el UI, revelar solo información mínima antes de la aceptación. La invitación por email/enlace y la acción explícita `DECLINED` se conservan como ampliaciones posteriores sin cambiar el vocabulario aprobado.
 
 ## Flujo F — Consulta de alertas
 
@@ -105,10 +111,13 @@ Alertas abiertas deben mostrar nivel, última lectura válida, cuándo comenzó 
 
 | Ruta | Contenido imprescindible |
 |---|---|
-| `/dashboard` | Pacientes autorizados, riesgo conocido, conectividad, última actualización y aviso accionable cuando falta dispositivo |
-| `/groups` | Lista/creación de contextos FAMILY o CARE_CENTER |
+| `/onboarding` | Elección inicial entre registrar dispositivo o monitorear con un código; ambas acciones siguen disponibles después |
+| `/access-code` | Entrada, vista previa mínima y aceptación de un código de acceso `MONITOR` |
+| `/dashboard` | Pacientes autorizados, riesgo conocido, conectividad, última actualización, acciones separadas de alta y aviso accionable cuando falta dispositivo |
+| `/groups` | Asistente de grupo nuevo/existente, paciente y configuración opcional del dispositivo |
 | `/groups/:id` | Datos básicos del grupo y pacientes del contexto que el usuario está autorizado a administrar/ver |
 | `/patients/:id` | Ficha mínima, últimos indicadores y accesos a módulos |
+| `/patients/:id/device` | Estado de asignación y formulario de serial simulado; solo para `ADMIN` |
 | `/patients/:id/map` | Posición, timestamp, radio/zonas, modo simulación controlado |
 | `/patients/:id/history` | Recorrido consultable en intervalo, origen de datos |
 | `/patients/:id/alerts` | Episodios, severidad, inicio, actualización y resolución |

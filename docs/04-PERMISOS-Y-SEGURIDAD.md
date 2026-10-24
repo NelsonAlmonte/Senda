@@ -24,13 +24,15 @@ La tabla `group_members` **no es obligatoria en la fase inicial**. Si aparece de
 ## Políticas RLS mínimas
 
 1. **`patients SELECT`**: usuarios con un `patient_access` activo para ese paciente; incluir flujo controlado de creación administrativa sin abrir lecturas globales.
-2. **`locations SELECT`**: solo si la asignación histórica apunta a un paciente con acceso activo del usuario.
-3. **`safe_zones SELECT`**: usuarios con acceso al paciente.
-4. **`safe_zones INSERT/UPDATE/DELETE`**: `ADMIN` o `MONITOR` autorizado.
-5. **`alert_episodes SELECT`**: usuarios con acceso al paciente.
-6. **`patient_access SELECT`**: según necesidad de interfaz; limitar exposición de correos de terceros.
-7. **`patient_access INSERT/UPDATE/DELETE`**: prohibir CRUD abierto desde cliente; usar operación atómica autorizada.
-8. **`devices` / `device_assignments`**: vistas/operaciones específicas, no listado completo de inventario ajeno.
+2. **`devices` y `device_assignments SELECT`**: solo si la asignación apunta a un paciente con `patient_access` activo. El inventario sin asignar no se expone.
+3. **Asignación de dispositivo**: RPC autenticada que exige `ADMIN`; el cliente no recibe permisos directos de inserción o actualización sobre inventario/asignaciones.
+4. **`locations SELECT`**: solo si la asignación histórica apunta a un paciente con acceso activo del usuario.
+5. **`safe_zones SELECT`**: usuarios con acceso al paciente.
+6. **`safe_zones INSERT/UPDATE/DELETE`**: `ADMIN` o `MONITOR` autorizado.
+7. **`alert_episodes SELECT`**: usuarios con acceso al paciente.
+8. **`patient_access SELECT`**: según necesidad de interfaz; limitar exposición de correos de terceros.
+9. **`patient_access INSERT/UPDATE/DELETE`**: prohibir CRUD abierto desde cliente; usar operación atómica autorizada.
+10. **`devices` / `device_assignments`**: vistas/operaciones específicas, no listado completo de inventario ajeno.
 9. **`push_subscriptions`**: cada usuario gestiona únicamente sus propias suscripciones; el envío masivo se ejecuta con backend autorizado.
 
 Preferir RLS y constraints sobre una proliferación de Edge Functions. Las funciones SQL sensibles deben asegurar permisos de ejecución y seguridad del `search_path`; revisar especialmente cualquier `SECURITY DEFINER`.
@@ -62,6 +64,8 @@ En transacción crea patient_access MONITOR y marca ACCEPTED
 No confiar únicamente en la presencia del código o en el estado visual de un botón. Una invitación se acepta **una sola vez**; no permitir reuso ni que un usuario invitado a Juan obtenga por error permiso sobre Rosa. El código no concede acceso al grupo ni a sus demás pacientes. El flujo `DECLINED` no concede acceso.
 
 La entrega por email y enlace seguro permanece como ampliación posterior. En ese flujo se valida además que la cuenta use el mismo email verificado de la invitación.
+
+**Estado implementado (2026-10-24):** las RPC de generación, vista previa y aceptación validan la sesión y los permisos en PostgreSQL. Solo se guarda el hash del código, la vista previa revela nombre mínimo del paciente y contexto, y la aceptación crea `patient_access MONITOR` y marca la invitación `ACCEPTED` en una misma transacción.
 
 ## Revocación
 

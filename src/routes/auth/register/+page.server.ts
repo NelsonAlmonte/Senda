@@ -36,7 +36,7 @@ export const actions: Actions = {
 			});
 		}
 
-		const next = safeRedirectPath(url.searchParams.get('next'));
+		const next = safeRedirectPath(url.searchParams.get('next'), '/onboarding');
 		const confirmationUrl = new URL('/auth/confirm', url.origin);
 		confirmationUrl.searchParams.set('next', next);
 

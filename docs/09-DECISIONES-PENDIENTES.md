@@ -21,6 +21,8 @@ Esta página distingue **acuerdos explícitos** de **recomendaciones** y evita q
 | Datos                      | Paciente central; grupos FAMILY/CARE_CENTER como contexto ligero                                                                                                                                                                           |
 | Administración de grupos  | Para el MVP cada grupo tendrá un único `owner_user_id`. `group_members` queda aplazado hasta que se apruebe una necesidad real de varios administradores; nunca sustituirá `patient_access`.                                                |
 | Permisos                   | `patient_access` por paciente; `ADMIN` y `MONITOR` pueden configurar geocercas                                                                                                                                                             |
+| Onboarding                 | Tras crear la cuenta se ofrecen las acciones de configurar dispositivo o ingresar código; no son tipos permanentes de cuenta. El grupo puede ser nuevo o existente y el dispositivo puede configurarse ahora o después.                    |
+| Código de acceso           | Código de un solo uso asociado a un paciente concreto; el flujo inicial concede `MONITOR` y no crea membresía general del grupo.                                                                                                         |
 | Invitación                 | PENDING → ACCEPTED o DECLINED; sin estado EXPIRED                                                                                                                                                                                          |
 | Geofencing                 | Círculos; confirmar salida con dos lecturas válidas y tolerancia de GPS                                                                                                                                                                    |
 | Ubicación                  | Cada 30 s inicialmente, configurable; tras 3 min sin datos válidos, STALE                                                                                                                                                                  |
@@ -34,7 +36,7 @@ Esta página distingue **acuerdos explícitos** de **recomendaciones** y evita q
 2. **Alertas:** todavía no se han ratificado umbrales 5/15/30 min, 500/1000 m, precisión GPS aceptable ni margen/histeresis exacto. Solo es seguro afirmar que habrá niveles y reglas basadas en tiempo/distancia.
 3. **Geocercas:** una o varias zonas activas por paciente; la propuesta actual soporta múltiples con regla de unión.
 4. **Lecturas:** idempotencia, datos retrasados/futuros, saltos físicamente imposibles y confirmación de reingreso.
-5. **Invitaciones:** decidir cómo enviar correos personalizados con Supabase + Gmail y cómo un ADMIN invalida una invitación PENDING; no crear estado EXPIRED.
+5. **Invitaciones por email:** el acceso inicial por código ya está definido. Queda decidir cómo enviar correos personalizados con Supabase + Gmail y cómo un ADMIN invalida una invitación PENDING; no crear estado EXPIRED.
 6. **Notificaciones:** nivel mínimo de envío Web Push, estrategia antispam/reintento y mecanismo de envío de servidor.
 7. **Aspecto visual:** colores definitivos, tipografía y componentes (shadcn-svelte/Lucide son recomendaciones, no confirmaciones explícitas).
 8. **Privacidad:** retención de historial, exportación/eliminación de datos y procedimiento de consentimiento/autorización para uso real (en simulaciones, trabajar con datos ficticios).
@@ -54,3 +56,9 @@ En la versión aportada de `Proyecto Final.pdf`, el objetivo general y apartados
 - Acuerdos posteriores de arquitectura: elección Supabase/SvelteKit/HTTPS, modelado paciente-céntrico, notificaciones y simulador.
 
 Estos documentos `.md` son un **punto de partida operativo**, no un sustituto del documento académico ni una decisión unilateral sobre los pendientes.
+
+## E. Estado temporal del entorno de desarrollo
+
+- **Confirmación de correo:** el 2026-10-24 se desactivó temporalmente en Supabase de desarrollo porque el enlace de confirmación no funcionó. El registro sin confirmación se validó manualmente, pero esto no modifica el requisito de usar correo verificado para invitaciones. Resolver y volver a probar la confirmación antes de Fase 5 y antes de considerar Auth validado para despliegue.
+- **Flujo Git:** cada historia se desarrolla en una rama `feat/`, `fix/`, `docs/`, `refactor/`, `test/` o `chore/`; los commits siguen Conventional Commits y las operaciones de commit/push/pull/merge/rebase se coordinan con el responsable del repositorio. El detalle operativo está en `AGENTS.md` y `docs/08-PLAN-Y-PRUEBAS.md`.
+- **Supabase de desarrollo:** el 2026-10-24 se aplicaron las migraciones de perfiles y onboarding de pacientes. La suite RLS pasa 22 casos y la creación de grupo + paciente fue validada manualmente desde la PWA. El hardening adicional del asesor de seguridad queda como trabajo posterior y no bloquea el MVP.

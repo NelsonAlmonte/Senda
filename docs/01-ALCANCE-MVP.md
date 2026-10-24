@@ -16,8 +16,8 @@ El documento `Proyecto Final.pdf` comprende capítulos I–III en la versión re
 2. Grupo ligero de tipo `FAMILY` o `CARE_CENTER`, con pacientes asociados; **sin módulo institucional**.
 3. Alta, consulta y edición de pacientes por persona autorizada.
 4. Acceso de múltiples usuarios a un paciente mediante `patient_access` con roles `ADMIN` y `MONITOR`.
-5. Invitaciones a monitorear un paciente por email y enlace seguro; aceptar o rechazar.
-6. Dispositivos **simulados** asignables a pacientes en la base de datos.
+5. Acceso compartido a un paciente mediante código de un solo uso; invitaciones por email y enlace seguro como ampliación posterior del mismo modelo.
+6. Dispositivos **simulados** registrables y asignables a pacientes en la base de datos, con opción de completar la configuración ahora o después del alta del paciente.
 7. Envío HTTPS de ubicaciones por dos métodos de prueba: click en Google Maps y simulador Node.js con rutas.
 8. Visualización de la última ubicación, antigüedad de datos e historial de posiciones.
 9. Geocercas **circulares** configurables por `ADMIN` y `MONITOR`.
@@ -27,7 +27,7 @@ El documento `Proyecto Final.pdf` comprende capítulos I–III en la versión re
 
 ## Fuera del alcance inicial
 
-- Firmware, provisioning, credenciales reales de IoT, QR, botón físico, claim, pairing y dispositivo en producción; se integrarán cuando el equipo físico esté disponible.
+- Firmware, provisioning, credenciales reales de IoT, QR, botón físico, claim, pairing físico y dispositivo en producción; el MVP solo representa de forma simulada el registro y la asignación.
 - Gestión de nómina, turnos, camas, habitaciones, facturación, historias clínicas, inventario institucional y módulos B2B.
 - Diagnóstico de Alzheimer, toma de decisiones médicas, aprendizaje automático clínico o vigilancia invasiva.
 - Modelos predictivos de IA complejos, GPS interior de alta precisión, rutas de rescate automáticas y conexión directa con emergencias.

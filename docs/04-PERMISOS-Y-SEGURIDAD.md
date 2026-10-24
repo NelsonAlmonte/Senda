@@ -48,20 +48,20 @@ El botón/click de simulación no puede aceptar coordenadas de un paciente ajeno
 ## Invitaciones de acceso
 
 ```text
-ADMIN del paciente crea invitación para un email
+ADMIN del paciente genera un código de acceso MONITOR
               ↓
-Servidor verifica ADMIN y guarda token_hash
+Servidor verifica ADMIN y guarda token_hash asociado al paciente
               ↓
-Destinatario recibe enlace
+Destinatario crea su cuenta o inicia sesión e introduce el código
               ↓
-Se autentica con el mismo email VERIFICADO
+Backend valida token, estado, paciente y vigencia del permiso del invitador
               ↓
-Backend valida token, email, estado y vigencia del permiso del invitador
-              ↓
-En transacción crea patient_access y marca ACCEPTED
+En transacción crea patient_access MONITOR y marca ACCEPTED
 ```
 
-No confiar únicamente en la presencia del token o en el estado visual de un botón. Una invitación se acepta **una sola vez**; no permitir reuso ni que un usuario invitado a Juan obtenga por error permiso sobre Rosa. El flujo `DECLINED` no concede acceso.
+No confiar únicamente en la presencia del código o en el estado visual de un botón. Una invitación se acepta **una sola vez**; no permitir reuso ni que un usuario invitado a Juan obtenga por error permiso sobre Rosa. El código no concede acceso al grupo ni a sus demás pacientes. El flujo `DECLINED` no concede acceso.
+
+La entrega por email y enlace seguro permanece como ampliación posterior. En ese flujo se valida además que la cuenta use el mismo email verificado de la invitación.
 
 ## Revocación
 

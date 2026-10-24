@@ -76,7 +76,7 @@ kind           SIMULATED | PHYSICAL (PHYSICAL reservado para futuro)
 created_at     timestamptz
 ```
 
-**No implementar aún** hardware_id, claim, estados `UNCLAIMED/CLAIMED/ASSIGNED` ni credenciales de hardware. Esas piezas siguen concebidas para integración posterior, pero no deben bloquear el MVP.
+**No implementar aún** hardware_id, credenciales reales ni el ciclo físico completo de claim/pairing. El onboarding puede simular el registro de una unidad mediante un identificador de prueba y crear su asignación al paciente. Un paciente puede existir sin asignación activa y completar esta configuración más adelante.
 
 ### 6. `device_assignments`
 
@@ -147,7 +147,7 @@ Un único episodio `OPEN` por paciente/tipo de evento de salida (restricción pa
 ```text
 id           uuid PK
 patient_id   uuid FK -> patients.id
-email        citext o text normalizado
+email        citext o text normalizado null
 access_role  ADMIN | MONITOR
 status       PENDING | ACCEPTED | DECLINED
 token_hash   text UNIQUE
@@ -157,7 +157,7 @@ accepted_at  timestamptz null
 declined_at  timestamptz null
 ```
 
-No agregar estado `EXPIRED`. El token se entrega en el enlace y solo se almacena su hash. Para cancelar una invitación pendiente sin alterar el vocabulario de estados, definir más adelante una invalidación controlada de token o eliminación autorizada (ver `09-DECISIONES-PENDIENTES.md`).
+No agregar estado `EXPIRED`. El token puede representarse como código introducido manualmente o entregarse mediante un enlace; solo se almacena su hash y se acepta una vez. El flujo inicial por código concede `MONITOR` exclusivamente sobre `patient_id` y no crea membresía del grupo. `email` es obligatorio cuando el envío sea por correo y puede ser nulo para un código compartido manualmente. Para cancelar una invitación pendiente sin alterar el vocabulario de estados, definir más adelante una invalidación controlada de token o eliminación autorizada (ver `09-DECISIONES-PENDIENTES.md`).
 
 ### 11. `push_subscriptions` (cuando se implemente Web Push)
 

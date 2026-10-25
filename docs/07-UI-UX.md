@@ -60,7 +60,17 @@ No usar únicamente un punto verde/rojo para comunicar estado; incluir texto. El
 
 **Estado implementado (2026-10-24):** `/onboarding` presenta las dos acciones como opciones equivalentes y no permanentes; `/groups` separa Grupo, Paciente y Dispositivo en un asistente con progreso y retorno; `/access-code` usa divulgación progresiva para revisar la información mínima antes de aceptar. En las tarjetas del dashboard, el permiso se expresa como **Tu acceso: Administrador/Monitor** y se separa de la identidad del paciente para no atribuirle ese rol por error.
 
-El mapa de última ubicación reserva su espacio durante la carga para evitar saltos, ofrece recuperación ante error y conserva estados útiles sin dispositivo o sin lecturas. La frescura se comunica con texto además de color. Cuando existe precisión GPS, el círculo azul se identifica expresamente como precisión y no como geocerca o zona segura.
+El mapa de última ubicación reserva su espacio durante la carga para evitar saltos, ofrece recuperación ante error y conserva estados útiles sin dispositivo o sin lecturas. La frescura se comunica con texto además de color. Cuando existe precisión GPS, el círculo azul se identifica expresamente como precisión y no como geocerca o zona segura. Las geocercas activas se muestran con círculos verdes no interactivos y una lista textual de nombres y radios; el mapa de monitoreo usa la misma interacción directa sin `Ctrl` que el editor.
+
+## Editor de geocercas
+
+- En móvil, el mapa aparece antes de la lista y del formulario. Los controles mantienen objetivos táctiles cómodos y separación suficiente.
+- El centro se elige en un modo explícito por toque/click y el círculo provisional también se puede arrastrar. Latitud, longitud y radio numéricos permiten completar la misma tarea con teclado, por lo que el arrastre nunca es obligatorio.
+- El slider actualiza el círculo provisional de inmediato. El ajuste de zoom se realiza al terminar el cambio para evitar que el mapa pelee con el usuario durante cada movimiento.
+- La zona seleccionada, las demás activas, la provisional y las inactivas tienen distinta jerarquía visual, acompañada siempre de nombre y estado textual; el color nunca es la única señal.
+- Guardar, error y carga producen feedback accesible. Desactivar y archivar son acciones diferentes; archivar requiere confirmación y conserva la información.
+
+**Criterios aplicados mediante UI UX Pro Max (2026-10-25):** el círculo provisional admite arrastre, pero el gesto no es obligatorio: **Cambiar centro**, el toque/click sobre cualquier área y las coordenadas numéricas ofrecen alternativas de un solo puntero y teclado. El editor captura directamente los gestos iniciados sobre el mapa para evitar la exigencia de `Ctrl`; el desplazamiento de la página sigue disponible fuera del mapa. También se mantienen foco visible, etiquetas asociadas, controles táctiles amplios, estados dinámicos anunciados y feedback de envío.
 
 ## Experiencia PWA
 

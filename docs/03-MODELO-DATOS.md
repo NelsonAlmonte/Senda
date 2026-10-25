@@ -119,17 +119,21 @@ source                SIMULATOR | MANUAL | DEVICE
 ```text
 id             uuid PK
 patient_id     uuid FK -> patients.id
-name           text
-center_lat     double precision
-center_lng     double precision
-radius_m       double precision CHECK (radius_m > 0)
+name           text (1..60; único por paciente mientras no esté archivado)
+center_latitude  double precision CHECK (-90..90)
+center_longitude double precision CHECK (-180..180)
+radius_m       double precision CHECK (50..5000)
 is_active      boolean DEFAULT true
 created_at     timestamptz
 updated_at     timestamptz
+created_by     uuid FK -> auth.users.id
 updated_by     uuid FK -> auth.users.id
+archived_at    timestamptz null
 ```
 
-Solo círculos para el MVP. Si hay varias zonas activas, **estar dentro de cualquiera de ellas significa estar en una zona permitida** (comportamiento propuesto, validar si se decide limitar a una sola zona).
+Solo círculos para el MVP. Se permiten varias zonas activas sin un máximo artificial en base de datos: **estar dentro de cualquiera de ellas significa estar en una zona permitida**. Las zonas pueden superponerse. Desactivar conserva la zona editable; archivar fija `is_active=false`, conserva la fila como evidencia y permite reutilizar su nombre. Una zona archivada nunca participa en la evaluación.
+
+**Estado de implementación (2026-10-25):** la migración `20261025183035_patient_safe_zones.sql` está aplicada en Supabase de desarrollo. Crea la tabla, el índice parcial de nombres, RLS de lectura por `patient_access` y RPC para crear, editar, activar, desactivar y archivar. Las escrituras directas quedan revocadas; `ADMIN` y `MONITOR` usan las mismas RPC autorizadas. La suite pgTAP pasa 29 casos e incluye permisos negativos, múltiples zonas, validación de límites y archivo sin borrado.
 
 ### 9. `alert_episodes`
 

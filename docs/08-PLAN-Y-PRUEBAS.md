@@ -67,6 +67,8 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Aceptación:** superar casos R01–R19 aplicables, tras ratificar umbrales abiertos.
 
+**Estado completado (2026-10-25, historia 4A):** se implementó la configuración de múltiples geocercas circulares en `/patients/:id/safe-zones`, con radio 50–5,000 m, selección y arrastre del centro en Google Maps, alternativa numérica, activación/desactivación y archivo sin borrado. La migración `20261025183035_patient_safe_zones.sql` está aplicada en Supabase de desarrollo y añade `safe_zones`, RLS por paciente y RPC para `ADMIN`/`MONITOR`. La suite pgTAP pasa 29 casos: permisos negativos, nombres únicos, más de cinco zonas y conservación al archivar, entre otros. El usuario validó manualmente el editor y la visualización de las zonas activas en el mapa de monitoreo. El motor de riesgo, episodios, salida/reingreso y alertas no forman parte de 4A.
+
 ### Fase 5 — Compartición e invitaciones
 
 - Extender el código inicial con invitación por email y enlace, manteniendo `PENDING`, aceptar/rechazar y revocación de `patient_access`.

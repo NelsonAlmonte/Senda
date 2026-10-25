@@ -31,11 +31,23 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (!patient) httpError(404, 'Paciente no encontrado.');
 
 	const group = Array.isArray(patient.group) ? patient.group[0] : patient.group;
-	const { data: assignments, error: assignmentError } = await locals.supabase
-		.from('device_assignments')
-		.select('id, assigned_at, unassigned_at, device:devices!inner(id, serial_number, device_kind)')
-		.eq('patient_id', params.id)
-		.order('assigned_at', { ascending: true });
+	const [assignmentResult, safeZonesResult] = await Promise.all([
+		locals.supabase
+			.from('device_assignments')
+			.select(
+				'id, assigned_at, unassigned_at, device:devices!inner(id, serial_number, device_kind)'
+			)
+			.eq('patient_id', params.id)
+			.order('assigned_at', { ascending: true }),
+		locals.supabase
+			.from('safe_zones')
+			.select('id, name, center_latitude, center_longitude, radius_m')
+			.eq('patient_id', params.id)
+			.eq('is_active', true)
+			.is('archived_at', null)
+			.order('name', { ascending: true })
+	]);
+	const { data: assignments, error: assignmentError } = assignmentResult;
 
 	if (assignmentError) httpError(500, 'No pudimos consultar el dispositivo del paciente.');
 
@@ -45,6 +57,13 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 			? assignment.device[0]
 			: assignment.device
 		: null;
+	const safeZones = (safeZonesResult.data ?? []).map((zone) => ({
+		id: zone.id,
+		name: zone.name,
+		centerLatitude: zone.center_latitude,
+		centerLongitude: zone.center_longitude,
+		radiusM: zone.radius_m
+	}));
 
 	let locationsAvailable = true;
 	let latestLocation: {
@@ -139,6 +158,8 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 				: null,
 		latestLocation,
 		locationsAvailable,
+		safeZones,
+		safeZonesAvailable: !safeZonesResult.error,
 		locationHistory,
 		historyAvailable,
 		manualLocationSimulatorEnabled:

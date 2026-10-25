@@ -331,7 +331,7 @@
 						Reintentar
 					</a>
 				</div>
-			{:else if !latestLocation && !data.manualLocationSimulatorEnabled}
+			{:else if !latestLocation && !data.manualLocationSimulatorEnabled && data.safeZones.length === 0}
 				<div class="mt-8 rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
 					<h2 class="text-xl font-bold text-ink">Aún no hay ubicaciones</h2>
 					<p class="mt-2 max-w-2xl leading-7 text-muted">
@@ -349,12 +349,62 @@
 								accuracyM={latestLocation?.accuracyM ?? null}
 								{patientName}
 								{historySegments}
+								safeZones={data.safeZones}
 								hasLocation={latestLocation !== null}
 								manualSimulationEnabled={data.manualLocationSimulatorEnabled}
 								onSimulationPointChange={handleSimulationPointChange}
 								onReady={handleMapReady}
 							/>
 						{/key}
+
+						<section
+							class="rounded-2xl border border-ink/10 bg-white p-4 shadow-sm"
+							aria-labelledby="map-safe-zones-title"
+						>
+							<div class="flex flex-wrap items-center justify-between gap-3">
+								<div>
+									<h2 id="map-safe-zones-title" class="font-bold text-ink">Geocercas activas</h2>
+									{#if !data.safeZonesAvailable}
+										<p class="mt-1 text-sm leading-6 text-amber-900" role="alert">
+											No pudimos consultar las geocercas. La ubicación sigue disponible.
+										</p>
+									{:else if data.safeZones.length === 0}
+										<p class="mt-1 text-sm leading-6 text-muted">
+											No hay zonas activas para mostrar. Esto no significa que el paciente esté en
+											una zona segura.
+										</p>
+									{:else}
+										<p class="mt-1 flex items-center gap-2 text-sm leading-6 text-muted">
+											<span
+												class="size-3 shrink-0 rounded-full border-2 border-brand bg-brand/25"
+												aria-hidden="true"
+											></span>
+											{data.safeZones.length}
+											{data.safeZones.length === 1
+												? 'zona permitida visible'
+												: 'zonas permitidas visibles'}
+										</p>
+									{/if}
+								</div>
+								<a
+									href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
+									class="inline-flex min-h-11 items-center rounded-xl px-3 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								>
+									Configurar geocercas
+								</a>
+							</div>
+							{#if data.safeZones.length > 0}
+								<ul class="mt-3 flex flex-wrap gap-2" aria-label="Geocercas visibles en el mapa">
+									{#each data.safeZones as zone (zone.id)}
+										<li
+											class="rounded-full border border-brand/20 bg-surface-muted px-3 py-1.5 text-sm font-semibold text-ink"
+										>
+											{zone.name} · {zone.radiusM.toLocaleString('es-DO')} m
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</section>
 
 						{#if data.manualLocationSimulatorEnabled}
 							<section
@@ -472,7 +522,12 @@
 							<div class="rounded-2xl border border-amber-700/25 bg-amber-50 p-4">
 								<p class="font-bold text-amber-950">Aún no hay ubicaciones</p>
 								<p class="mt-1 text-sm leading-6 text-amber-950">
-									El dispositivo está listo. Usa el modo de prueba para enviar la primera lectura.
+									{#if data.manualLocationSimulatorEnabled}
+										El dispositivo está listo. Usa el modo de prueba para enviar la primera lectura.
+									{:else}
+										El mapa muestra las geocercas activas, pero todavía no existe una lectura de
+										ubicación.
+									{/if}
 								</p>
 							</div>
 						{:else if latestLocation.freshness === 'FRESH'}

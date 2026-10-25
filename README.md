@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fases 0–3 validadas. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código, la ingestión segura de ubicaciones simuladas y el mapa con historial y actualización Realtime están implementados. El historial presenta hasta 200 lecturas autorizadas separadas por asignación histórica; el usuario validó que el marcador y el recorrido se actualizan sin reconstruir el mapa. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 39 para ubicaciones. Las geocercas y las alertas aún no están implementadas.
+> **Estado:** Fases 0–3 y reproducción de rutas validadas. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código, la ingestión segura de ubicaciones simuladas y el mapa con historial y actualización Realtime están implementados. El historial presenta hasta 200 lecturas autorizadas separadas por asignación histórica; el usuario validó que el marcador y el recorrido se actualizan sin reconstruir el mapa. El simulador Node reproduce una ruta ficticia persistiendo cada punto y su ejecución completa fue validada manualmente. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 39 para ubicaciones. Las geocercas y las alertas aún no están implementadas.
 
 ## Propósito
 
@@ -131,6 +131,20 @@ npm run simulate:location -- <patient-id> 18.4861 -69.9312 8.5
 ```
 
 El script inicia sesión con Supabase Auth y llama la RPC autorizada. No usa `service_role`; una cuenta `MONITOR`, un paciente ajeno o un paciente sin dispositivo simulado activo son rechazados.
+
+Reproduce la ruta ficticia incluida enviando una lectura cada 30 segundos:
+
+```sh
+npm run simulate:route -- <patient-id>
+```
+
+Para una demostración acelerada, indica el intervalo en milisegundos:
+
+```sh
+npm run simulate:route -- <patient-id> 2000
+```
+
+La ruta contiene 12 puntos y se ejecuta una sola vez. Cada punto pasa por la misma RPC y queda persistido; usa `Ctrl+C` para detener la reproducción de forma controlada.
 
 Para comprobar Realtime, abre `/patients/<patient-id>/map` con una cuenta autorizada y espera el estado **Actualizaciones automáticas activas**. Ejecuta de nuevo el simulador con coordenadas distintas sin recargar la página. El marcador, las coordenadas, la hora y la precisión deben actualizarse automáticamente. Un segundo navegador autenticado como `MONITOR` del mismo paciente debe recibir la misma lectura; un usuario sin `patient_access` no puede abrir el mapa ni recibir sus filas por Postgres Changes.
 

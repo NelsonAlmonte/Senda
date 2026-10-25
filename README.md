@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fases 0–3 y reproducción de rutas validadas. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código, la ingestión segura de ubicaciones simuladas y el mapa con historial y actualización Realtime están implementados. El historial presenta hasta 200 lecturas autorizadas separadas por asignación histórica; el usuario validó que el marcador y el recorrido se actualizan sin reconstruir el mapa. El simulador Node reproduce una ruta ficticia persistiendo cada punto y su ejecución completa fue validada manualmente. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 39 para ubicaciones. Las geocercas y las alertas aún no están implementadas.
+> **Estado:** Fases 0–3 implementadas y los simuladores de una lectura, ruta y selección manual en mapa validados. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código, la ingestión segura de ubicaciones simuladas y el mapa con historial y actualización Realtime están implementados. El historial presenta hasta 200 lecturas autorizadas separadas por asignación histórica; el usuario validó que el marcador y el recorrido se actualizan sin reconstruir el mapa. El simulador Node reproduce una ruta ficticia persistiendo cada punto y su ejecución completa fue validada manualmente. La simulación manual está limitada a `ADMIN`, se habilita mediante una variable privada de entorno y persiste por la misma RPC; el usuario validó su selección, confirmación, persistencia y actualización en el mapa. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 39 para ubicaciones. Las geocercas y las alertas aún no están implementadas.
 
 ## Propósito
 
@@ -122,6 +122,7 @@ Tras aplicar la migración de ingestión en Supabase de desarrollo, configura en
 ```dotenv
 SENDA_SIMULATOR_EMAIL=simulator-admin@example.test
 SENDA_SIMULATOR_PASSWORD=development-only-password
+SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR=true
 ```
 
 Envía una lectura indicando el UUID del paciente, coordenadas y precisión opcional en metros:
@@ -149,3 +150,5 @@ La ruta contiene 12 puntos y se ejecuta una sola vez. Cada punto pasa por la mis
 Para comprobar Realtime, abre `/patients/<patient-id>/map` con una cuenta autorizada y espera el estado **Actualizaciones automáticas activas**. Ejecuta de nuevo el simulador con coordenadas distintas sin recargar la página. El marcador, las coordenadas, la hora y la precisión deben actualizarse automáticamente. Un segundo navegador autenticado como `MONITOR` del mismo paciente debe recibir la misma lectura; un usuario sin `patient_access` no puede abrir el mapa ni recibir sus filas por Postgres Changes.
 
 El historial del mapa consulta como máximo las 200 lecturas más recientes del paciente y las ordena por fecha de captura. Las lecturas de asignaciones distintas se dibujan como trazos separados para no crear un recorrido falso al cambiar de dispositivo. Una lectura nueva recibida por Realtime se añade al resumen y al trazo sin recargar la página.
+
+Con `SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR=true`, una cuenta con acceso `ADMIN` y un dispositivo simulado activo verá **Modo de prueba** en `/patients/<patient-id>/map`. Activa la selección, toca o haz clic en el mapa —o escribe coordenadas válidas— y confirma. El marcador amarillo es únicamente una vista previa; el punto oficial cambia cuando la RPC persiste la lectura `MANUAL` y Realtime la entrega. `MONITOR` no ve este control. Mantén la variable en `false` o sin definir fuera de entornos de prueba.

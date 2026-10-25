@@ -16,6 +16,17 @@
 	export type MapHistorySegment = MapHistoryPoint[];
 
 	export type MapLocationUpdater = (location: MapLocationUpdate) => void;
+
+	export type MapSimulationPoint = {
+		latitude: number;
+		longitude: number;
+	};
+
+	export type PatientLocationMapController = {
+		updateLocation: MapLocationUpdater;
+		setSimulationMode: (enabled: boolean) => void;
+		setSimulationPoint: (point: MapSimulationPoint | null) => void;
+	};
 </script>
 
 <script lang="ts">
@@ -29,10 +40,26 @@
 		accuracyM: number | null;
 		patientName: string;
 		historySegments: MapHistorySegment[];
-		onReady?: (updater: MapLocationUpdater | null) => void;
+		hasLocation?: boolean;
+		manualSimulationEnabled?: boolean;
+		onSimulationPointChange?: (point: MapSimulationPoint) => void;
+		onReady?: (controller: PatientLocationMapController | null) => void;
+	};
+	type MapClickEvent = {
+		latLng: { lat: () => number; lng: () => number } | null;
 	};
 
-	let { latitude, longitude, accuracyM, patientName, historySegments, onReady }: Props = $props();
+	let {
+		latitude,
+		longitude,
+		accuracyM,
+		patientName,
+		historySegments,
+		hasLocation = true,
+		manualSimulationEnabled = false,
+		onSimulationPointChange,
+		onReady
+	}: Props = $props();
 	let mapState = $state<'LOADING' | 'READY' | 'ERROR'>('LOADING');
 	let retryKey = $state(0);
 
@@ -45,6 +72,9 @@
 				accuracyM,
 				markerTitle: `Última ubicación registrada de ${patientName}`,
 				historySegments,
+				hasLocation,
+				manualSimulationEnabled,
+				onSimulationPointChange,
 				onReady
 			}));
 			let disposed = false;
@@ -80,7 +110,7 @@
 					});
 
 					const marker = new AdvancedMarkerElement({
-						map,
+						map: initialState.hasLocation ? map : null,
 						position: initialState.position,
 						title: initialState.markerTitle,
 						content: pin
@@ -90,7 +120,10 @@
 						map,
 						center: initialState.position,
 						radius: initialState.accuracyM ?? 0,
-						visible: initialState.accuracyM !== null && initialState.accuracyM > 0,
+						visible:
+							initialState.hasLocation &&
+							initialState.accuracyM !== null &&
+							initialState.accuracyM > 0,
 						clickable: false,
 						fillColor: '#bdd8e9',
 						fillOpacity: 0.24,
@@ -135,6 +168,7 @@
 
 					const updateLocation: MapLocationUpdater = (location) => {
 						const nextPosition = { lat: location.latitude, lng: location.longitude };
+						marker.map = map;
 						marker.position = nextPosition;
 						marker.title = `Última ubicación registrada de ${location.patientName}`;
 						accuracyCircle.setCenter(nextPosition);
@@ -144,13 +178,75 @@
 						if (location.panToLocation !== false) map.panTo(nextPosition);
 					};
 
+					let simulationMode = false;
+					let simulationMarker: InstanceType<typeof AdvancedMarkerElement> | null = null;
+					const simulationPin = initialState.manualSimulationEnabled
+						? new PinElement({
+								background: '#fff3c4',
+								borderColor: '#92400e',
+								glyphColor: '#92400e',
+								scale: 1.05
+							})
+						: null;
+
+					const setSimulationPoint = (point: MapSimulationPoint | null) => {
+						if (!initialState.manualSimulationEnabled) return;
+
+						if (!point) {
+							if (simulationMarker) simulationMarker.map = null;
+							return;
+						}
+
+						const position = { lat: point.latitude, lng: point.longitude };
+						if (simulationMarker) {
+							simulationMarker.map = map;
+							simulationMarker.position = position;
+						} else if (simulationPin) {
+							simulationMarker = new AdvancedMarkerElement({
+								map,
+								position,
+								title: 'Ubicación simulada pendiente de confirmar',
+								content: simulationPin
+							});
+						}
+					};
+
+					const setSimulationMode = (enabled: boolean) => {
+						simulationMode = initialState.manualSimulationEnabled && enabled;
+						map.setOptions({ draggableCursor: simulationMode ? 'crosshair' : null });
+					};
+
+					const mapClickListener = initialState.manualSimulationEnabled
+						? map.addListener('click', (event: MapClickEvent) => {
+								if (!simulationMode || !event.latLng) return;
+
+								const point = {
+									latitude: event.latLng.lat(),
+									longitude: event.latLng.lng()
+								};
+								setSimulationPoint(point);
+								initialState.onSimulationPointChange?.(point);
+							})
+						: null;
+
+					const controller: PatientLocationMapController = {
+						updateLocation,
+						setSimulationMode,
+						setSimulationPoint
+					};
+
 					removeMapResources = () => {
+						mapClickListener?.remove();
+						if (simulationMarker) {
+							simulationMarker.map = null;
+							simulationMarker.remove();
+						}
 						marker.map = null;
 						marker.remove();
 						accuracyCircle.setMap(null);
 						for (const polyline of routePolylines) polyline.setMap(null);
 					};
-					initialState.onReady?.(updateLocation);
+					initialState.onReady?.(controller);
 
 					mapState = 'READY';
 				} catch {
@@ -170,13 +266,13 @@
 
 <section
 	class="relative min-h-88 overflow-hidden rounded-3xl border border-ink/10 bg-surface-muted shadow-lg shadow-brand/5 sm:min-h-112"
-	aria-label={`Mapa de la última ubicación y el recorrido reciente de ${patientName}`}
+	aria-label={`Mapa de ubicación y recorrido reciente de ${patientName}`}
 	aria-busy={mapState === 'LOADING'}
 >
 	<div
 		class="absolute inset-0"
 		{@attach createMapAttachment(retryKey)}
-		aria-label={`Google Maps con la última ubicación y el recorrido reciente de ${patientName}`}
+		aria-label={`Google Maps con la ubicación y el recorrido reciente de ${patientName}`}
 	></div>
 
 	{#if mapState === 'LOADING'}
@@ -190,7 +286,7 @@
 					aria-hidden="true"
 				></div>
 				<p class="mt-4 font-bold text-ink">Cargando mapa…</p>
-				<p class="mt-1 text-sm leading-6 text-muted">La ubicación ya está disponible.</p>
+				<p class="mt-1 text-sm leading-6 text-muted">Preparando la ubicación del paciente.</p>
 			</div>
 		</div>
 	{:else if mapState === 'ERROR'}

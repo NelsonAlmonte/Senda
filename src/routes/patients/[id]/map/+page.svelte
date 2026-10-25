@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import PatientLocationRealtime, {
 		type LocationRealtimeRow,
@@ -7,13 +8,17 @@
 	import { presentLocationTime } from '#lib/locations/presentation.js';
 	import PatientLocationMap, {
 		type MapHistorySegment,
-		type MapLocationUpdater
+		type MapSimulationPoint,
+		type PatientLocationMapController
 	} from '#lib/maps/PatientLocationMap.svelte';
 	import type { PageProps } from './$types';
 
 	type LatestLocation = NonNullable<PageProps['data']['latestLocation']>;
 	type HistoryLocation = PageProps['data']['locationHistory'][number];
 	type RealtimeState = 'IDLE' | LocationRealtimeState;
+	type SimulatorFeedback = { kind: 'success' | 'error'; message: string };
+
+	const defaultMapCenter = { latitude: 18.4861, longitude: -69.9312 };
 
 	let { data }: PageProps = $props();
 	let patientName = $derived(`${data.patient.firstName} ${data.patient.lastName}`);
@@ -21,7 +26,18 @@
 	let locationHistory = $derived(data.locationHistory);
 	let historySegments = $derived(buildHistorySegments(locationHistory));
 	let realtimeState = $state<RealtimeState>('IDLE');
-	let mapLocationUpdater: MapLocationUpdater | null = null;
+	let mapController = $state<PatientLocationMapController | null>(null);
+	let simulationMode = $state(false);
+	let simulatorSubmitting = $state(false);
+	let simulatorFeedback = $state<SimulatorFeedback | null>(null);
+	let latitudeInput = $state<number | undefined>();
+	let longitudeInput = $state<number | undefined>();
+	let selectedSimulationPoint = $derived(parseSimulationPoint(latitudeInput, longitudeInput));
+	let mapCenter = $derived(
+		latestLocation
+			? { latitude: latestLocation.latitude, longitude: latestLocation.longitude }
+			: defaultMapCenter
+	);
 
 	function isNewerLocation(candidate: LatestLocation, current: LatestLocation | null): boolean {
 		if (!current) return true;
@@ -93,7 +109,7 @@
 		if (isNewerLocation(candidate, latestLocation)) latestLocation = candidate;
 
 		const markerLocation = latestLocation ?? candidate;
-		mapLocationUpdater?.({
+		mapController?.updateLocation({
 			latitude: markerLocation.latitude,
 			longitude: markerLocation.longitude,
 			accuracyM: markerLocation.accuracyM,
@@ -106,11 +122,11 @@
 		realtimeState = state;
 	}
 
-	function handleMapReady(updater: MapLocationUpdater | null) {
-		mapLocationUpdater = updater;
-		if (!updater || !latestLocation) return;
+	function handleMapReady(controller: PatientLocationMapController | null) {
+		mapController = controller;
+		if (!controller || !latestLocation) return;
 
-		updater({
+		controller.updateLocation({
 			latitude: latestLocation.latitude,
 			longitude: latestLocation.longitude,
 			accuracyM: latestLocation.accuracyM,
@@ -119,6 +135,101 @@
 			panToLocation: false
 		});
 	}
+
+	function parseSimulationPoint(
+		latitudeValue: number | undefined,
+		longitudeValue: number | undefined
+	): MapSimulationPoint | null {
+		if (
+			latitudeValue === undefined ||
+			longitudeValue === undefined ||
+			!Number.isFinite(latitudeValue) ||
+			!Number.isFinite(longitudeValue) ||
+			latitudeValue < -90 ||
+			latitudeValue > 90 ||
+			longitudeValue < -180 ||
+			longitudeValue > 180
+		) {
+			return null;
+		}
+
+		return { latitude: latitudeValue, longitude: longitudeValue };
+	}
+
+	function activateSimulationMode() {
+		if (!mapController) return;
+
+		simulationMode = true;
+		simulatorFeedback = null;
+		mapController.setSimulationMode(true);
+	}
+
+	function handleSimulationPointChange(point: MapSimulationPoint) {
+		latitudeInput = Number(point.latitude.toFixed(6));
+		longitudeInput = Number(point.longitude.toFixed(6));
+		simulatorFeedback = null;
+	}
+
+	function syncSimulationPointFromInputs() {
+		simulatorFeedback = null;
+		mapController?.setSimulationPoint(parseSimulationPoint(latitudeInput, longitudeInput));
+	}
+
+	function handleLatitudeInput(event: Event & { currentTarget: HTMLInputElement }) {
+		latitudeInput = Number.isNaN(event.currentTarget.valueAsNumber)
+			? undefined
+			: event.currentTarget.valueAsNumber;
+		syncSimulationPointFromInputs();
+	}
+
+	function handleLongitudeInput(event: Event & { currentTarget: HTMLInputElement }) {
+		longitudeInput = Number.isNaN(event.currentTarget.valueAsNumber)
+			? undefined
+			: event.currentTarget.valueAsNumber;
+		syncSimulationPointFromInputs();
+	}
+
+	function resetSimulationSelection() {
+		simulationMode = false;
+		latitudeInput = undefined;
+		longitudeInput = undefined;
+		mapController?.setSimulationPoint(null);
+		mapController?.setSimulationMode(false);
+	}
+
+	function cancelSimulation() {
+		resetSimulationSelection();
+		simulatorFeedback = null;
+	}
+
+	const enhanceSimulation: SubmitFunction = () => {
+		simulatorSubmitting = true;
+		simulatorFeedback = null;
+
+		return async ({ result, update }) => {
+			simulatorSubmitting = false;
+
+			if (result.type === 'success') {
+				const resultData = result.data as { message?: string } | undefined;
+				resetSimulationSelection();
+				simulatorFeedback = {
+					kind: 'success',
+					message:
+						resultData?.message ??
+						'Ubicación simulada enviada. El mapa se actualizará al recibirla por Realtime.'
+				};
+			} else if (result.type === 'failure') {
+				const resultData = result.data as { message?: string } | undefined;
+				simulatorFeedback = {
+					kind: 'error',
+					message:
+						resultData?.message ?? 'No pudimos guardar la ubicación simulada. Inténtalo nuevamente.'
+				};
+			}
+
+			await update({ reset: false, refreshAll: false });
+		};
+	};
 </script>
 
 <svelte:head>
@@ -220,7 +331,7 @@
 						Reintentar
 					</a>
 				</div>
-			{:else if !latestLocation}
+			{:else if !latestLocation && !data.manualLocationSimulatorEnabled}
 				<div class="mt-8 rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
 					<h2 class="text-xl font-bold text-ink">Aún no hay ubicaciones</h2>
 					<p class="mt-2 max-w-2xl leading-7 text-muted">
@@ -230,19 +341,141 @@
 				</div>
 			{:else}
 				<div class="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-					{#key data.assignment.id}
-						<PatientLocationMap
-							latitude={latestLocation.latitude}
-							longitude={latestLocation.longitude}
-							accuracyM={latestLocation.accuracyM}
-							{patientName}
-							{historySegments}
-							onReady={handleMapReady}
-						/>
-					{/key}
+					<div class="min-w-0 space-y-6">
+						{#key data.assignment.id}
+							<PatientLocationMap
+								latitude={mapCenter.latitude}
+								longitude={mapCenter.longitude}
+								accuracyM={latestLocation?.accuracyM ?? null}
+								{patientName}
+								{historySegments}
+								hasLocation={latestLocation !== null}
+								manualSimulationEnabled={data.manualLocationSimulatorEnabled}
+								onSimulationPointChange={handleSimulationPointChange}
+								onReady={handleMapReady}
+							/>
+						{/key}
+
+						{#if data.manualLocationSimulatorEnabled}
+							<section
+								class="rounded-3xl border border-amber-700/25 bg-amber-50 p-5 shadow-lg shadow-amber-900/5 sm:p-6"
+								aria-labelledby="manual-simulator-title"
+							>
+								<p class="text-sm font-bold tracking-[0.12em] text-amber-900 uppercase">
+									Modo de prueba
+								</p>
+								<h2 id="manual-simulator-title" class="mt-1 text-xl font-bold text-amber-950">
+									Simular una ubicación manual
+								</h2>
+								<p class="mt-2 max-w-2xl text-sm leading-6 text-amber-950">
+									La ubicación se guardará como una lectura real de prueba. El marcador amarillo
+									solo representa el punto pendiente de confirmar.
+								</p>
+
+								{#if !simulationMode}
+									<button
+										type="button"
+										onclick={activateSimulationMode}
+										disabled={!mapController}
+										class="mt-5 min-h-12 cursor-pointer rounded-xl bg-amber-950 px-5 font-bold text-white shadow-sm transition hover:bg-amber-900 focus:ring-4 focus:ring-amber-900/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										{mapController ? 'Elegir punto en el mapa' : 'Esperando el mapa…'}
+									</button>
+								{:else}
+									<form
+										method="POST"
+										action="?/simulateLocation"
+										use:enhance={enhanceSimulation}
+										class="mt-5"
+									>
+										<p class="text-sm leading-6 font-semibold text-amber-950">
+											Haz clic o toca el mapa para elegir el punto. También puedes escribir las
+											coordenadas.
+										</p>
+										<div class="mt-4 grid gap-4 sm:grid-cols-2">
+											<div>
+												<label for="simulation-latitude" class="text-sm font-bold text-amber-950">
+													Latitud
+												</label>
+												<input
+													id="simulation-latitude"
+													name="latitude"
+													type="number"
+													min="-90"
+													max="90"
+													step="any"
+													required
+													value={latitudeInput ?? ''}
+													oninput={handleLatitudeInput}
+													class="mt-2 min-h-12 w-full rounded-xl border border-amber-900/25 bg-white px-4 font-mono text-base text-ink outline-none focus:border-amber-900 focus:ring-4 focus:ring-amber-900/15"
+												/>
+											</div>
+											<div>
+												<label for="simulation-longitude" class="text-sm font-bold text-amber-950">
+													Longitud
+												</label>
+												<input
+													id="simulation-longitude"
+													name="longitude"
+													type="number"
+													min="-180"
+													max="180"
+													step="any"
+													required
+													value={longitudeInput ?? ''}
+													oninput={handleLongitudeInput}
+													class="mt-2 min-h-12 w-full rounded-xl border border-amber-900/25 bg-white px-4 font-mono text-base text-ink outline-none focus:border-amber-900 focus:ring-4 focus:ring-amber-900/15"
+												/>
+											</div>
+										</div>
+
+										<div class="mt-5 flex flex-col gap-3 sm:flex-row">
+											<button
+												type="submit"
+												disabled={simulatorSubmitting || !selectedSimulationPoint}
+												class="min-h-12 cursor-pointer rounded-xl bg-amber-950 px-5 font-bold text-white shadow-sm transition hover:bg-amber-900 focus:ring-4 focus:ring-amber-900/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+											>
+												{simulatorSubmitting ? 'Enviando ubicación…' : 'Confirmar ubicación'}
+											</button>
+											<button
+												type="button"
+												onclick={cancelSimulation}
+												disabled={simulatorSubmitting}
+												class="min-h-12 cursor-pointer rounded-xl border border-amber-900/25 bg-white px-5 font-bold text-amber-950 transition hover:bg-amber-100 focus:ring-4 focus:ring-amber-900/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+											>
+												Cancelar
+											</button>
+										</div>
+									</form>
+								{/if}
+
+								{#if simulatorFeedback}
+									<div
+										class={[
+											'mt-5 rounded-2xl border p-4 text-sm leading-6 font-semibold',
+											simulatorFeedback.kind === 'success'
+												? 'border-brand/25 bg-white text-ink'
+												: 'border-red-700/25 bg-red-50 text-red-950'
+										]}
+										role={simulatorFeedback.kind === 'error' ? 'alert' : 'status'}
+										aria-live="polite"
+									>
+										{simulatorFeedback.message}
+									</div>
+								{/if}
+							</section>
+						{/if}
+					</div>
 
 					<aside class="rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
-						{#if latestLocation.freshness === 'FRESH'}
+						{#if !latestLocation}
+							<div class="rounded-2xl border border-amber-700/25 bg-amber-50 p-4">
+								<p class="font-bold text-amber-950">Aún no hay ubicaciones</p>
+								<p class="mt-1 text-sm leading-6 text-amber-950">
+									El dispositivo está listo. Usa el modo de prueba para enviar la primera lectura.
+								</p>
+							</div>
+						{:else if latestLocation.freshness === 'FRESH'}
 							<div class="rounded-2xl border border-brand/20 bg-surface-muted p-4">
 								<p class="font-bold text-ink">Ubicación reciente</p>
 								<p class="mt-1 text-sm leading-6 text-muted">
@@ -259,42 +492,44 @@
 							</div>
 						{/if}
 
-						<dl class="mt-6 space-y-5 text-sm">
-							<div>
-								<dt class="font-semibold text-muted">Coordenadas</dt>
-								<dd class="mt-1 font-mono text-ink">
-									{latestLocation.latitude.toFixed(5)},
-									{latestLocation.longitude.toFixed(5)}
-								</dd>
-							</div>
-							<div>
-								<dt class="font-semibold text-muted">Registrada</dt>
-								<dd class="mt-1 leading-6 text-ink">
-									<time datetime={latestLocation.recordedAt}>
-										{latestLocation.recordedAtLabel}
-									</time>
-								</dd>
-							</div>
-							<div>
-								<dt class="font-semibold text-muted">Dispositivo</dt>
-								<dd class="mt-1 font-mono break-all text-ink">
-									{data.assignment.device.serialNumber}
-								</dd>
-							</div>
-							{#if latestLocation.accuracyM !== null}
+						{#if latestLocation}
+							<dl class="mt-6 space-y-5 text-sm">
 								<div>
-									<dt class="font-semibold text-muted">Precisión informada</dt>
-									<dd class="mt-1 text-ink">
-										{latestLocation.accuracyM.toFixed(1)} m
+									<dt class="font-semibold text-muted">Coordenadas</dt>
+									<dd class="mt-1 font-mono text-ink">
+										{latestLocation.latitude.toFixed(5)},
+										{latestLocation.longitude.toFixed(5)}
 									</dd>
 								</div>
-							{/if}
-						</dl>
+								<div>
+									<dt class="font-semibold text-muted">Registrada</dt>
+									<dd class="mt-1 leading-6 text-ink">
+										<time datetime={latestLocation.recordedAt}>
+											{latestLocation.recordedAtLabel}
+										</time>
+									</dd>
+								</div>
+								<div>
+									<dt class="font-semibold text-muted">Dispositivo</dt>
+									<dd class="mt-1 font-mono break-all text-ink">
+										{data.assignment.device.serialNumber}
+									</dd>
+								</div>
+								{#if latestLocation.accuracyM !== null}
+									<div>
+										<dt class="font-semibold text-muted">Precisión informada</dt>
+										<dd class="mt-1 text-ink">
+											{latestLocation.accuracyM.toFixed(1)} m
+										</dd>
+									</div>
+								{/if}
+							</dl>
 
-						{#if latestLocation.accuracyM !== null && latestLocation.accuracyM > 0}
-							<p class="mt-6 border-t border-ink/10 pt-5 text-sm leading-6 text-muted">
-								El círculo azul representa la precisión GPS informada. No es una zona segura.
-							</p>
+							{#if latestLocation.accuracyM !== null && latestLocation.accuracyM > 0}
+								<p class="mt-6 border-t border-ink/10 pt-5 text-sm leading-6 text-muted">
+									El círculo azul representa la precisión GPS informada. No es una zona segura.
+								</p>
+							{/if}
 						{/if}
 
 						<section class="mt-6 border-t border-ink/10 pt-5" aria-labelledby="history-title">

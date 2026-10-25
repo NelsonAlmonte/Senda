@@ -1,6 +1,14 @@
+import { SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR } from '$app/env/private';
 import { presentLocationTime } from '#lib/locations/presentation.js';
-import { error as httpError, redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error as httpError, fail, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+
+function parseCoordinate(value: FormDataEntryValue | null): number | null {
+	if (typeof value !== 'string' || value.trim() === '') return null;
+
+	const coordinate = Number(value);
+	return Number.isFinite(coordinate) ? coordinate : null;
+}
 
 export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (!locals.user || !locals.supabase) {
@@ -132,6 +140,88 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		latestLocation,
 		locationsAvailable,
 		locationHistory,
-		historyAvailable
+		historyAvailable,
+		manualLocationSimulatorEnabled:
+			SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR &&
+			access.access_role === 'ADMIN' &&
+			device?.device_kind === 'SIMULATED'
 	};
+};
+
+export const actions: Actions = {
+	simulateLocation: async ({ locals, params, request }) => {
+		if (!locals.user || !locals.supabase) {
+			redirect(303, `/auth/login?next=/patients/${params.id}/map`);
+		}
+
+		if (!SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR) {
+			httpError(404, 'La simulación manual no está habilitada en este entorno.');
+		}
+
+		const formData = await request.formData();
+		const latitude = parseCoordinate(formData.get('latitude'));
+		const longitude = parseCoordinate(formData.get('longitude'));
+
+		if (latitude === null || latitude < -90 || latitude > 90) {
+			return fail(400, {
+				message: 'La latitud debe ser un número entre -90 y 90.'
+			});
+		}
+
+		if (longitude === null || longitude < -180 || longitude > 180) {
+			return fail(400, {
+				message: 'La longitud debe ser un número entre -180 y 180.'
+			});
+		}
+
+		const { data: access, error: accessError } = await locals.supabase
+			.from('patient_access')
+			.select('access_role')
+			.eq('patient_id', params.id)
+			.eq('user_id', locals.user.id)
+			.is('revoked_at', null)
+			.maybeSingle();
+
+		if (accessError) {
+			return fail(500, {
+				message: 'No pudimos verificar tu acceso. Inténtalo nuevamente.'
+			});
+		}
+
+		if (access?.access_role !== 'ADMIN') {
+			httpError(403, 'Solo un administrador del paciente puede simular ubicaciones.');
+		}
+
+		const { error } = await locals.supabase.rpc('ingest_simulated_location', {
+			p_patient_id: params.id,
+			p_event_id: crypto.randomUUID(),
+			p_latitude: latitude,
+			p_longitude: longitude,
+			p_accuracy_m: null,
+			p_recorded_at: new Date().toISOString(),
+			p_source: 'MANUAL'
+		});
+
+		if (error) {
+			if (error.code === '42501') {
+				httpError(403, 'No tienes permiso para simular ubicaciones de este paciente.');
+			}
+
+			if (error.message.includes('Patient has no active simulated device.')) {
+				return fail(409, {
+					message:
+						'El paciente necesita un dispositivo simulado activo antes de enviar ubicaciones.'
+				});
+			}
+
+			return fail(400, {
+				message: 'No pudimos guardar la ubicación simulada. Revisa el punto e inténtalo nuevamente.'
+			});
+		}
+
+		return {
+			success: true,
+			message: 'Ubicación simulada enviada. El mapa se actualizará al recibirla por Realtime.'
+		};
+	}
 };

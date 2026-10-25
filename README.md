@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fase 0, autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado y el acceso `MONITOR` mediante código están implementados en Supabase de desarrollo. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos y 17 para códigos de acceso. La ingestión de ubicaciones, los mapas y las alertas aún no están implementados.
+> **Estado:** Fases 0–2C. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código y la ingestión segura de ubicaciones simuladas están implementados en Supabase de desarrollo. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 38 para ubicaciones. Los mapas, Realtime y las alertas aún no están implementados.
 
 ## Propósito
 
@@ -102,7 +102,7 @@ Cada historia se desarrolla en una rama independiente con nombres como `feat/pat
 feat(patients): add group and patient onboarding
 ```
 
-Después de verificar la historia se realiza commit, push y, preferentemente, un pull request. Codex no ejecuta `git add`, commit, push, pull, merge, rebase ni cambios de rama hasta que el usuario lo indique explícitamente; cuando lo indique, puede hacerlo directamente por consola. Una autorización técnica del entorno puede seguir apareciendo si la plataforma la exige. No iniciar otra historia en la misma rama ni mezclar cambios ajenos.
+Después de verificar la historia se realiza commit y push de su rama. Codex no ejecuta `git add`, commit, push, pull, merge, rebase ni cambios de rama hasta que el usuario lo indique explícitamente; cuando lo indique, puede hacerlo directamente por consola. El cierre predeterminado es actualizar `main`, fusionar directamente la rama terminada y publicar `main`; usar pull request solo si el usuario lo pide. Una autorización técnica del entorno puede seguir apareciendo si la plataforma la exige. No iniciar otra historia en la misma rama ni mezclar cambios ajenos.
 
 Comandos de verificación:
 
@@ -114,3 +114,20 @@ npm run preview
 ```
 
 El proyecto usa SSR con el adaptador oficial de Netlify. El build genera los activos públicos en `build` y la función SSR en `.netlify/functions-internal`; en el despliegue se validarán las rutas profundas, la sesión por cookies, el manifest y el service worker.
+
+### Simulador de ubicaciones
+
+Tras aplicar la migración de ingestión en Supabase de desarrollo, configura en `.env` una cuenta ficticia que tenga acceso `ADMIN` al paciente:
+
+```dotenv
+SENDA_SIMULATOR_EMAIL=simulator-admin@example.test
+SENDA_SIMULATOR_PASSWORD=development-only-password
+```
+
+Envía una lectura indicando el UUID del paciente, coordenadas y precisión opcional en metros:
+
+```sh
+npm run simulate:location -- <patient-id> 18.4861 -69.9312 8.5
+```
+
+El script inicia sesión con Supabase Auth y llama la RPC autorizada. No usa `service_role`; una cuenta `MONITOR`, un paciente ajeno o un paciente sin dispositivo simulado activo son rechazados.

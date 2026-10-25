@@ -47,6 +47,8 @@ El botón/click de simulación no puede aceptar coordenadas de un paciente ajeno
 - El script Node.js usa credenciales de prueba en variables de entorno, no en el repositorio; no utilizar `service_role` dentro de la PWA.
 - Producción futura con hardware utilizará autenticación de dispositivo separada de Supabase Auth de los familiares.
 
+**Decisión MVP (2026-10-24):** la ingestión simulada inicial usa una RPC autenticada que exige acceso `ADMIN` activo al paciente y una asignación simulada vigente. `authenticated` solo recibe `SELECT` sobre `locations`; no puede insertar directamente. `MONITOR` puede leer las ubicaciones autorizadas, pero no simularlas. La autenticación independiente del hardware permanece aplazada.
+
 ## Invitaciones de acceso
 
 ```text

@@ -79,6 +79,16 @@
 				</div>
 			{/if}
 
+			{#if data.devicesAvailable && !data.locationsAvailable}
+				<div
+					class="mt-7 max-w-2xl rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+					role="status"
+				>
+					No pudimos consultar las ubicaciones. Los pacientes y dispositivos siguen disponibles,
+					pero su última lectura no puede mostrarse ahora.
+				</div>
+			{/if}
+
 			<div class="mt-9 flex flex-wrap items-end justify-between gap-4">
 				<div>
 					<h2 class="text-2xl font-bold text-ink">Pacientes autorizados</h2>
@@ -144,9 +154,59 @@
 									<p class="mt-1 font-mono text-sm break-all text-ink">
 										{patient.assignment.device.serialNumber}
 									</p>
-									<p class="mt-2 text-sm leading-6 text-muted">
-										Aún no hay ubicaciones recibidas para este dispositivo.
-									</p>
+
+									{#if !data.locationsAvailable}
+										<p class="mt-3 text-sm leading-6 text-muted">
+											La última ubicación no está disponible temporalmente.
+										</p>
+									{:else if patient.assignment.latestLocation}
+										{#if patient.assignment.latestLocation.freshness === 'FRESH'}
+											<div class="mt-4 rounded-xl border border-brand/20 bg-white/70 p-3">
+												<p class="font-bold text-ink">Ubicación reciente</p>
+												<p class="mt-1 text-sm leading-6 text-muted">
+													Última lectura {patient.assignment.latestLocation.ageLabel}.
+												</p>
+											</div>
+										{:else}
+											<div class="mt-4 rounded-xl border border-amber-700/25 bg-amber-50 p-3">
+												<p class="font-bold text-amber-950">Ubicación desactualizada</p>
+												<p class="mt-1 text-sm leading-6 text-amber-950">
+													No se ha recibido una posición reciente. La última lectura fue
+													{patient.assignment.latestLocation.ageLabel}.
+												</p>
+											</div>
+										{/if}
+
+										<dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+											<div>
+												<dt class="font-semibold text-muted">Coordenadas</dt>
+												<dd class="mt-1 font-mono text-ink">
+													{patient.assignment.latestLocation.latitude.toFixed(5)},
+													{patient.assignment.latestLocation.longitude.toFixed(5)}
+												</dd>
+											</div>
+											<div>
+												<dt class="font-semibold text-muted">Registrada</dt>
+												<dd class="mt-1 text-ink">
+													<time datetime={patient.assignment.latestLocation.recordedAt}>
+														{patient.assignment.latestLocation.recordedAtLabel}
+													</time>
+												</dd>
+											</div>
+											{#if patient.assignment.latestLocation.accuracyM !== null}
+												<div>
+													<dt class="font-semibold text-muted">Precisión informada</dt>
+													<dd class="mt-1 text-ink">
+														{patient.assignment.latestLocation.accuracyM.toFixed(1)} m
+													</dd>
+												</div>
+											{/if}
+										</dl>
+									{:else}
+										<p class="mt-3 text-sm leading-6 text-muted">
+											Aún no hay ubicaciones recibidas para este dispositivo.
+										</p>
+									{/if}
 								</div>
 							{:else}
 								<div class="mt-5 rounded-2xl bg-canvas p-4">

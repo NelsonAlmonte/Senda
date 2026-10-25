@@ -24,7 +24,7 @@
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
 
-**Estado implementado (2026-10-24):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`.
+**Estado implementado (2026-10-24):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El dashboard distingue sin dispositivo, sin ubicaciones, lectura reciente, lectura desactualizada y fallo temporal de consulta, sin presentar todavía un estado de riesgo.
 
 ## Flujo A — Registro e inicio de sesión
 

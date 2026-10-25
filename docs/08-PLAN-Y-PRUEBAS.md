@@ -11,7 +11,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 3. Mantener la rama limitada a una historia o corrección; no incorporar cambios ajenos accidentalmente.
 4. Ejecutar las verificaciones disponibles y revisar `git diff` antes de cerrar el trabajo.
 5. Usar Conventional Commits en inglés, con alcance cuando aporte contexto.
-6. No ejecutar `git add`, commit, push, pull, merge, rebase ni cambios de rama hasta que el usuario lo indique explícitamente. Cuando lo indique, Codex puede usar la consola normal; preferir revisión mediante pull request.
+6. No ejecutar `git add`, commit, push, pull, merge, rebase ni cambios de rama hasta que el usuario lo indique explícitamente. Cuando lo indique, Codex puede usar la consola normal. El cierre predeterminado es merge directo en `main` y push de `main`; usar pull request solo por petición expresa.
 7. Si colaboran varios desarrolladores o agentes, usar ramas/historias separadas y acordar previamente cambios sobre migraciones o archivos compartidos.
 
 ## Fases
@@ -48,7 +48,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Aceptación:** un paciente puede quedar sin dispositivo y retomar la configuración; un código concede acceso únicamente al paciente correcto; los movimientos se guardan y no pueden falsificarse por usuarios no autorizados.
 
-**Estado parcial (2026-10-24, historias 2A–2B):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. El alta guiada separa grupo, paciente y dispositivo; permite crear un grupo con su primer paciente, reutilizar un grupo propio, configurar ahora o después y retomar la configuración desde el dashboard. El registro redirige al selector entre registrar y monitorear; un `ADMIN` puede generar un código manual de un solo uso y otra cuenta puede revisarlo y obtener `MONITOR` exclusivamente sobre ese paciente. Las suites pgTAP pasan 23 casos para dispositivos y 17 para códigos, además de los 25 de pacientes. Aún faltan ubicaciones y simulación de movimientos.
+**Estado parcial (2026-10-24, historias 2A–2C):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. El alta guiada separa grupo, paciente y dispositivo; permite crear un grupo con su primer paciente, reutilizar un grupo propio, configurar ahora o después y retomar la configuración desde el dashboard. El registro redirige al selector entre registrar y monitorear; un `ADMIN` puede generar un código manual de un solo uso y otra cuenta puede revisarlo y obtener `MONITOR` exclusivamente sobre ese paciente. La ingestión idempotente de ubicaciones vinculadas a la asignación histórica ya está aplicada en Supabase de desarrollo, con lectura para `ADMIN`/`MONITOR`, escritura simulada limitada a `ADMIN`, emisor Node de una lectura y estados de frescura en el dashboard. El emisor se validó manualmente contra Supabase de desarrollo; su suite pgTAP pasa 38 casos y las suites anteriores continúan pasando 25, 23 y 17 casos. Aún faltan la reproducción automática de rutas, el mapa y Realtime.
 
 ### Fase 3 — Mapa e historial
 

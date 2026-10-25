@@ -99,6 +99,7 @@ unassigned_at  timestamptz null
 ```text
 id                    bigint identity PK
 device_assignment_id  uuid FK -> device_assignments.id
+event_id              uuid (idempotencia por asignación)
 latitude              double precision CHECK [-90, 90]
 longitude             double precision CHECK [-180, 180]
 accuracy_m            double precision null (>=0)
@@ -109,7 +110,9 @@ source                SIMULATOR | MANUAL | DEVICE
 
 **Corrección importante respecto al esquema preliminar:** no autorizar una ubicación antigua uniéndola al **paciente actualmente asignado** al dispositivo. Una unidad física puede pasar de Juan a Rosa. Al usar `device_assignment_id` inmutable, las ubicaciones históricas de Juan continúan siendo de Juan, y no pasan a Rosa accidentalmente.
 
-Índices sugeridos: `(device_assignment_id, recorded_at DESC)`. El procesamiento debe rechazar/fijar como sospechosas coordenadas fuera de rango, datos demasiado antiguos/futuros y lecturas duplicadas. La política de idempotencia exacta queda por cerrar.
+Índice implementado: `(device_assignment_id, recorded_at DESC, id DESC)`. La idempotencia usa `UNIQUE(device_assignment_id,event_id)`: repetir el mismo UUID con los mismos datos devuelve la ubicación existente; reutilizarlo con datos distintos se rechaza. La RPC de simulación valida rangos, precisión finita no negativa, asignación activa, que la captura no anteceda la asignación y que no esté más de un minuto en el futuro.
+
+**Estado implementado (2026-10-24):** `locations`, la vista `latest_locations` y la RPC idempotente limitada a `ADMIN` están aplicadas en Supabase de desarrollo. La suite pgTAP de ubicaciones pasa 38 casos, incluida lectura `MONITOR`, rechazo de escritura directa y aislamiento del historial al reasignar un dispositivo.
 
 ### 8. `safe_zones`
 

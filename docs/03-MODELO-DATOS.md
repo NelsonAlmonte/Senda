@@ -112,7 +112,7 @@ source                SIMULATOR | MANUAL | DEVICE
 
 Índice implementado: `(device_assignment_id, recorded_at DESC, id DESC)`. La idempotencia usa `UNIQUE(device_assignment_id,event_id)`: repetir el mismo UUID con los mismos datos devuelve la ubicación existente; reutilizarlo con datos distintos se rechaza. La RPC de simulación valida rangos, precisión finita no negativa, asignación activa, que la captura no anteceda la asignación y que no esté más de un minuto en el futuro.
 
-**Estado implementado (2026-10-24):** `locations`, la vista `latest_locations` y la RPC idempotente limitada a `ADMIN` están aplicadas en Supabase de desarrollo. La suite pgTAP de ubicaciones pasa 38 casos, incluida lectura `MONITOR`, rechazo de escritura directa y aislamiento del historial al reasignar un dispositivo.
+**Estado implementado (2026-10-24):** `locations`, la vista `latest_locations` y la RPC idempotente limitada a `ADMIN` están aplicadas en Supabase de desarrollo. `locations` pertenece a la publicación `supabase_realtime`; Postgres Changes entrega inserciones únicamente después de evaluar su política RLS por `patient_access`. La suite pgTAP de ubicaciones pasa 39 casos, incluida publicación Realtime, lectura `MONITOR`, rechazo de escritura directa y aislamiento del historial al reasignar un dispositivo.
 
 ### 8. `safe_zones`
 

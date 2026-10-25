@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(38);
+select plan(39);
 
 select has_table('public', 'locations', 'locations table exists');
 select has_view('public', 'latest_locations', 'latest_locations view exists');
@@ -14,6 +14,16 @@ select ok(
 select has_column('public', 'locations', 'device_assignment_id', 'locations stores assignment history');
 select has_column('public', 'locations', 'event_id', 'locations stores an idempotency identifier');
 select has_column('public', 'locations', 'recorded_at', 'locations stores capture time');
+select ok(
+	exists (
+		select 1
+		from pg_publication_tables
+		where pubname = 'supabase_realtime'
+			and schemaname = 'public'
+			and tablename = 'locations'
+	),
+	'locations is enabled for Supabase Realtime'
+);
 
 select ok(
 	has_table_privilege('authenticated', 'public.locations', 'SELECT'),

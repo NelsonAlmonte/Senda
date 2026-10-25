@@ -1,4 +1,4 @@
-import { presentLocationTime } from '#lib/server/location-presentation.js';
+import { presentLocationTime } from '#lib/locations/presentation.js';
 import { error as httpError, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -40,6 +40,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 
 	let locationsAvailable = true;
 	let latestLocation: {
+		id: number;
 		latitude: number;
 		longitude: number;
 		accuracyM: number | null;
@@ -54,13 +55,14 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (assignment && device) {
 		const locationResult = await locals.supabase
 			.from('latest_locations')
-			.select('latitude, longitude, accuracy_m, recorded_at, received_at, source')
+			.select('id, latitude, longitude, accuracy_m, recorded_at, received_at, source')
 			.eq('device_assignment_id', assignment.id)
 			.maybeSingle();
 
 		locationsAvailable = !locationResult.error;
 		if (locationResult.data) {
 			latestLocation = {
+				id: locationResult.data.id,
 				latitude: locationResult.data.latitude,
 				longitude: locationResult.data.longitude,
 				accuracyM: locationResult.data.accuracy_m,

@@ -1,3 +1,14 @@
+<script module lang="ts">
+	export type MapLocationUpdate = {
+		latitude: number;
+		longitude: number;
+		accuracyM: number | null;
+		patientName: string;
+	};
+
+	export type MapLocationUpdater = (location: MapLocationUpdate) => void;
+</script>
+
 <script lang="ts">
 	import { loadMapDisplayLibraries } from './loader';
 	import type { Attachment } from 'svelte/attachments';
@@ -7,9 +18,10 @@
 		longitude: number;
 		accuracyM: number | null;
 		patientName: string;
+		onReady?: (updater: MapLocationUpdater | null) => void;
 	};
 
-	let { latitude, longitude, accuracyM, patientName }: Props = $props();
+	let { latitude, longitude, accuracyM, patientName, onReady }: Props = $props();
 	let mapState = $state<'LOADING' | 'READY' | 'ERROR'>('LOADING');
 	let retryKey = $state(0);
 
@@ -21,8 +33,7 @@
 			const accuracy = accuracyM;
 			const markerTitle = `Última ubicación registrada de ${patientName}`;
 			let disposed = false;
-			let removeMarker: (() => void) | null = null;
-			let removeAccuracyCircle: (() => void) | null = null;
+			let removeMapResources: (() => void) | null = null;
 
 			mapState = 'LOADING';
 
@@ -56,25 +67,36 @@
 						title: markerTitle,
 						content: pin
 					});
-					removeMarker = () => {
-						marker.map = null;
-						marker.remove();
+
+					const accuracyCircle = new Circle({
+						map,
+						center: position,
+						radius: accuracy ?? 0,
+						visible: accuracy !== null && accuracy > 0,
+						clickable: false,
+						fillColor: '#bdd8e9',
+						fillOpacity: 0.24,
+						strokeColor: '#1f6f8b',
+						strokeOpacity: 0.7,
+						strokeWeight: 2
+					});
+
+					const updateLocation: MapLocationUpdater = (location) => {
+						const nextPosition = { lat: location.latitude, lng: location.longitude };
+						marker.position = nextPosition;
+						marker.title = `Última ubicación registrada de ${location.patientName}`;
+						accuracyCircle.setCenter(nextPosition);
+						accuracyCircle.setRadius(location.accuracyM ?? 0);
+						accuracyCircle.setVisible(location.accuracyM !== null && location.accuracyM > 0);
+						map.panTo(nextPosition);
 					};
 
-					if (accuracy !== null && accuracy > 0) {
-						const accuracyCircle = new Circle({
-							map,
-							center: position,
-							radius: accuracy,
-							clickable: false,
-							fillColor: '#bdd8e9',
-							fillOpacity: 0.24,
-							strokeColor: '#1f6f8b',
-							strokeOpacity: 0.7,
-							strokeWeight: 2
-						});
-						removeAccuracyCircle = () => accuracyCircle.setMap(null);
-					}
+					removeMapResources = () => {
+						marker.map = null;
+						marker.remove();
+						accuracyCircle.setMap(null);
+					};
+					onReady?.(updateLocation);
 
 					mapState = 'READY';
 				} catch {
@@ -84,8 +106,8 @@
 
 			return () => {
 				disposed = true;
-				removeMarker?.();
-				removeAccuracyCircle?.();
+				onReady?.(null);
+				removeMapResources?.();
 				element.replaceChildren();
 			};
 		};

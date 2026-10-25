@@ -1,4 +1,4 @@
-import { presentLocationTime } from '#lib/server/location-presentation.js';
+import { presentLocationTime } from '#lib/locations/presentation.js';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

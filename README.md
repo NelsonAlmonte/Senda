@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fases 0–3A. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código, la ingestión segura de ubicaciones simuladas y el mapa de la última posición están implementados. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 38 para ubicaciones. El historial, Realtime, las geocercas y las alertas aún no están implementados.
+> **Estado:** Fases 0–3B. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código, la ingestión segura de ubicaciones simuladas y el mapa con actualización Realtime están implementados. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 39 para ubicaciones. La actualización simultánea se validó manualmente con usuarios `ADMIN` y `MONITOR`; el historial de recorrido, las geocercas y las alertas aún no están implementados.
 
 ## Propósito
 
@@ -131,3 +131,5 @@ npm run simulate:location -- <patient-id> 18.4861 -69.9312 8.5
 ```
 
 El script inicia sesión con Supabase Auth y llama la RPC autorizada. No usa `service_role`; una cuenta `MONITOR`, un paciente ajeno o un paciente sin dispositivo simulado activo son rechazados.
+
+Para comprobar Realtime, abre `/patients/<patient-id>/map` con una cuenta autorizada y espera el estado **Actualizaciones automáticas activas**. Ejecuta de nuevo el simulador con coordenadas distintas sin recargar la página. El marcador, las coordenadas, la hora y la precisión deben actualizarse automáticamente. Un segundo navegador autenticado como `MONITOR` del mismo paciente debe recibir la misma lectura; un usuario sin `patient_access` no puede abrir el mapa ni recibir sus filas por Postgres Changes.

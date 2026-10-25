@@ -70,7 +70,7 @@ ADMIN elige configurar ahora durante el onboarding o retoma “Configurar ahora�
 
 No mover el marcador como única prueba: el click debe producir un evento persistido y pasar por el mismo motor de riesgo que el simulador automático.
 
-**Estado parcial (2026-10-24):** el mapa de solo lectura y sus estados están implementados con carga dinámica de Google Maps. La simulación por click, la reproducción de rutas, la evaluación de riesgo y Realtime permanecen pendientes y no se simulan visualmente.
+**Estado parcial (2026-10-24):** el mapa de solo lectura, sus estados y la actualización automática por Postgres Changes están implementados con carga dinámica de Google Maps. La pantalla indica si la suscripción está conectando, activa o no disponible; una lectura nueva y autorizada actualiza marcador, coordenadas, timestamp y precisión sin recargar. El usuario validó manualmente la recepción simultánea con cuentas `ADMIN` y `MONITOR` en dos navegadores. La simulación por click, la reproducción de rutas y la evaluación de riesgo permanecen pendientes y no se simulan visualmente.
 
 ## Flujo D — Configurar geocerca
 

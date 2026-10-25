@@ -5,15 +5,21 @@
 		type LocationRealtimeState
 	} from '#lib/locations/PatientLocationRealtime.svelte';
 	import { presentLocationTime } from '#lib/locations/presentation.js';
-	import PatientLocationMap, { type MapLocationUpdater } from '#lib/maps/PatientLocationMap.svelte';
+	import PatientLocationMap, {
+		type MapHistorySegment,
+		type MapLocationUpdater
+	} from '#lib/maps/PatientLocationMap.svelte';
 	import type { PageProps } from './$types';
 
 	type LatestLocation = NonNullable<PageProps['data']['latestLocation']>;
+	type HistoryLocation = PageProps['data']['locationHistory'][number];
 	type RealtimeState = 'IDLE' | LocationRealtimeState;
 
 	let { data }: PageProps = $props();
 	let patientName = $derived(`${data.patient.firstName} ${data.patient.lastName}`);
 	let latestLocation = $derived(data.latestLocation);
+	let locationHistory = $derived(data.locationHistory);
+	let historySegments = $derived(buildHistorySegments(locationHistory));
 	let realtimeState = $state<RealtimeState>('IDLE');
 	let mapLocationUpdater: MapLocationUpdater | null = null;
 
@@ -40,21 +46,78 @@
 		};
 	}
 
+	function presentHistoryLocation(row: LocationRealtimeRow): HistoryLocation {
+		return {
+			id: row.id,
+			deviceAssignmentId: row.device_assignment_id,
+			latitude: row.latitude,
+			longitude: row.longitude,
+			recordedAt: row.recorded_at,
+			recordedAtLabel: presentLocationTime(row.recorded_at).recordedAtLabel
+		};
+	}
+
+	function buildHistorySegments(history: HistoryLocation[]): MapHistorySegment[] {
+		const assignmentOrder: string[] = [];
+		const segments: Record<string, MapHistorySegment> = {};
+
+		for (const location of history) {
+			if (!segments[location.deviceAssignmentId]) {
+				assignmentOrder.push(location.deviceAssignmentId);
+				segments[location.deviceAssignmentId] = [];
+			}
+
+			segments[location.deviceAssignmentId].push({
+				latitude: location.latitude,
+				longitude: location.longitude
+			});
+		}
+
+		return assignmentOrder.map((assignmentId) => segments[assignmentId]);
+	}
+
+	function mergeHistoryLocation(row: LocationRealtimeRow): HistoryLocation[] {
+		const candidate = presentHistoryLocation(row);
+		return [...locationHistory.filter((location) => location.id !== candidate.id), candidate]
+			.sort((left, right) => {
+				const timeDifference = Date.parse(left.recordedAt) - Date.parse(right.recordedAt);
+				return timeDifference || left.id - right.id;
+			})
+			.slice(-200);
+	}
+
 	function handleRealtimeLocation(row: LocationRealtimeRow) {
 		const candidate = presentRealtimeLocation(row);
-		if (!isNewerLocation(candidate, latestLocation)) return;
+		const nextHistory = mergeHistoryLocation(row);
+		locationHistory = nextHistory;
+		if (isNewerLocation(candidate, latestLocation)) latestLocation = candidate;
 
-		latestLocation = candidate;
+		const markerLocation = latestLocation ?? candidate;
 		mapLocationUpdater?.({
-			latitude: candidate.latitude,
-			longitude: candidate.longitude,
-			accuracyM: candidate.accuracyM,
-			patientName
+			latitude: markerLocation.latitude,
+			longitude: markerLocation.longitude,
+			accuracyM: markerLocation.accuracyM,
+			patientName,
+			historySegments: buildHistorySegments(nextHistory)
 		});
 	}
 
 	function handleRealtimeState(state: LocationRealtimeState) {
 		realtimeState = state;
+	}
+
+	function handleMapReady(updater: MapLocationUpdater | null) {
+		mapLocationUpdater = updater;
+		if (!updater || !latestLocation) return;
+
+		updater({
+			latitude: latestLocation.latitude,
+			longitude: latestLocation.longitude,
+			accuracyM: latestLocation.accuracyM,
+			patientName,
+			historySegments,
+			panToLocation: false
+		});
 	}
 </script>
 
@@ -62,7 +125,7 @@
 	<title>Mapa de {patientName} | Senda</title>
 	<meta
 		name="description"
-		content={`Consulta la última ubicación registrada de ${patientName} en Senda.`}
+		content={`Consulta la última ubicación y el recorrido reciente de ${patientName} en Senda.`}
 	/>
 </svelte:head>
 
@@ -173,7 +236,8 @@
 							longitude={latestLocation.longitude}
 							accuracyM={latestLocation.accuracyM}
 							{patientName}
-							onReady={(updater) => (mapLocationUpdater = updater)}
+							{historySegments}
+							onReady={handleMapReady}
 						/>
 					{/key}
 
@@ -232,6 +296,56 @@
 								El círculo azul representa la precisión GPS informada. No es una zona segura.
 							</p>
 						{/if}
+
+						<section class="mt-6 border-t border-ink/10 pt-5" aria-labelledby="history-title">
+							<h2 id="history-title" class="font-bold text-ink">Recorrido reciente</h2>
+							{#if !data.historyAvailable}
+								<p class="mt-2 text-sm leading-6 text-amber-900" role="alert">
+									No pudimos consultar el historial. La última ubicación sigue disponible.
+								</p>
+							{:else if locationHistory.length === 0}
+								<p class="mt-2 text-sm leading-6 text-muted">Aún no hay lecturas para trazar.</p>
+							{:else}
+								<p class="mt-2 text-sm leading-6 text-muted">
+									{locationHistory.length}
+									{locationHistory.length === 1 ? 'lectura mostrada' : 'lecturas mostradas'} (máximo 200).
+								</p>
+								<dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-1">
+									<div>
+										<dt class="font-semibold text-muted">Desde</dt>
+										<dd class="mt-1 text-ink">
+											<time datetime={locationHistory[0].recordedAt}>
+												{locationHistory[0].recordedAtLabel}
+											</time>
+										</dd>
+									</div>
+									<div>
+										<dt class="font-semibold text-muted">Hasta</dt>
+										<dd class="mt-1 text-ink">
+											<time datetime={locationHistory.at(-1)?.recordedAt}>
+												{locationHistory.at(-1)?.recordedAtLabel}
+											</time>
+										</dd>
+									</div>
+								</dl>
+								{#if locationHistory.length === 1}
+									<p class="mt-4 text-sm leading-6 text-muted">
+										Se necesita otra lectura para dibujar el recorrido.
+									</p>
+								{:else}
+									<p class="mt-4 flex gap-2 text-sm leading-6 text-muted">
+										<span
+											class="mt-2.5 h-1 w-7 shrink-0 rounded-full bg-[#1f6f8b]"
+											aria-hidden="true"
+										></span>
+										<span>
+											La línea une lecturas consecutivas de una misma asignación; no representa una
+											conexión continua.
+										</span>
+									</p>
+								{/if}
+							{/if}
+						</section>
 					</aside>
 				</div>
 			{/if}

@@ -62,13 +62,15 @@ ADMIN elige configurar ahora durante el onboarding o retoma “Configurar ahora�
     → asigna el dispositivo simulado a Juan
     → Juan tiene asignación activa
     → usuario autorizado abre /patients/:id/map
-    → mapa con última posición y antigüedad
+    → mapa con última posición, antigüedad y hasta 200 lecturas recientes
     → en entorno prueba: click autorizado o reproducción Node.js
     → backend guarda coordenada y evalúa riesgo
     → Realtime actualiza posición + indicadores
 ```
 
 No mover el marcador como única prueba: el click debe producir un evento persistido y pasar por el mismo motor de riesgo que el simulador automático.
+
+El historial se presenta dentro del mapa del paciente, con cantidad de lecturas y rango temporal en texto accesible. Realtime incorpora cada lectura nueva al marcador, al resumen y al trazo sin recargar. Los puntos se agrupan por `device_assignment_id`: un cambio de dispositivo inicia otro trazo y nunca une asignaciones distintas con una línea falsa. El límite de 200 es de presentación/consulta del MVP y no decide la retención permanente, que continúa abierta en `09-DECISIONES-PENDIENTES.md`.
 
 **Estado parcial (2026-10-24):** el mapa de solo lectura, sus estados y la actualización automática por Postgres Changes están implementados con carga dinámica de Google Maps. La pantalla indica si la suscripción está conectando, activa o no disponible; una lectura nueva y autorizada actualiza marcador, coordenadas, timestamp y precisión sin recargar. El usuario validó manualmente la recepción simultánea con cuentas `ADMIN` y `MONITOR` en dos navegadores. La simulación por click, la reproducción de rutas y la evaluación de riesgo permanecen pendientes y no se simulan visualmente.
 

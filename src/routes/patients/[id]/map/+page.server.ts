@@ -23,15 +23,15 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (!patient) httpError(404, 'Paciente no encontrado.');
 
 	const group = Array.isArray(patient.group) ? patient.group[0] : patient.group;
-	const { data: assignment, error: assignmentError } = await locals.supabase
+	const { data: assignments, error: assignmentError } = await locals.supabase
 		.from('device_assignments')
-		.select('id, assigned_at, device:devices!inner(id, serial_number, device_kind)')
+		.select('id, assigned_at, unassigned_at, device:devices!inner(id, serial_number, device_kind)')
 		.eq('patient_id', params.id)
-		.is('unassigned_at', null)
-		.maybeSingle();
+		.order('assigned_at', { ascending: true });
 
 	if (assignmentError) httpError(500, 'No pudimos consultar el dispositivo del paciente.');
 
+	const assignment = assignments?.find((candidate) => candidate.unassigned_at === null) ?? null;
 	const device = assignment
 		? Array.isArray(assignment.device)
 			? assignment.device[0]
@@ -51,6 +51,40 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		ageLabel: string;
 		recordedAtLabel: string;
 	} | null = null;
+	let historyAvailable = true;
+	let locationHistory: Array<{
+		id: number;
+		deviceAssignmentId: string;
+		latitude: number;
+		longitude: number;
+		recordedAt: string;
+		recordedAtLabel: string;
+	}> = [];
+
+	const assignmentIds = assignments?.map((candidate) => candidate.id) ?? [];
+	if (assignmentIds.length > 0) {
+		const historyResult = await locals.supabase
+			.from('locations')
+			.select('id, device_assignment_id, latitude, longitude, recorded_at')
+			.in('device_assignment_id', assignmentIds)
+			.order('recorded_at', { ascending: false })
+			.order('id', { ascending: false })
+			.limit(200);
+
+		historyAvailable = !historyResult.error;
+		if (historyResult.data) {
+			locationHistory = historyResult.data
+				.map((location) => ({
+					id: location.id,
+					deviceAssignmentId: location.device_assignment_id,
+					latitude: location.latitude,
+					longitude: location.longitude,
+					recordedAt: location.recorded_at,
+					recordedAtLabel: presentLocationTime(location.recorded_at).recordedAtLabel
+				}))
+				.reverse();
+		}
+	}
 
 	if (assignment && device) {
 		const locationResult = await locals.supabase
@@ -96,6 +130,8 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 					}
 				: null,
 		latestLocation,
-		locationsAvailable
+		locationsAvailable,
+		locationHistory,
+		historyAvailable
 	};
 };

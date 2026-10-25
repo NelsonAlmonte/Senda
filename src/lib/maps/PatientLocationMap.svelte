@@ -4,13 +4,23 @@
 		longitude: number;
 		accuracyM: number | null;
 		patientName: string;
+		historySegments: MapHistorySegment[];
+		panToLocation?: boolean;
 	};
+
+	export type MapHistoryPoint = {
+		latitude: number;
+		longitude: number;
+	};
+
+	export type MapHistorySegment = MapHistoryPoint[];
 
 	export type MapLocationUpdater = (location: MapLocationUpdate) => void;
 </script>
 
 <script lang="ts">
 	import { loadMapDisplayLibraries } from './loader';
+	import { untrack } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 
 	type Props = {
@@ -18,10 +28,11 @@
 		longitude: number;
 		accuracyM: number | null;
 		patientName: string;
+		historySegments: MapHistorySegment[];
 		onReady?: (updater: MapLocationUpdater | null) => void;
 	};
 
-	let { latitude, longitude, accuracyM, patientName, onReady }: Props = $props();
+	let { latitude, longitude, accuracyM, patientName, historySegments, onReady }: Props = $props();
 	let mapState = $state<'LOADING' | 'READY' | 'ERROR'>('LOADING');
 	let retryKey = $state(0);
 
@@ -29,9 +40,13 @@
 		void _retryKey;
 
 		return (element) => {
-			const position = { lat: latitude, lng: longitude };
-			const accuracy = accuracyM;
-			const markerTitle = `Última ubicación registrada de ${patientName}`;
+			const initialState = untrack(() => ({
+				position: { lat: latitude, lng: longitude },
+				accuracyM,
+				markerTitle: `Última ubicación registrada de ${patientName}`,
+				historySegments,
+				onReady
+			}));
 			let disposed = false;
 			let removeMapResources: (() => void) | null = null;
 
@@ -39,12 +54,15 @@
 
 			void (async () => {
 				try {
-					const [{ Map, Circle }, { AdvancedMarkerElement, PinElement }] =
-						await loadMapDisplayLibraries();
+					const [
+						{ Map, Circle, Polyline },
+						{ AdvancedMarkerElement, PinElement },
+						{ LatLngBounds }
+					] = await loadMapDisplayLibraries();
 					if (disposed) return;
 
 					const map = new Map(element, {
-						center: position,
+						center: initialState.position,
 						zoom: 17,
 						mapId: 'DEMO_MAP_ID',
 						clickableIcons: false,
@@ -63,16 +81,16 @@
 
 					const marker = new AdvancedMarkerElement({
 						map,
-						position,
-						title: markerTitle,
+						position: initialState.position,
+						title: initialState.markerTitle,
 						content: pin
 					});
 
 					const accuracyCircle = new Circle({
 						map,
-						center: position,
-						radius: accuracy ?? 0,
-						visible: accuracy !== null && accuracy > 0,
+						center: initialState.position,
+						radius: initialState.accuracyM ?? 0,
+						visible: initialState.accuracyM !== null && initialState.accuracyM > 0,
 						clickable: false,
 						fillColor: '#bdd8e9',
 						fillOpacity: 0.24,
@@ -81,6 +99,40 @@
 						strokeWeight: 2
 					});
 
+					let routePolylines: Array<InstanceType<typeof Polyline>> = [];
+					const renderHistory = (segments: MapHistorySegment[]) => {
+						for (const polyline of routePolylines) polyline.setMap(null);
+						routePolylines = segments
+							.filter((segment) => segment.length > 1)
+							.map(
+								(segment) =>
+									new Polyline({
+										map,
+										path: segment.map((point) => ({
+											lat: point.latitude,
+											lng: point.longitude
+										})),
+										clickable: false,
+										strokeColor: '#1f6f8b',
+										strokeOpacity: 0.9,
+										strokeWeight: 4
+									})
+							);
+					};
+
+					renderHistory(initialState.historySegments);
+					const historyPoints = initialState.historySegments.flat();
+					const distinctPositions = new Set(
+						historyPoints.map((point) => `${point.latitude}:${point.longitude}`)
+					);
+					if (distinctPositions.size > 1) {
+						const bounds = new LatLngBounds();
+						for (const point of historyPoints) {
+							bounds.extend({ lat: point.latitude, lng: point.longitude });
+						}
+						map.fitBounds(bounds, 48);
+					}
+
 					const updateLocation: MapLocationUpdater = (location) => {
 						const nextPosition = { lat: location.latitude, lng: location.longitude };
 						marker.position = nextPosition;
@@ -88,15 +140,17 @@
 						accuracyCircle.setCenter(nextPosition);
 						accuracyCircle.setRadius(location.accuracyM ?? 0);
 						accuracyCircle.setVisible(location.accuracyM !== null && location.accuracyM > 0);
-						map.panTo(nextPosition);
+						renderHistory(location.historySegments);
+						if (location.panToLocation !== false) map.panTo(nextPosition);
 					};
 
 					removeMapResources = () => {
 						marker.map = null;
 						marker.remove();
 						accuracyCircle.setMap(null);
+						for (const polyline of routePolylines) polyline.setMap(null);
 					};
-					onReady?.(updateLocation);
+					initialState.onReady?.(updateLocation);
 
 					mapState = 'READY';
 				} catch {
@@ -106,7 +160,7 @@
 
 			return () => {
 				disposed = true;
-				onReady?.(null);
+				initialState.onReady?.(null);
 				removeMapResources?.();
 				element.replaceChildren();
 			};
@@ -116,13 +170,13 @@
 
 <section
 	class="relative min-h-88 overflow-hidden rounded-3xl border border-ink/10 bg-surface-muted shadow-lg shadow-brand/5 sm:min-h-112"
-	aria-label={`Mapa de la última ubicación de ${patientName}`}
+	aria-label={`Mapa de la última ubicación y el recorrido reciente de ${patientName}`}
 	aria-busy={mapState === 'LOADING'}
 >
 	<div
 		class="absolute inset-0"
 		{@attach createMapAttachment(retryKey)}
-		aria-label={`Google Maps con la última ubicación registrada de ${patientName}`}
+		aria-label={`Google Maps con la última ubicación y el recorrido reciente de ${patientName}`}
 	></div>
 
 	{#if mapState === 'LOADING'}

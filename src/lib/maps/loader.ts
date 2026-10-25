@@ -25,5 +25,5 @@ export async function loadMapsLibrary() {
 export async function loadMapDisplayLibraries() {
 	configureMapsLoader();
 
-	return Promise.all([importLibrary('maps'), importLibrary('marker')]);
+	return Promise.all([importLibrary('maps'), importLibrary('marker'), importLibrary('core')]);
 }

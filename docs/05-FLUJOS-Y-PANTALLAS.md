@@ -62,7 +62,7 @@ ADMIN elige configurar ahora durante el onboarding o retoma “Configurar ahora�
     → asigna el dispositivo simulado a Juan
     → Juan tiene asignación activa
     → usuario autorizado abre /patients/:id/map
-    → mapa con última posición, antigüedad y hasta 200 lecturas recientes
+    → mapa con última posición, antigüedad, geocercas activas y hasta 200 lecturas recientes
     → en entorno prueba: click autorizado o reproducción Node.js
     → backend guarda coordenada y evalúa riesgo
     → Realtime actualiza posición + indicadores
@@ -70,22 +70,32 @@ ADMIN elige configurar ahora durante el onboarding o retoma “Configurar ahora�
 
 No mover el marcador como única prueba: el click debe producir un evento persistido y pasar por el mismo motor de riesgo que el simulador automático.
 
-El historial se presenta dentro del mapa del paciente, con cantidad de lecturas y rango temporal en texto accesible. Realtime incorpora cada lectura nueva al marcador, al resumen y al trazo sin recargar. Los puntos se agrupan por `device_assignment_id`: un cambio de dispositivo inicia otro trazo y nunca une asignaciones distintas con una línea falsa. El límite de 200 es de presentación/consulta del MVP y no decide la retención permanente, que continúa abierta en `09-DECISIONES-PENDIENTES.md`.
+El historial se presenta dentro del mapa del paciente, con cantidad de lecturas y rango temporal en texto accesible. Las geocercas activas autorizadas se dibujan como círculos no interactivos y se acompañan de nombre y radio; las inactivas o archivadas no aparecen en el monitoreo. Realtime incorpora cada lectura nueva al marcador, al resumen y al trazo sin recargar. Los puntos se agrupan por `device_assignment_id`: un cambio de dispositivo inicia otro trazo y nunca une asignaciones distintas con una línea falsa. El límite de 200 es de presentación/consulta del MVP y no decide la retención permanente, que continúa abierta en `09-DECISIONES-PENDIENTES.md`.
 
-**Estado completado (2026-10-25):** el mapa, sus estados y la actualización automática por Postgres Changes están implementados con carga dinámica de Google Maps. La pantalla indica si la suscripción está conectando, activa o no disponible; una lectura nueva y autorizada actualiza marcador, coordenadas, timestamp, precisión e historial sin reconstruir el mapa. El usuario validó manualmente la recepción simultánea con cuentas `ADMIN` y `MONITOR` en dos navegadores. El simulador Node reproduce una ruta ficticia de una sola pasada, con intervalo configurable y persistencia mediante la RPC común; el usuario validó su recorrido completo. La simulación manual en mapa solo aparece para `ADMIN` con dispositivo simulado y una bandera privada de entorno: permite seleccionar por click o escribir coordenadas, exige confirmación, persiste mediante la RPC común con origen `MANUAL` y espera Realtime para actualizar el marcador oficial. El usuario validó este flujo completo; la evaluación de riesgo corresponde a la Fase 4.
+**Estado completado (2026-10-25):** el mapa, sus estados y la actualización automática por Postgres Changes están implementados con carga dinámica de Google Maps. La pantalla indica si la suscripción está conectando, activa o no disponible; una lectura nueva y autorizada actualiza marcador, coordenadas, timestamp, precisión e historial sin reconstruir el mapa. El mapa usa interacción directa sin exigir `Ctrl`, muestra las geocercas activas y mantiene los círculos sin interacción para no bloquear la selección de una ubicación simulada. El usuario validó manualmente la recepción simultánea con cuentas `ADMIN` y `MONITOR` en dos navegadores. El simulador Node reproduce una ruta ficticia de una sola pasada, con intervalo configurable y persistencia mediante la RPC común; el usuario validó su recorrido completo. La simulación manual en mapa solo aparece para `ADMIN` con dispositivo simulado y una bandera privada de entorno: permite seleccionar por click o escribir coordenadas, exige confirmación, persiste mediante la RPC común con origen `MANUAL` y espera Realtime para actualizar el marcador oficial. El usuario validó este flujo completo; la evaluación de riesgo corresponde a la Fase 4.
 
 ## Flujo D — Configurar geocerca
 
 ```text
 ADMIN/MONITOR → /patients/:id/safe-zones
-    → dibuja un círculo en Google Maps
-    → ve el radio / coordenadas aproximadas
+    → crea o selecciona una geocerca guardada
+    → escribe un nombre corto
+    → activa el modo de selección y toca el centro en Google Maps
+    → ajusta el radio con slider o valor numérico exacto
     → frontend valida formulario
-    → Supabase verifica autorización + radio válido
+    → Supabase verifica patient_access + nombre/coordenadas/radio
     → guarda y muestra resultado
 ```
 
-Si hay varias zonas activas, evaluar la unión lógica de las permitidas. Confirmar comportamiento al implementar la historia si se opta por restringir el MVP a una sola zona.
+Se permiten varias zonas activas y superpuestas. La evaluación futura usa la unión lógica: basta estar dentro de una zona activa para permanecer en un área permitida. No existe máximo artificial en la base de datos; la demostración habitual usará entre dos y cinco.
+
+El radio comienza en 250 m, admite 50–5,000 m e incrementos de 50 m. El círculo cambia durante el ajuste y, al terminar, el mapa adapta el encuadre con margen. Después de colocar el centro, el círculo provisional se puede arrastrar tanto al crear como al editar. **Cambiar centro** mantiene una alternativa por toque/click y permite elegir cualquier punto, incluso dentro de la misma geocerca o de otra existente; durante esa selección, los círculos no interceptan el toque. Latitud, longitud y radio tienen entradas numéricas como alternativa de teclado.
+
+El editor usa interacción directa con el mapa: la rueda amplía sin exigir `Ctrl` en escritorio y los gestos iniciados sobre el mapa lo manipulan en móvil. El resto de la página conserva el desplazamiento normal fuera del área del mapa.
+
+La zona seleccionada se destaca; las demás activas se presentan con menor énfasis; la provisional usa una apariencia ámbar y texto explícito; una zona inactiva permanece oculta salvo al seleccionarla en la lista. Crear, editar, activar, desactivar y archivar están disponibles para `ADMIN` y `MONITOR`. Archivar no elimina físicamente la fila.
+
+**Estado completado (2026-10-25):** la ruta, el editor gráfico, la lista accesible, las acciones SSR y el enlace desde cada paciente del dashboard están implementados. La migración está aplicada en Supabase de desarrollo y su suite pgTAP pasa 29 casos. El usuario validó manualmente el flujo completo, incluidos el zoom directo, el arrastre del círculo, la selección de centros superpuestos, la limpieza del estado provisional y la visualización de las zonas activas en el mapa de monitoreo.
 
 ## Flujo E — Código de acceso e invitación
 

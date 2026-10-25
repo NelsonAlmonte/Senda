@@ -54,7 +54,7 @@ Evaluar de `CRITICAL` a `HIGH`, `MEDIUM`, `LOW` para evitar solapamientos. Tiemp
 - Configurar un **margen/histeresis** al perímetro para evitar flapping (entrada/salida en segundos). El valor exacto queda pendiente de validación con simulador y hardware.
 - No crear eventos duplicados al reintentar enviar la misma posición. La ingestión inicial usa un `event_id` UUID único por asignación; el mismo evento y contenido es idempotente, mientras que reutilizarlo con contenido distinto se rechaza.
 - `recorded_at`: cuando se capturó; `received_at`: cuando llegó. No inferir la posición actual de un punto recibido fuera de orden.
-- Varias geocercas: si el paciente está dentro de **cualquiera** de las zonas activas válidas, no está fuera de zona permitida. Si se decide limitar a una zona en MVP, simplificar en ese momento.
+- Varias geocercas: si el paciente está dentro de **cualquiera** de las zonas activas válidas, no está fuera de zona permitida. Las zonas pueden superponerse y no existe un máximo artificial en base de datos. Las inactivas o archivadas no participan.
 - Calcular un reingreso confiable antes de resolver episodio. Una sola lectura momentánea dentro del borde puede ser insuficiente; concretar este criterio con las pruebas.
 
 ## Envío de notificaciones
@@ -102,5 +102,4 @@ Evaluar de `CRITICAL` a `HIGH`, `MEDIUM`, `LOW` para evitar solapamientos. Tiemp
 1. Validar o modificar tiempos 5/15/30 minutos y distancias 500/1000 metros.
 2. Fijar margen/histeresis y precisión GPS aceptable.
 3. Decidir confirmación de reingreso y gestión de escaladas con datos tardíos.
-4. Elegir si una o varias geocercas activas son permitidas inicialmente.
-5. Formalizar umbral de rapidez imposible/saltos espurios. La idempotencia básica por `event_id` ya está definida.
+4. Formalizar umbral de rapidez imposible/saltos espurios. La idempotencia básica por `event_id` ya está definida.

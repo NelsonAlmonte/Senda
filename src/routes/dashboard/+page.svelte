@@ -226,26 +226,30 @@
 									{/if}
 								</div>
 							{/if}
-							{#if patient.accessRole === 'ADMIN' || patient.assignment}
-								<div class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-									{#if patient.accessRole === 'ADMIN'}
-										<a
-											href={resolve('/patients/[id]/access', { id: patient.id })}
-											class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-										>
-											Compartir acceso
-										</a>
-									{/if}
-									{#if patient.assignment}
-										<a
-											href={resolve('/patients/[id]/map', { id: patient.id })}
-											class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-										>
-											Ver mapa
-										</a>
-									{/if}
-								</div>
-							{/if}
+							<div class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+								{#if patient.accessRole === 'ADMIN'}
+									<a
+										href={resolve('/patients/[id]/access', { id: patient.id })}
+										class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+									>
+										Compartir acceso
+									</a>
+								{/if}
+								{#if patient.assignment}
+									<a
+										href={resolve('/patients/[id]/map', { id: patient.id })}
+										class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+									>
+										Ver mapa
+									</a>
+								{/if}
+								<a
+									href={resolve('/patients/[id]/safe-zones', { id: patient.id })}
+									class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								>
+									Configurar geocercas
+								</a>
+							</div>
 						</li>
 					{/each}
 				</ul>

@@ -15,6 +15,14 @@
 
 	export type MapHistorySegment = MapHistoryPoint[];
 
+	export type MapSafeZone = {
+		id: string;
+		name: string;
+		centerLatitude: number;
+		centerLongitude: number;
+		radiusM: number;
+	};
+
 	export type MapLocationUpdater = (location: MapLocationUpdate) => void;
 
 	export type MapSimulationPoint = {
@@ -40,6 +48,7 @@
 		accuracyM: number | null;
 		patientName: string;
 		historySegments: MapHistorySegment[];
+		safeZones: MapSafeZone[];
 		hasLocation?: boolean;
 		manualSimulationEnabled?: boolean;
 		onSimulationPointChange?: (point: MapSimulationPoint) => void;
@@ -55,6 +64,7 @@
 		accuracyM,
 		patientName,
 		historySegments,
+		safeZones,
 		hasLocation = true,
 		manualSimulationEnabled = false,
 		onSimulationPointChange,
@@ -72,6 +82,7 @@
 				accuracyM,
 				markerTitle: `Última ubicación registrada de ${patientName}`,
 				historySegments,
+				safeZones,
 				hasLocation,
 				manualSimulationEnabled,
 				onSimulationPointChange,
@@ -99,8 +110,24 @@
 						fullscreenControl: true,
 						mapTypeControl: false,
 						streetViewControl: false,
-						gestureHandling: 'cooperative'
+						gestureHandling: 'greedy'
 					});
+
+					const safeZoneCircles = initialState.safeZones.map(
+						(zone) =>
+							new Circle({
+								map,
+								center: { lat: zone.centerLatitude, lng: zone.centerLongitude },
+								radius: zone.radiusM,
+								clickable: false,
+								fillColor: '#8fbfaf',
+								fillOpacity: 0.14,
+								strokeColor: '#355f55',
+								strokeOpacity: 0.8,
+								strokeWeight: 2,
+								zIndex: 1
+							})
+					);
 
 					const pin = new PinElement({
 						background: '#355f55',
@@ -129,7 +156,8 @@
 						fillOpacity: 0.24,
 						strokeColor: '#1f6f8b',
 						strokeOpacity: 0.7,
-						strokeWeight: 2
+						strokeWeight: 2,
+						zIndex: 2
 					});
 
 					let routePolylines: Array<InstanceType<typeof Polyline>> = [];
@@ -148,7 +176,8 @@
 										clickable: false,
 										strokeColor: '#1f6f8b',
 										strokeOpacity: 0.9,
-										strokeWeight: 4
+										strokeWeight: 4,
+										zIndex: 3
 									})
 							);
 					};
@@ -158,10 +187,15 @@
 					const distinctPositions = new Set(
 						historyPoints.map((point) => `${point.latitude}:${point.longitude}`)
 					);
-					if (distinctPositions.size > 1) {
+					if (distinctPositions.size > 1 || safeZoneCircles.length > 0) {
 						const bounds = new LatLngBounds();
+						if (initialState.hasLocation) bounds.extend(initialState.position);
 						for (const point of historyPoints) {
 							bounds.extend({ lat: point.latitude, lng: point.longitude });
+						}
+						for (const circle of safeZoneCircles) {
+							const circleBounds = circle.getBounds();
+							if (circleBounds) bounds.union(circleBounds);
 						}
 						map.fitBounds(bounds, 48);
 					}
@@ -244,6 +278,7 @@
 						marker.map = null;
 						marker.remove();
 						accuracyCircle.setMap(null);
+						for (const circle of safeZoneCircles) circle.setMap(null);
 						for (const polyline of routePolylines) polyline.setMap(null);
 					};
 					initialState.onReady?.(controller);
@@ -266,13 +301,13 @@
 
 <section
 	class="relative min-h-88 overflow-hidden rounded-3xl border border-ink/10 bg-surface-muted shadow-lg shadow-brand/5 sm:min-h-112"
-	aria-label={`Mapa de ubicación y recorrido reciente de ${patientName}`}
+	aria-label={`Mapa de ubicación, recorrido reciente y geocercas activas de ${patientName}`}
 	aria-busy={mapState === 'LOADING'}
 >
 	<div
 		class="absolute inset-0"
 		{@attach createMapAttachment(retryKey)}
-		aria-label={`Google Maps con la ubicación y el recorrido reciente de ${patientName}`}
+		aria-label={`Google Maps con la ubicación, el recorrido reciente y las geocercas activas de ${patientName}`}
 	></div>
 
 	{#if mapState === 'LOADING'}

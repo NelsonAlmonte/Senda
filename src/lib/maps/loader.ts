@@ -5,7 +5,7 @@ export const hasGoogleMapsConfig = Boolean(PUBLIC_GOOGLE_MAPS_API_KEY);
 
 let isConfigured = false;
 
-export async function loadMapsLibrary() {
+function configureMapsLoader(): void {
 	if (!hasGoogleMapsConfig) {
 		throw new Error('Falta configurar PUBLIC_GOOGLE_MAPS_API_KEY.');
 	}
@@ -14,6 +14,16 @@ export async function loadMapsLibrary() {
 		setOptions({ key: PUBLIC_GOOGLE_MAPS_API_KEY, v: 'weekly' });
 		isConfigured = true;
 	}
+}
+
+export async function loadMapsLibrary() {
+	configureMapsLoader();
 
 	return importLibrary('maps');
+}
+
+export async function loadMapDisplayLibraries() {
+	configureMapsLoader();
+
+	return Promise.all([importLibrary('maps'), importLibrary('marker')]);
 }

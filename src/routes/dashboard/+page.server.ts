@@ -1,23 +1,6 @@
+import { presentLocationTime } from '#lib/server/location-presentation.js';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-
-const staleAfterMilliseconds = 3 * 60 * 1000;
-const locationDateFormatter = new Intl.DateTimeFormat('es-DO', {
-	dateStyle: 'medium',
-	timeStyle: 'short',
-	timeZone: 'America/Santo_Domingo'
-});
-
-function formatLocationAge(recordedAt: string, now: number): string {
-	const ageMilliseconds = Math.max(0, now - Date.parse(recordedAt));
-	if (ageMilliseconds < 60_000) return 'hace menos de 1 minuto';
-
-	const minutes = Math.floor(ageMilliseconds / 60_000);
-	if (minutes < 60) return `hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
-
-	const hours = Math.floor(minutes / 60);
-	return `hace ${hours} ${hours === 1 ? 'hora' : 'horas'}`;
-}
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user || !locals.supabase) {
@@ -141,12 +124,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				latestLocation: location
 					? {
 							...location,
-							freshness:
-								now - Date.parse(location.recordedAt) <= staleAfterMilliseconds
-									? ('FRESH' as const)
-									: ('STALE' as const),
-							ageLabel: formatLocationAge(location.recordedAt, now),
-							recordedAtLabel: locationDateFormatter.format(new Date(location.recordedAt))
+							...presentLocationTime(location.recordedAt, now)
 						}
 					: null
 			}

@@ -48,7 +48,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Aceptación:** un paciente puede quedar sin dispositivo y retomar la configuración; un código concede acceso únicamente al paciente correcto; los movimientos se guardan y no pueden falsificarse por usuarios no autorizados.
 
-**Estado parcial (2026-10-24, historias 2A–2C):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. El alta guiada separa grupo, paciente y dispositivo; permite crear un grupo con su primer paciente, reutilizar un grupo propio, configurar ahora o después y retomar la configuración desde el dashboard. El registro redirige al selector entre registrar y monitorear; un `ADMIN` puede generar un código manual de un solo uso y otra cuenta puede revisarlo y obtener `MONITOR` exclusivamente sobre ese paciente. La ingestión idempotente de ubicaciones vinculadas a la asignación histórica ya está aplicada en Supabase de desarrollo, con lectura para `ADMIN`/`MONITOR`, escritura simulada limitada a `ADMIN`, emisor Node de una lectura y estados de frescura en el dashboard. El emisor se validó manualmente contra Supabase de desarrollo; su suite pgTAP pasa 38 casos y las suites anteriores continúan pasando 25, 23 y 17 casos. Aún faltan la reproducción automática de rutas, el mapa y Realtime.
+**Estado parcial (2026-10-24, historias 2A–2C):** implementados `devices`, `device_assignments`, la regla de un dispositivo activo por paciente, tres seriales demo preexistentes y la RPC de asignación restringida a `ADMIN`. El alta guiada separa grupo, paciente y dispositivo; permite crear un grupo con su primer paciente, reutilizar un grupo propio, configurar ahora o después y retomar la configuración desde el dashboard. El registro redirige al selector entre registrar y monitorear; un `ADMIN` puede generar un código manual de un solo uso y otra cuenta puede revisarlo y obtener `MONITOR` exclusivamente sobre ese paciente. La ingestión idempotente de ubicaciones vinculadas a la asignación histórica ya está aplicada en Supabase de desarrollo, con lectura para `ADMIN`/`MONITOR`, escritura simulada limitada a `ADMIN`, emisor Node de una lectura y estados de frescura en el dashboard. El emisor se validó manualmente contra Supabase de desarrollo; su suite pgTAP pasa 38 casos y las suites anteriores continúan pasando 25, 23 y 17 casos. Aún faltan la simulación por click y la reproducción automática de rutas.
 
 ### Fase 3 — Mapa e historial
 
@@ -56,6 +56,8 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 - Estados sin dispositivo, sin datos y datos obsoletos.
 
 **Aceptación:** segundo navegador autorizado ve coordenadas nuevas sin recargar; dispositivo reutilizado no filtra recorridos anteriores.
+
+**Estado parcial (2026-10-24, historia 3A):** `/patients/:id/map` presenta la última posición autorizada mediante Google Maps, con marcador, precisión opcional, timestamp y estados sin dispositivo, sin lectura, desactualizado y error. El dashboard y la pantalla de dispositivo enlazan al mapa. La consulta conserva RLS por paciente y la interfaz no afirma seguimiento en vivo ni riesgo conocido. Faltan historial y Realtime, por lo que la aceptación completa de la fase todavía no se cumple.
 
 ### Fase 4 — Geocercas y motor de alertas
 

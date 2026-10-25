@@ -24,7 +24,7 @@
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
 
-**Estado implementado (2026-10-24):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El dashboard distingue sin dispositivo, sin ubicaciones, lectura reciente, lectura desactualizada y fallo temporal de consulta, sin presentar todavía un estado de riesgo.
+**Estado implementado (2026-10-24):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El dashboard distingue sin dispositivo, sin ubicaciones, lectura reciente, lectura desactualizada y fallo temporal de consulta, sin presentar todavía un estado de riesgo. `/patients/:id/map` muestra a `ADMIN` y `MONITOR` la última posición autorizada, su antigüedad y precisión, sin llamarla seguimiento en vivo.
 
 ## Flujo A — Registro e inicio de sesión
 
@@ -69,6 +69,8 @@ ADMIN elige configurar ahora durante el onboarding o retoma “Configurar ahora�
 ```
 
 No mover el marcador como única prueba: el click debe producir un evento persistido y pasar por el mismo motor de riesgo que el simulador automático.
+
+**Estado parcial (2026-10-24):** el mapa de solo lectura y sus estados están implementados con carga dinámica de Google Maps. La simulación por click, la reproducción de rutas, la evaluación de riesgo y Realtime permanecen pendientes y no se simulan visualmente.
 
 ## Flujo D — Configurar geocerca
 

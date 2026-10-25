@@ -63,17 +63,24 @@
 							{data.assignment.device.serialNumber}
 						</p>
 						<p class="mt-2 text-sm leading-6 text-muted">
-							La asignación está activa. La recepción de ubicaciones se implementará en la siguiente
-							historia.
+							La asignación está activa y puede recibir ubicaciones simuladas.
 						</p>
 					</div>
 
-					<a
-						href={resolve('/dashboard')}
-						class="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-					>
-						Ir al panel
-					</a>
+					<div class="mt-6 flex flex-col gap-3 sm:flex-row">
+						<a
+							href={resolve('/patients/[id]/map', { id: data.patient.id })}
+							class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+						>
+							Ver mapa
+						</a>
+						<a
+							href={resolve('/dashboard')}
+							class="inline-flex min-h-12 items-center justify-center rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+						>
+							Ir al panel
+						</a>
+					</div>
 				{:else}
 					{#if data.onboarding}
 						<div class="mt-6 rounded-2xl bg-canvas p-4 text-sm leading-6 text-ink">

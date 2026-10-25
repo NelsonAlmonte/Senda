@@ -1,6 +1,6 @@
 # Senda — Plataforma IoT de monitoreo y alerta temprana
 
-> **Estado:** Fases 0–2C. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código y la ingestión segura de ubicaciones simuladas están implementados en Supabase de desarrollo. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 38 para ubicaciones. Los mapas, Realtime y las alertas aún no están implementados.
+> **Estado:** Fases 0–3A. La autenticación/perfil, el alta guiada de grupos y pacientes, la asignación de un dispositivo simulado, el acceso `MONITOR` mediante código, la ingestión segura de ubicaciones simuladas y el mapa de la última posición están implementados. Las suites pgTAP pasan 25 casos para pacientes, 23 para dispositivos, 17 para códigos de acceso y 38 para ubicaciones. El historial, Realtime, las geocercas y las alertas aún no están implementados.
 
 ## Propósito
 

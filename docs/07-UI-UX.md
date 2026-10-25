@@ -60,6 +60,8 @@ No usar únicamente un punto verde/rojo para comunicar estado; incluir texto. El
 
 **Estado implementado (2026-10-24):** `/onboarding` presenta las dos acciones como opciones equivalentes y no permanentes; `/groups` separa Grupo, Paciente y Dispositivo en un asistente con progreso y retorno; `/access-code` usa divulgación progresiva para revisar la información mínima antes de aceptar. En las tarjetas del dashboard, el permiso se expresa como **Tu acceso: Administrador/Monitor** y se separa de la identidad del paciente para no atribuirle ese rol por error.
 
+El mapa de última ubicación reserva su espacio durante la carga para evitar saltos, ofrece recuperación ante error y conserva estados útiles sin dispositivo o sin lecturas. La frescura se comunica con texto además de color. Cuando existe precisión GPS, el círculo azul se identifica expresamente como precisión y no como geocerca o zona segura.
+
 ## Experiencia PWA
 
 - Compatibilidad de instalación según capacidades reales del navegador/OS.

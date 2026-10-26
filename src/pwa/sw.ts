@@ -59,11 +59,42 @@ function notificationTag(value: unknown): string {
 	return normalized || 'senda-alert';
 }
 
+function isAppClient(client: WindowClient): boolean {
+	try {
+		return new URL(client.url).origin === sw.location.origin;
+	} catch {
+		return false;
+	}
+}
+
+async function focusOrOpenNotificationTarget(targetUrl: string): Promise<void> {
+	const clients = await sw.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+	const appClient = clients.find(isAppClient);
+
+	if (appClient) {
+		try {
+			if (appClient.url === targetUrl) {
+				await appClient.focus();
+				return;
+			}
+
+			const navigatedClient = await appClient.navigate(targetUrl);
+			await (navigatedClient ?? appClient).focus();
+			return;
+		} catch {
+			// The window may have closed; open a new client below.
+		}
+	}
+
+	const openedClient = await sw.clients.openWindow(targetUrl);
+	if (openedClient) await openedClient.focus();
+}
+
 sw.addEventListener('push', (event) => {
 	const payload = parsePayload(event);
 	event.waitUntil(
-		sw.registration.showNotification('Alerta de Senda', {
-			body: 'Hay una salida confirmada. Abre Senda para revisar.',
+		sw.registration.showNotification('Alerta de zona segura', {
+			body: 'Posible salida de una zona segura. Abre Senda para revisar de inmediato.',
 			icon: '/pwa-192x192.png',
 			badge: '/pwa-64x64.png',
 			tag: notificationTag(payload.tag),
@@ -79,16 +110,7 @@ sw.addEventListener('notificationclick', (event) => {
 	event.waitUntil(
 		(async () => {
 			const targetUrl = new URL(targetPath, sw.location.origin).href;
-			const clients = await sw.clients.matchAll({ includeUncontrolled: true, type: 'window' });
-			const appClient = clients.find((client) => new URL(client.url).origin === sw.location.origin);
-
-			if (appClient) {
-				await appClient.navigate(targetUrl);
-				await appClient.focus();
-				return;
-			}
-
-			await sw.clients.openWindow(targetUrl);
+			await focusOrOpenNotificationTarget(targetUrl);
 		})()
 	);
 });

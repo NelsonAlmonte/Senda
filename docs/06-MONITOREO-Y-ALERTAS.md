@@ -79,9 +79,10 @@ El prototipo no cambia el episodio según minutos transcurridos ni distancia adi
 
 - Registrar el episodio dentro de la aplicación al confirmarse la salida.
 - Mostrar el episodio `OPEN` en el dashboard de cada usuario autorizado y actualizar su apertura o resolución por Realtime.
-- Si se implementa Web Push, enviar como máximo una notificación al abrir el episodio y definir aparte si corresponde otra al resolverlo.
+- Enviar como máximo una notificación Web Push al abrir el episodio; el MVP no envía otra al resolverlo.
 - No repetir Web Push con cada nueva ubicación mientras el episodio siga `OPEN`.
 - No incluir datos personales innecesarios en el cuerpo del push.
+- Usar **Posible salida de una zona segura. Abre Senda para revisar de inmediato.** para comunicar urgencia sin declarar una emergencia no verificada.
 
 ## Casos de prueba prioritarios
 
@@ -120,4 +121,4 @@ El prototipo no cambia el episodio según minutos transcurridos ni distancia adi
 
 1. Evaluar con hardware real si la banda de 25 m, el máximo de precisión de 100 m y las dos lecturas consecutivas necesitan ajustes.
 2. Formalizar un umbral de rapidez imposible o saltos espurios si las pruebas reales muestran esa necesidad. La idempotencia básica por `event_id` ya está definida.
-3. Definir la política de Web Push sin introducir niveles de severidad.
+3. Evaluar una cola de reintentos persistentes solo si las pruebas posteriores muestran que la entrega asíncrona simple es insuficiente para el alcance real.

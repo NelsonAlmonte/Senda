@@ -33,6 +33,9 @@ function createSvelteKitPwaPlugins() {
 			start_url: '/',
 			scope: '/',
 			display: 'standalone',
+			launch_handler: {
+				client_mode: 'navigate-existing'
+			},
 			background_color: '#f6f8f5',
 			theme_color: '#355f55',
 			lang: 'es',

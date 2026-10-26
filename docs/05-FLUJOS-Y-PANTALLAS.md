@@ -149,6 +149,8 @@ En `/settings`, Web Push distingue **activadas**, **desactivadas**, **bloqueadas
 
 Cuando Web Push está desactivado o bloqueado, `/dashboard` muestra un recordatorio breve con enlace a configuración. Puede ocultarse durante la sesión actual, pero reaparece en una sesión posterior mientras siga desactivado. Navegadores no compatibles y errores técnicos no se presentan como si el usuario hubiera decidido desactivar las notificaciones.
 
+Al abrirse un episodio, cada navegador suscrito de un usuario autorizado recibe como máximo una notificación titulada **Alerta de zona segura** con el texto **Posible salida de una zona segura. Abre Senda para revisar de inmediato.** El mensaje evita nombres, coordenadas y datos clínicos. Al pulsarlo abre `/dashboard`, donde la sesión y RLS determinan qué episodio puede consultar la persona.
+
 ## UX indispensable
 
 - No etiquetar una ubicación antigua como "en vivo".

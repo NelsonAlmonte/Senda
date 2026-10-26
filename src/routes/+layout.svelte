@@ -10,6 +10,7 @@
 		if ('serviceWorker' in navigator) {
 			void navigator.serviceWorker
 				.register('/sw.js', { scope: '/', type: dev ? 'module' : 'classic' })
+				.then((registration) => registration.update())
 				.catch(() => undefined);
 		}
 	});

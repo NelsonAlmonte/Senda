@@ -1,9 +1,38 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import DashboardAlertEpisodesRealtime, {
+		type DashboardAlertEpisodeRealtimeRow,
+		type DashboardAlertEpisodeRealtimeState
+	} from '#lib/alerts/DashboardAlertEpisodesRealtime.svelte';
+	import { presentDateTime } from '#lib/locations/presentation.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 	let displayName = $derived(data.profile?.full_name || data.user.email || 'Usuario de Senda');
+	let patients = $derived(data.patients);
+	let alertRealtimeState = $state<'IDLE' | DashboardAlertEpisodeRealtimeState>('IDLE');
+	let alertAnnouncement = $state('');
+
+	function handleAlertEpisode(row: DashboardAlertEpisodeRealtimeRow) {
+		const patient = patients.find((candidate) => candidate.id === row.patient_id);
+		if (!patient) return;
+
+		patients = patients.map((candidate) =>
+			candidate.id === row.patient_id
+				? {
+						...candidate,
+						activeAlertEpisode:
+							row.status === 'OPEN' ? { id: row.id, confirmedAt: row.confirmed_at } : null
+					}
+				: candidate
+		);
+
+		const patientName = `${patient.firstName} ${patient.lastName}`;
+		alertAnnouncement =
+			row.status === 'OPEN'
+				? `Salida confirmada activa para ${patientName}.`
+				: `El episodio de salida de ${patientName} fue resuelto.`;
+	}
 </script>
 
 <svelte:head><title>Panel | Senda</title></svelte:head>
@@ -33,6 +62,16 @@
 		</header>
 
 		<section class="py-10 sm:py-14">
+			{#if data.alertEpisodesAvailable && patients.length > 0}
+				<DashboardAlertEpisodesRealtime
+					onAlertEpisode={handleAlertEpisode}
+					onStateChange={(state) => (alertRealtimeState = state)}
+				/>
+				<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+					{alertAnnouncement}
+				</p>
+			{/if}
+
 			<p class="text-sm font-bold tracking-[0.14em] text-brand uppercase">Panel protegido</p>
 			<h1 class="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-ink sm:text-4xl">
 				Hola, {displayName}
@@ -89,6 +128,24 @@
 				</div>
 			{/if}
 
+			{#if !data.alertEpisodesAvailable}
+				<div
+					class="mt-7 max-w-2xl rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+					role="status"
+				>
+					No pudimos consultar los episodios de salida. Las ubicaciones siguen disponibles, pero
+					debes abrir el mapa para comprobar su estado.
+				</div>
+			{:else if alertRealtimeState === 'ERROR'}
+				<div
+					class="mt-7 max-w-2xl rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+					role="status"
+				>
+					La actualización automática de episodios no está disponible. Recarga el panel para obtener
+					el estado más reciente.
+				</div>
+			{/if}
+
 			<div class="mt-9 flex flex-wrap items-end justify-between gap-4">
 				<div>
 					<h2 class="text-2xl font-bold text-ink">Pacientes autorizados</h2>
@@ -131,10 +188,15 @@
 				>
 					No pudimos consultar el estado de los dispositivos. Inténtalo nuevamente en unos minutos.
 				</div>
-			{:else if data.patients.length > 0}
+			{:else if patients.length > 0}
 				<ul class="mt-6 grid gap-5 md:grid-cols-2">
-					{#each data.patients as patient (patient.id)}
-						<li class="rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
+					{#each patients as patient (patient.id)}
+						<li
+							class={[
+								'rounded-3xl border bg-white p-6 shadow-lg shadow-brand/5',
+								patient.activeAlertEpisode ? 'border-amber-700/30' : 'border-white/80'
+							]}
+						>
 							<div class="min-w-0">
 								<h3 class="text-xl font-bold break-words text-ink">
 									{patient.firstName}
@@ -148,6 +210,33 @@
 									{patient.accessRole === 'ADMIN' ? 'Administrador' : 'Monitor'}
 								</p>
 							</div>
+							{#if patient.activeAlertEpisode}
+								<section
+									class="mt-5 rounded-2xl border border-amber-700/25 bg-amber-50 p-4"
+									aria-labelledby={`active-alert-${patient.id}`}
+								>
+									<p class="text-xs font-bold tracking-[0.12em] text-amber-950 uppercase">
+										Episodio de salida
+									</p>
+									<h4 id={`active-alert-${patient.id}`} class="mt-1 font-bold text-amber-950">
+										Salida confirmada activa
+									</h4>
+									<p class="mt-1 text-sm leading-6 text-amber-950">
+										Confirmada el
+										<time datetime={patient.activeAlertEpisode.confirmedAt}>
+											{presentDateTime(patient.activeAlertEpisode.confirmedAt)}
+										</time>.
+									</p>
+									{#if patient.assignment}
+										<a
+											href={resolve('/patients/[id]/map', { id: patient.id })}
+											class="mt-3 inline-flex min-h-12 items-center rounded-xl font-bold text-amber-950 underline decoration-2 underline-offset-4 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+										>
+											Ver ubicación y detalles
+										</a>
+									{/if}
+								</section>
+							{/if}
 							{#if patient.assignment}
 								<div class="mt-5 rounded-2xl border border-brand/15 bg-surface-muted p-4">
 									<p class="font-bold text-ink">Dispositivo configurado</p>

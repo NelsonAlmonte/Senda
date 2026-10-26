@@ -66,6 +66,8 @@ La relación de la lectura con las geocercas se presenta en una tarjeta separada
 
 El episodio confirmado se presenta en una tercera tarjeta separada: **Salida confirmada activa**, **Sin episodio de salida activo** o error de consulta. Incluye texto y fecha de confirmación, sin presentar niveles ni depender del ámbar como única señal. Debajo se mantiene un historial breve de episodios activos/resueltos; Realtime actualiza la región de estado sin mover el foco.
 
+En el dashboard, solo los episodios activos reciben una tarjeta destacada para no saturar cada paciente con estados normales repetidos. La tarjeta incluye el texto **Salida confirmada activa**, la fecha y un enlace contextual al mapa. El borde ámbar refuerza la jerarquía, pero nunca sustituye el texto. Aperturas y resoluciones se anuncian en una única región `status` contextual; los errores de consulta o conexión se muestran de forma visible y no se interpretan como ausencia de episodios.
+
 ## Editor de geocercas
 
 - En móvil, el mapa aparece antes de la lista y del formulario. Los controles mantienen objetivos táctiles cómodos y separación suficiente.

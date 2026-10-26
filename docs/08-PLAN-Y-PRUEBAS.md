@@ -73,6 +73,8 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 
 **Estado completado (2026-10-25, historia 4C):** `alert_episodes` conserva un único episodio `OPEN` por paciente, vinculado a la asignación histórica y a las lecturas confirmatorias. Dos `OUTSIDE` consecutivas con precisión nula o de hasta 100 m lo abren; dos `INSIDE` lo resuelven. Lecturas inciertas, sin zona, imprecisas o atrasadas no alteran indebidamente el estado. La PWA muestra estado e historial breve por SSR y Realtime. Las migraciones `20261026010952_geofence_alert_episodes.sql` y `20261026012835_remove_alert_episode_severity.sql` están aplicadas en desarrollo; sus 55 casos pgTAP pasan sin dejar datos ficticios y el usuario validó manualmente el flujo. La segunda elimina la columna redundante `severity`; el equipo decidió no implementar niveles, escaladas ni cron en el MVP. La Fase 4 queda completada.
 
+**Estado completado (2026-10-26, historia 4D):** el dashboard incorpora el episodio `OPEN` a la carga SSR de cada paciente autorizado y mantiene las tarjetas sincronizadas mediante una sola suscripción Postgres Changes sobre `alert_episodes`. La presentación usa texto, fecha, enlace al mapa y una región accesible para anunciar apertura o resolución. No añade tablas, severidades ni permisos; reutiliza la publicación y RLS validadas en 4C. El usuario validó manualmente la apertura, resolución y navegación contextual sin recargar el dashboard.
+
 ### Fase 5 — Compartición e invitaciones
 
 - Extender el código inicial con invitación por email y enlace, manteniendo `PENDING`, aceptar/rechazar y revocación de `patient_access`.

@@ -61,17 +61,40 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			source: string;
 		}
 	>();
+	const activeAlertEpisodesByPatient = new Map<
+		string,
+		{
+			id: string;
+			confirmedAt: string;
+		}
+	>();
 	let devicesAvailable = true;
 	let locationsAvailable = true;
+	let alertEpisodesAvailable = true;
 
 	if (patientIds.length > 0) {
-		const assignmentResult = await locals.supabase
-			.from('device_assignments')
-			.select('id, patient_id, assigned_at, device:devices!inner(id, serial_number, device_kind)')
-			.in('patient_id', patientIds)
-			.is('unassigned_at', null);
+		const [assignmentResult, alertEpisodesResult] = await Promise.all([
+			locals.supabase
+				.from('device_assignments')
+				.select('id, patient_id, assigned_at, device:devices!inner(id, serial_number, device_kind)')
+				.in('patient_id', patientIds)
+				.is('unassigned_at', null),
+			locals.supabase
+				.from('alert_episodes')
+				.select('id, patient_id, confirmed_at')
+				.in('patient_id', patientIds)
+				.eq('status', 'OPEN')
+		]);
 
 		devicesAvailable = !assignmentResult.error;
+		alertEpisodesAvailable = !alertEpisodesResult.error;
+
+		for (const episode of alertEpisodesResult.data ?? []) {
+			activeAlertEpisodesByPatient.set(episode.patient_id, {
+				id: episode.id,
+				confirmedAt: episode.confirmed_at
+			});
+		}
 
 		for (const assignment of assignmentResult.data ?? []) {
 			const device = Array.isArray(assignment.device) ? assignment.device[0] : assignment.device;
@@ -114,11 +137,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const now = Date.now();
 	const patients = authorizedPatients.map((patient) => {
 		const assignment = assignmentsByPatient.get(patient.id);
-		if (!assignment) return { ...patient, assignment: null };
+		const activeAlertEpisode = activeAlertEpisodesByPatient.get(patient.id) ?? null;
+		if (!assignment) return { ...patient, activeAlertEpisode, assignment: null };
 
 		const location = latestLocationsByAssignment.get(assignment.id);
 		return {
 			...patient,
+			activeAlertEpisode,
 			assignment: {
 				...assignment,
 				latestLocation: location
@@ -138,6 +163,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		patientsAvailable: !accessResult.error,
 		devicesAvailable,
 		locationsAvailable,
+		alertEpisodesAvailable,
 		patientCreated: url.searchParams.get('created') === 'patient',
 		deviceConfigured: url.searchParams.get('configured') === 'device',
 		accessAccepted: url.searchParams.get('access') === 'accepted',

@@ -7,10 +7,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 function createSvelteKitPwaPlugins() {
 	const plugins = VitePWA({
 		outDir: '.svelte-kit/output/client',
+		strategies: 'injectManifest',
+		srcDir: 'src/pwa',
+		filename: 'sw.ts',
 		registerType: 'autoUpdate',
 		injectRegister: null,
 		devOptions: {
-			enabled: true
+			enabled: true,
+			type: 'module'
 		},
 		includeAssets: [
 			'favicon.ico',
@@ -56,14 +60,10 @@ function createSvelteKitPwaPlugins() {
 				}
 			]
 		},
-		workbox: {
+		injectManifest: {
 			globDirectory: '.svelte-kit/output/client',
-			globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,woff2}'],
-			cleanupOutdatedCaches: true,
-			clientsClaim: true,
-			skipWaiting: true,
-			navigateFallback: undefined,
-			runtimeCaching: []
+			globPatterns: ['_app/**/*.{js,css,woff2}'],
+			injectionPoint: 'self.__WB_MANIFEST'
 		}
 	});
 

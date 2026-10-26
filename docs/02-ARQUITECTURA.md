@@ -36,7 +36,7 @@
 - Formularios, navegación, layouts, estados vacíos, carga y errores.
 - Prevalidaciones (email válido, radio positivo, coordenadas completas, límites de campo).
 - Inicialización y actualización de Google Maps; dibujo y previsualización de geocercas.
-- Visualización de indicadores, nivel de riesgo calculado por backend y última transmisión.
+- Visualización de la clasificación de geocerca calculada por backend, episodios confirmados y última transmisión.
 - Realtime y manejo del ciclo de suscripciones mientras el usuario navega.
 - Interacción del modo simulación manual **solo si está expresamente habilitado** para pruebas.
 
@@ -86,7 +86,7 @@ La ingestión puede ser una RPC protegida para simuladores autenticados en entor
 ## Despliegue confirmado y recomendaciones aún no cerradas
 
 - La aplicación usa SSR con `@sveltejs/adapter-netlify@7.0.1`, función Node (`edge: false`) y salida pública `build`. Validar en Netlify autenticación por cookies, rutas profundas, service worker, Google Maps y Push.
-- Estrategia `generateSW` vs `injectManifest`: elegir al implementar Web Push, probando eventos push con el plugin elegido.
+- **Decisión 2026-10-26:** usar `injectManifest` de `vite-plugin-pwa@1.3.0` con un service worker propio para `push` y `notificationclick`, conservando el precache de recursos estáticos. No cachear respuestas de Supabase ni datos de pacientes. Validar el worker y sus actualizaciones en Netlify.
 - Cálculo de distancias mediante Haversine/PostGIS: comenzar por la opción correcta más simple y verificable; activar PostGIS si simplifica consultas y filtros.
 - Biblioteca de UI y tipografía: recomendaciones en `07-UI-UX.md`; no confundir con decisiones cerradas.
 

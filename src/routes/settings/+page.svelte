@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import PushNotificationSettings from '#lib/push/PushNotificationSettings.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -84,5 +85,7 @@
 				>
 			</form>
 		</section>
+
+		<PushNotificationSettings />
 	</div>
 </main>

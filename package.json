@@ -14,6 +14,7 @@
 		"format": "prettier --write .",
 		"test:simulator": "node --test simulator/simulator-client.test.mjs",
 		"generate:pwa-assets": "pwa-assets-generator --preset minimal-2023 static/pwa-source.svg",
+		"generate:vapid-keys": "node scripts/generate-vapid-keys.mjs",
 		"simulate:location": "node --env-file=.env simulator/send-location.mjs",
 		"simulate:route": "node --env-file=.env simulator/play-route.mjs"
 	},
@@ -43,7 +44,8 @@
 		"typescript": "6.0.3",
 		"typescript-eslint": "8.72.0",
 		"vite": "8.3.5",
-		"vite-plugin-pwa": "1.3.0"
+		"vite-plugin-pwa": "1.3.0",
+		"workbox-precaching": "7.4.1"
 	},
 	"imports": {
 		"#lib": "./src/lib/index.js",

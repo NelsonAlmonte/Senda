@@ -21,7 +21,7 @@ El documento `Proyecto Final.pdf` comprende capítulos I–III en la versión re
 7. Envío HTTPS de ubicaciones por dos métodos de prueba: click en Google Maps y simulador Node.js con rutas.
 8. Visualización de la última ubicación, antigüedad de datos e historial de posiciones.
 9. Geocercas **circulares** configurables por `ADMIN` y `MONITOR`.
-10. Clasificación de riesgo normal/bajo/medio/alto/crítico, episodios de alerta y estado de conexión independiente.
+10. Clasificación de cada lectura respecto de las geocercas, episodios `OPEN`/`RESOLVED` sin niveles de severidad y estado de conexión independiente.
 11. Alertas in-app y notificaciones Web Push en escenarios soportados por el navegador.
 12. Pruebas reproducibles, incluyendo excepciones, latencia, regresión y autorización.
 

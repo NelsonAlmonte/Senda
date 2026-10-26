@@ -7,8 +7,10 @@
 	let { children }: LayoutProps = $props();
 
 	onMount(() => {
-		if (!dev && 'serviceWorker' in navigator) {
-			void navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => undefined);
+		if ('serviceWorker' in navigator) {
+			void navigator.serviceWorker
+				.register('/sw.js', { scope: '/', type: dev ? 'module' : 'classic' })
+				.catch(() => undefined);
 		}
 	});
 </script>

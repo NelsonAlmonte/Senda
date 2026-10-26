@@ -182,7 +182,7 @@ No agregar estado `EXPIRED`. El token puede representarse como código introduci
 
 **Implementado el 2026-10-24:** código manual de un solo uso con `email = null`, hash SHA-256 persistido y aceptación transaccional. La tabla no se expone directamente a `anon` ni `authenticated`; las operaciones se realizan mediante RPC con autorización interna. El envío por email, `DECLINED` y la invalidación administrativa permanecen para una historia posterior.
 
-### 11. `push_subscriptions` (cuando se implemente Web Push)
+### 11. `push_subscriptions`
 
 ```text
 id          uuid PK
@@ -194,6 +194,8 @@ created_at  timestamptz
 ```
 
 El usuario solo administra sus propias suscripciones. No exponer listado global ni claves privadas VAPID. Diseñar eliminación de endpoints inválidos durante envíos.
+
+**Historia 6A completada (2026-10-26):** la migración local `20261026173727_push_subscriptions.sql`, registrada por Supabase MCP como `20261026181621_push_subscriptions`, está aplicada en el proyecto de desarrollo. Crea la tabla con endpoint único, FK en cascada a `auth.users`, grants explícitos y cuatro políticas RLS separadas para que cada persona solo consulte y modifique sus propias suscripciones. La PWA registra una fila por navegador/dispositivo. Sus 29 pruebas pgTAP pasan dentro de una transacción con rollback; la verificación posterior confirma tabla vacía, RLS activa, CRUD para `authenticated` y ausencia de lectura para `anon`. El usuario validó manualmente la activación, desactivación y los estados asociados en el navegador.
 
 ### Extensiones opcionales posteriores
 

@@ -82,6 +82,8 @@ En el dashboard, solo los episodios activos reciben una tarjeta destacada para n
 
 - Compatibilidad de instalación según capacidades reales del navegador/OS.
 - Web Push requiere consentimiento. En iOS, verificar funcionamiento como app añadida a pantalla de inicio.
+- El estado de Web Push debe expresarse con texto y no solo con color. `/settings` ofrece una acción clara para activar, desactivar o volver a comprobar; el dashboard muestra un recordatorio descartable durante la sesión únicamente cuando el usuario puede actuar porque las notificaciones están desactivadas o bloqueadas.
+- Pedir permiso solo como consecuencia de la acción explícita **Activar notificaciones**. Si el navegador lo bloqueó, explicar que Senda no puede cambiar ese permiso y orientar hacia la configuración del sitio.
 - Service worker: **no cachear respuestas de Supabase con ubicaciones/personas/historial por defecto**. Cachear recursos estáticos con política segura; evitar filtraciones entre usuarios al cambiar de sesión.
 - Cuando haya versión nueva, manejar actualización/reload de forma visible y sin pérdida silenciosa de acciones.
 - Mapas Google requieren red; evitar prometer posiciones nuevas offline.

@@ -62,19 +62,22 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 ### Fase 4 — Geocercas y motor de alertas
 
 - `safe_zones`, episodios `alert_episodes`, validación de lecturas, confirmación de salida y reingreso.
-- Severidad y conectividad separadas; cron/funciones SQL donde se necesiten.
+- Episodio de salida y conectividad separados; sin niveles de severidad ni cron de escalado en el MVP.
 - Escenarios automáticos con tiempo de simulación controlado.
 
 **Aceptación:** superar casos R01–R19 aplicables, tras ratificar umbrales abiertos.
 
 **Estado completado (2026-10-25, historia 4A):** se implementó la configuración de múltiples geocercas circulares en `/patients/:id/safe-zones`, con radio 50–5,000 m, selección y arrastre del centro en Google Maps, alternativa numérica, activación/desactivación y archivo sin borrado. La migración `20261025183035_patient_safe_zones.sql` está aplicada en Supabase de desarrollo y añade `safe_zones`, RLS por paciente y RPC para `ADMIN`/`MONITOR`. La suite pgTAP pasa 29 casos: permisos negativos, nombres únicos, más de cinco zonas y conservación al archivar, entre otros. El usuario validó manualmente el editor y la visualización de las zonas activas en el mapa de monitoreo. El motor de riesgo, episodios, salida/reingreso y alertas no forman parte de 4A.
 
-**Estado completado (2026-10-25, historia 4B):** PostgreSQL clasifica cada lectura como `INSIDE`, `OUTSIDE`, `UNCERTAIN` o `NO_ACTIVE_ZONE`, con `NOT_EVALUATED` para el historial anterior. La tolerancia efectiva es el mayor valor entre la precisión informada y 25 m. La PWA presenta la relación en `/patients/:id/map` y aclara que una lectura fuera todavía no es una alerta confirmada. La migración `20261026000952_geofence_location_evaluation.sql` está aplicada en Supabase de desarrollo y sus 36 casos pgTAP pasan; la transacción de prueba no dejó registros ficticios. El usuario validó manualmente todos los estados y la actualización Realtime en la PWA. La confirmación con dos lecturas, los episodios, reingreso, severidades y notificaciones permanecen fuera de 4B.
+**Estado completado (2026-10-25, historia 4B):** PostgreSQL clasifica cada lectura como `INSIDE`, `OUTSIDE`, `UNCERTAIN` o `NO_ACTIVE_ZONE`, con `NOT_EVALUATED` para el historial anterior. La tolerancia efectiva es el mayor valor entre la precisión informada y 25 m. La PWA presenta la relación en `/patients/:id/map` y aclara que una lectura fuera todavía no es una alerta confirmada. La migración `20261026000952_geofence_location_evaluation.sql` está aplicada en Supabase de desarrollo y sus 36 casos pgTAP pasan; la transacción de prueba no dejó registros ficticios. El usuario validó manualmente todos los estados y la actualización Realtime en la PWA. La confirmación con dos lecturas, los episodios y el reingreso se implementaron después en 4C; las notificaciones permanecen en una fase posterior.
+
+**Estado completado (2026-10-25, historia 4C):** `alert_episodes` conserva un único episodio `OPEN` por paciente, vinculado a la asignación histórica y a las lecturas confirmatorias. Dos `OUTSIDE` consecutivas con precisión nula o de hasta 100 m lo abren; dos `INSIDE` lo resuelven. Lecturas inciertas, sin zona, imprecisas o atrasadas no alteran indebidamente el estado. La PWA muestra estado e historial breve por SSR y Realtime. Las migraciones `20261026010952_geofence_alert_episodes.sql` y `20261026012835_remove_alert_episode_severity.sql` están aplicadas en desarrollo; sus 55 casos pgTAP pasan sin dejar datos ficticios y el usuario validó manualmente el flujo. La segunda elimina la columna redundante `severity`; el equipo decidió no implementar niveles, escaladas ni cron en el MVP. La Fase 4 queda completada.
 
 ### Fase 5 — Compartición e invitaciones
 
 - Extender el código inicial con invitación por email y enlace, manteniendo `PENDING`, aceptar/rechazar y revocación de `patient_access`.
 - Integración de correo con configuración Supabase Auth/Gmail y mecanismo específico de emails de paciente.
+- Esta invitación sirve para conceder acceso al paciente; no participa en las notificaciones Web Push, que usan suscripciones del navegador en la Fase 6.
 
 **Aceptación:** email y token correctos permiten acceso; email erróneo/token reutilizado/usuario sin permiso no.
 
@@ -89,7 +92,7 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 ### Fase 7 — Calidad, evidencia y demo
 
 - Pruebas integrales de permisos y casos límite; UX y accesibilidad; registro de métricas y documentación.
-- Preparar demo con ruta dentro/fuera, escaladas, retorno, historial, cambios de geocerca e invitación.
+- Preparar demo con ruta dentro/fuera, apertura del episodio, retorno, historial, cambios de geocerca e invitación.
 - Documentar limitaciones, resultados medidos y tecnología realmente utilizada.
 
 **Aceptación:** el MVP funciona de extremo a extremo y puede presentarse al jurado como producto funcional con simulación permitida.

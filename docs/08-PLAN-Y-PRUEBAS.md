@@ -86,10 +86,12 @@ Cada fase se entrega con: funcionalidad visible, cambios SQL en migraciones, per
 ### Fase 6 — Notificaciones Web Push y PWA completa
 
 - Pedir permiso, guardar suscripciones, enviar push desde backend ante cambio de episodio.
-- Validar plugin PWA con `injectManifest`/custom SW si se requiere para evento push.
+- Usar la estrategia confirmada `injectManifest` con service worker propio para eventos `push` y `notificationclick`, conservando únicamente el precache estático.
 - Probar en navegadores/OS de interés, incluido iPhone instalado en pantalla de inicio cuando haya acceso al dispositivo.
 
 **Aceptación:** alerta llega a usuarios autorizados incluso con PWA cerrada en entorno compatible; fallo de push no borra alerta.
+
+**Historia 6A completada (2026-10-26):** suscripción por navegador, activación/desactivación desde `/settings`, RLS por propietario y recordatorio descartable por sesión en el dashboard. El estado combina permiso del navegador, `PushSubscription` local y fila propia en Supabase. La migración está aplicada en Supabase de desarrollo y sus 29 pruebas pgTAP pasan con rollback, sin dejar suscripciones de prueba. El usuario validó manualmente la activación, desactivación y los estados asociados en el navegador. La entrega real de una notificación no forma parte de 6A; el envío backend al abrir episodios será una historia 6B separada.
 
 ### Fase 7 — Calidad, evidencia y demo
 

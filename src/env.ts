@@ -24,6 +24,11 @@ export const variables = defineEnvVars({
 		static: true,
 		schema: optionalTrimmedString
 	},
+	PUBLIC_VAPID_PUBLIC_KEY: {
+		public: true,
+		static: true,
+		schema: optionalTrimmedString
+	},
 	SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR: {
 		description: 'Enables the development-only manual location simulator on patient maps.',
 		schema: optionalBooleanFlag

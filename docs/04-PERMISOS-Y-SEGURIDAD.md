@@ -33,7 +33,7 @@ La tabla `group_members` **no es obligatoria en la fase inicial**. Si aparece de
 8. **`patient_access SELECT`**: según necesidad de interfaz; limitar exposición de correos de terceros.
 9. **`patient_access INSERT/UPDATE/DELETE`**: prohibir CRUD abierto desde cliente; usar operación atómica autorizada.
 10. **`devices` / `device_assignments`**: vistas/operaciones específicas, no listado completo de inventario ajeno.
-9. **`push_subscriptions`**: cada usuario gestiona únicamente sus propias suscripciones; el envío masivo se ejecuta con backend autorizado.
+9. **`push_subscriptions`**: cada usuario gestiona únicamente sus propias suscripciones mediante `SELECT`, `INSERT`, `UPDATE` y `DELETE` sujetos a `user_id = auth.uid()`. El endpoint es único para no registrar el mismo navegador bajo varias cuentas. El envío y la limpieza de endpoints inválidos se ejecutarán después desde backend autorizado.
 
 Preferir RLS y constraints sobre una proliferación de Edge Functions. Las funciones SQL sensibles deben asegurar permisos de ejecución y seguridad del `search_path`; revisar especialmente cualquier `SECURITY DEFINER`.
 

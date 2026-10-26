@@ -5,6 +5,7 @@
 		type DashboardAlertEpisodeRealtimeState
 	} from '#lib/alerts/DashboardAlertEpisodesRealtime.svelte';
 	import { presentDateTime } from '#lib/locations/presentation.js';
+	import PushNotificationReminder from '#lib/push/PushNotificationReminder.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -80,6 +81,8 @@
 				Consulta las personas que tienes autorizadas y crea el primer contexto de cuidado cuando lo
 				necesites.
 			</p>
+
+			<PushNotificationReminder />
 
 			{#if data.patientCreated}
 				<div

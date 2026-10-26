@@ -145,6 +145,10 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 | `/invitations` | Invitaciones propias PENDING y acciones de aceptar/declinar |
 | `/settings` | Perfil y activación de Web Push; información básica |
 
+En `/settings`, Web Push distingue **activadas**, **desactivadas**, **bloqueadas**, **no compatibles**, **configuración pendiente** y **error de comprobación**. El permiso del navegador por sí solo no significa que el dispositivo esté activo: también deben existir una suscripción de `PushManager` y su fila propia en `push_subscriptions`. La activación y desactivación se realizan por dispositivo.
+
+Cuando Web Push está desactivado o bloqueado, `/dashboard` muestra un recordatorio breve con enlace a configuración. Puede ocultarse durante la sesión actual, pero reaparece en una sesión posterior mientras siga desactivado. Navegadores no compatibles y errores técnicos no se presentan como si el usuario hubiera decidido desactivar las notificaciones.
+
 ## UX indispensable
 
 - No etiquetar una ubicación antigua como "en vivo".

@@ -45,7 +45,7 @@
 - Integridad referencial, operaciones atómicas e invariantes de asignaciones.
 - Comprobación final de acceso a pacientes, geocercas, invitaciones y ubicación mediante RLS/RPC.
 - Recepción autorizada de posiciones y asignación de la posición al dispositivo/asignación válida.
-- Clasificación canónica de los episodios de riesgo, persistencia y anti-duplicación.
+- Clasificación canónica de cada lectura contra geocercas; posteriormente, confirmación de episodios de riesgo, persistencia y anti-duplicación.
 - Detección programada de ubicación obsoleta.
 - Envío de Web Push y manejo de secretos necesarios para integraciones.
 
@@ -58,9 +58,11 @@ Emisor autorizado → ingestión → verificar contexto/asignación
        ↓
 Persistir ubicación (con recorded_at y received_at)
        ↓
-Evaluar precisión, orden temporal, geocercas y episodio
+Clasificar la lectura contra geocercas activas con su precisión
        ↓
-Persistir estado de riesgo/alerta en transacción
+Persistir relación INSIDE / OUTSIDE / UNCERTAIN / NO_ACTIVE_ZONE
+       ↓
+Confirmar o actualizar episodio de riesgo (historia posterior)
        ↓
 Supabase Realtime → clientes con permisos
        ↓

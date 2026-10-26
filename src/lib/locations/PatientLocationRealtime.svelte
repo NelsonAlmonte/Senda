@@ -1,4 +1,6 @@
 <script module lang="ts">
+	import type { LocationGeofenceRelation } from './presentation.js';
+
 	export type LocationRealtimeRow = {
 		id: number;
 		device_assignment_id: string;
@@ -9,6 +11,11 @@
 		recorded_at: string;
 		received_at: string;
 		source: string;
+		geofence_relation: LocationGeofenceRelation;
+		matched_safe_zone_id: string | null;
+		distance_to_boundary_m: number | null;
+		effective_tolerance_m: number | null;
+		geofence_evaluated_at: string | null;
 	};
 
 	export type LocationRealtimeState = 'CONNECTING' | 'CONNECTED' | 'ERROR';

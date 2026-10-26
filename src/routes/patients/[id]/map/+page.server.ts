@@ -1,5 +1,5 @@
 import { SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR } from '$app/env/private';
-import { presentLocationTime } from '#lib/locations/presentation.js';
+import { presentLocationTime, type LocationGeofenceRelation } from '#lib/locations/presentation.js';
 import { error as httpError, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -74,6 +74,11 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		recordedAt: string;
 		receivedAt: string;
 		source: string;
+		geofenceRelation: LocationGeofenceRelation;
+		matchedSafeZoneId: string | null;
+		distanceToBoundaryM: number | null;
+		effectiveToleranceM: number | null;
+		geofenceEvaluatedAt: string | null;
 		freshness: 'FRESH' | 'STALE';
 		ageLabel: string;
 		recordedAtLabel: string;
@@ -116,7 +121,9 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (assignment && device) {
 		const locationResult = await locals.supabase
 			.from('latest_locations')
-			.select('id, latitude, longitude, accuracy_m, recorded_at, received_at, source')
+			.select(
+				'id, latitude, longitude, accuracy_m, recorded_at, received_at, source, geofence_relation, matched_safe_zone_id, distance_to_boundary_m, effective_tolerance_m, geofence_evaluated_at'
+			)
 			.eq('device_assignment_id', assignment.id)
 			.maybeSingle();
 
@@ -130,6 +137,11 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 				recordedAt: locationResult.data.recorded_at,
 				receivedAt: locationResult.data.received_at,
 				source: locationResult.data.source,
+				geofenceRelation: locationResult.data.geofence_relation as LocationGeofenceRelation,
+				matchedSafeZoneId: locationResult.data.matched_safe_zone_id,
+				distanceToBoundaryM: locationResult.data.distance_to_boundary_m,
+				effectiveToleranceM: locationResult.data.effective_tolerance_m,
+				geofenceEvaluatedAt: locationResult.data.geofence_evaluated_at,
 				...presentLocationTime(locationResult.data.recorded_at)
 			};
 		}

@@ -62,6 +62,8 @@ No usar únicamente un punto verde/rojo para comunicar estado; incluir texto. El
 
 El mapa de última ubicación reserva su espacio durante la carga para evitar saltos, ofrece recuperación ante error y conserva estados útiles sin dispositivo o sin lecturas. La frescura se comunica con texto además de color. Cuando existe precisión GPS, el círculo azul se identifica expresamente como precisión y no como geocerca o zona segura. Las geocercas activas se muestran con círculos verdes no interactivos y una lista textual de nombres y radios; el mapa de monitoreo usa la misma interacción directa sin `Ctrl` que el editor.
 
+La relación de la lectura con las geocercas se presenta en una tarjeta separada de la frescura y de las futuras alertas. Sus estados usan encabezados completos —**Dentro de una zona permitida**, **Fuera de las zonas permitidas**, **Ubicación cerca del límite**, **Sin geocerca activa** o **Evaluación no disponible**— para no depender del color. El estado fuera de zona aclara que una lectura aislada aún no constituye una alerta confirmada; los cambios recibidos por Realtime se anuncian de forma cortés sin mover el foco.
+
 ## Editor de geocercas
 
 - En móvil, el mapa aparece antes de la lista y del formulario. Los controles mantienen objetivos táctiles cómodos y separación suficiente.

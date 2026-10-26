@@ -106,6 +106,11 @@ accuracy_m            double precision null (>=0)
 recorded_at           timestamptz
 received_at           timestamptz DEFAULT now()
 source                SIMULATOR | MANUAL | DEVICE
+geofence_relation     NOT_EVALUATED | NO_ACTIVE_ZONE | INSIDE | OUTSIDE | UNCERTAIN
+matched_safe_zone_id  uuid null FK -> safe_zones.id ON DELETE RESTRICT
+distance_to_boundary_m double precision null
+effective_tolerance_m double precision null (>=25 cuando fue evaluada)
+geofence_evaluated_at timestamptz null
 ```
 
 **Corrección importante respecto al esquema preliminar:** no autorizar una ubicación antigua uniéndola al **paciente actualmente asignado** al dispositivo. Una unidad física puede pasar de Juan a Rosa. Al usar `device_assignment_id` inmutable, las ubicaciones históricas de Juan continúan siendo de Juan, y no pasan a Rosa accidentalmente.
@@ -113,6 +118,8 @@ source                SIMULATOR | MANUAL | DEVICE
 Índice implementado: `(device_assignment_id, recorded_at DESC, id DESC)`. La idempotencia usa `UNIQUE(device_assignment_id,event_id)`: repetir el mismo UUID con los mismos datos devuelve la ubicación existente; reutilizarlo con datos distintos se rechaza. La RPC de simulación valida rangos, precisión finita no negativa, asignación activa, que la captura no anteceda la asignación y que no esté más de un minuto en el futuro.
 
 **Estado implementado (2026-10-25):** `locations`, la vista `latest_locations` y la RPC idempotente limitada a `ADMIN` están aplicadas en Supabase de desarrollo. `locations` pertenece a la publicación `supabase_realtime`; Postgres Changes entrega inserciones únicamente después de evaluar su política RLS por `patient_access`. El mapa consulta bajo la misma RLS un máximo de 200 lecturas recientes del paciente y conserva `device_assignment_id` para dibujar cada asignación como un trazo independiente. La suite pgTAP de ubicaciones pasa 39 casos, incluida publicación Realtime, lectura `MONITOR`, rechazo de escritura directa y aislamiento del historial al reasignar un dispositivo. El usuario validó manualmente la visualización histórica y su actualización sin reconstruir el mapa.
+
+**Historia 4B implementada (2026-10-25):** la migración `20261026000952_geofence_location_evaluation.sql` añade una evaluación inmutable a cada lectura nueva mediante un trigger previo a la inserción. Usa distancia Haversine, todas las zonas activas no archivadas del paciente y una tolerancia efectiva `greatest(coalesce(accuracy_m, 0), 25)`. `distance_to_boundary_m` es negativa dentro y positiva fuera. Las 21 lecturas históricas verificadas conservaron `NOT_EVALUATED`; no se reinterpretan retroactivamente con una configuración de geocercas posterior. El FK a la zona usa `ON DELETE RESTRICT`, coherente con el archivo sin borrado físico. La migración está aplicada en Supabase de desarrollo y sus 36 casos pgTAP pasan sin dejar datos de prueba.
 
 ### 8. `safe_zones`
 

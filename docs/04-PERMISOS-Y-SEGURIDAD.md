@@ -26,7 +26,7 @@ La tabla `group_members` **no es obligatoria en la fase inicial**. Si aparece de
 1. **`patients SELECT`**: usuarios con un `patient_access` activo para ese paciente; incluir flujo controlado de creación administrativa sin abrir lecturas globales.
 2. **`devices` y `device_assignments SELECT`**: solo si la asignación apunta a un paciente con `patient_access` activo. El inventario sin asignar no se expone.
 3. **Asignación de dispositivo**: RPC autenticada que exige `ADMIN`; el cliente no recibe permisos directos de inserción o actualización sobre inventario/asignaciones.
-4. **`locations SELECT`**: solo si la asignación histórica apunta a un paciente con acceso activo del usuario.
+4. **`locations SELECT`**: solo si la asignación histórica apunta a un paciente con acceso activo del usuario. La relación con geocercas, zona coincidente, tolerancia y distancia firmada forman parte de la misma fila y heredan exactamente este aislamiento.
 5. **`safe_zones SELECT`**: usuarios con acceso al paciente.
 6. **`safe_zones INSERT/UPDATE/DELETE`**: `ADMIN` o `MONITOR` autorizado.
 7. **`alert_episodes SELECT`**: usuarios con acceso al paciente.

@@ -5,7 +5,7 @@
 		type LocationRealtimeRow,
 		type LocationRealtimeState
 	} from '#lib/locations/PatientLocationRealtime.svelte';
-	import { presentLocationTime } from '#lib/locations/presentation.js';
+	import { presentGeofenceRelation, presentLocationTime } from '#lib/locations/presentation.js';
 	import PatientLocationMap, {
 		type MapHistorySegment,
 		type MapSimulationPoint,
@@ -25,6 +25,18 @@
 	let latestLocation = $derived(data.latestLocation);
 	let locationHistory = $derived(data.locationHistory);
 	let historySegments = $derived(buildHistorySegments(locationHistory));
+	let matchedSafeZoneName = $derived(
+		data.safeZones.find((zone) => zone.id === latestLocation?.matchedSafeZoneId)?.name ?? null
+	);
+	let geofencePresentation = $derived(
+		latestLocation
+			? presentGeofenceRelation(
+					latestLocation.geofenceRelation,
+					matchedSafeZoneName,
+					latestLocation.effectiveToleranceM
+				)
+			: null
+	);
 	let realtimeState = $state<RealtimeState>('IDLE');
 	let mapController = $state<PatientLocationMapController | null>(null);
 	let simulationMode = $state(false);
@@ -58,6 +70,11 @@
 			recordedAt: row.recorded_at,
 			receivedAt: row.received_at,
 			source: row.source,
+			geofenceRelation: row.geofence_relation,
+			matchedSafeZoneId: row.matched_safe_zone_id,
+			distanceToBoundaryM: row.distance_to_boundary_m,
+			effectiveToleranceM: row.effective_tolerance_m,
+			geofenceEvaluatedAt: row.geofence_evaluated_at,
 			...presentLocationTime(row.recorded_at)
 		};
 	}
@@ -545,6 +562,44 @@
 									vivo.
 								</p>
 							</div>
+						{/if}
+
+						{#if latestLocation && geofencePresentation}
+							<section
+								class={[
+									'mt-6 rounded-2xl border p-4',
+									geofencePresentation.tone === 'positive'
+										? 'border-brand/20 bg-surface-muted'
+										: geofencePresentation.tone === 'warning'
+											? 'border-amber-700/25 bg-amber-50'
+											: 'border-ink/10 bg-white'
+								]}
+								aria-labelledby="geofence-relation-title"
+								role="status"
+								aria-live="polite"
+								aria-atomic="true"
+							>
+								<p class="text-xs font-bold tracking-[0.12em] text-muted uppercase">
+									Relación con geocercas
+								</p>
+								<h2
+									id="geofence-relation-title"
+									class={[
+										'mt-1 font-bold',
+										geofencePresentation.tone === 'warning' ? 'text-amber-950' : 'text-ink'
+									]}
+								>
+									{geofencePresentation.title}
+								</h2>
+								<p
+									class={[
+										'mt-1 text-sm leading-6',
+										geofencePresentation.tone === 'warning' ? 'text-amber-950' : 'text-muted'
+									]}
+								>
+									{geofencePresentation.description}
+								</p>
+							</section>
 						{/if}
 
 						{#if latestLocation}

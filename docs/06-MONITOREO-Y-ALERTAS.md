@@ -9,6 +9,26 @@
 - Confirmar salida por **dos lecturas consecutivas válidas fuera**, considerando `accuracy_m` y tolerancia alrededor del radio.
 - Geocercas circulares.
 - La ubicación se clasifica desde backend; frontend representa estado y permite simular solo bajo autorización.
+- La clasificación básica usa una incertidumbre mínima de **25 m**; si `accuracy_m` es mayor, se usa ese valor.
+
+## Clasificación básica por lectura — historia 4B
+
+Esta etapa todavía no crea episodios ni alertas. Al insertar una ubicación, PostgreSQL calcula la distancia Haversine entre la lectura y cada geocerca activa no archivada del paciente. Para cada círculo:
+
+```text
+tolerancia_efectiva = max(accuracy_m o 0, 25 m)
+distancia_al_perímetro = distancia_al_centro - radio
+```
+
+- `INSIDE`: la lectura y su margen completo caben dentro de al menos una zona (`distancia_al_perímetro <= -tolerancia_efectiva`).
+- `UNCERTAIN`: no está confirmada dentro de ninguna zona y su margen alcanza al menos un perímetro (`abs(distancia_al_perímetro) <= tolerancia_efectiva`).
+- `OUTSIDE`: queda fuera de todas las zonas por más que el margen efectivo.
+- `NO_ACTIVE_ZONE`: no existe una geocerca activa y no archivada contra la cual evaluar.
+- `NOT_EVALUATED`: lectura histórica anterior al clasificador; no se reinterpreta usando zonas creadas o modificadas después.
+
+La prioridad al evaluar múltiples zonas es `INSIDE` → `UNCERTAIN` → `OUTSIDE`: estar inequívocamente dentro de cualquiera basta para `INSIDE`. La fila conserva la zona determinante, la distancia firmada al perímetro, la tolerancia aplicada y el momento de evaluación. La interfaz puede representar esa relación, pero **una lectura `OUTSIDE` no equivale a una salida confirmada ni a una alerta**.
+
+**Estado completado (2026-10-25):** migración, trigger y UI implementados. La migración está aplicada en Supabase de desarrollo y los 36 casos pgTAP pasan sin dejar datos ficticios. El usuario validó manualmente `INSIDE`, `OUTSIDE`, `UNCERTAIN`, `NO_ACTIVE_ZONE` y la actualización Realtime en la PWA.
 
 ## Separar dos dimensiones
 
@@ -51,7 +71,7 @@ Evaluar de `CRITICAL` a `HIGH`, `MEDIUM`, `LOW` para evitar solapamientos. Tiemp
 ## Resistencia a lecturas ruidosas
 
 - `accuracy_m` influye en si la lectura sirve para confirmar una salida. No utilizar una sola lectura de gran error como prueba suficiente.
-- Configurar un **margen/histeresis** al perímetro para evitar flapping (entrada/salida en segundos). El valor exacto queda pendiente de validación con simulador y hardware.
+- La banda básica de incertidumbre ya usa 25 m como mínimo. El **margen/histéresis adicional del futuro episodio** para evitar flapping (entrada/salida en segundos) continúa pendiente de validación con simulador y hardware.
 - No crear eventos duplicados al reintentar enviar la misma posición. La ingestión inicial usa un `event_id` UUID único por asignación; el mismo evento y contenido es idempotente, mientras que reutilizarlo con contenido distinto se rechaza.
 - `recorded_at`: cuando se capturó; `received_at`: cuando llegó. No inferir la posición actual de un punto recibido fuera de orden.
 - Varias geocercas: si el paciente está dentro de **cualquiera** de las zonas activas válidas, no está fuera de zona permitida. Las zonas pueden superponerse y no existe un máximo artificial en base de datos. Las inactivas o archivadas no participan.
@@ -100,6 +120,6 @@ Evaluar de `CRITICAL` a `HIGH`, `MEDIUM`, `LOW` para evitar solapamientos. Tiemp
 ## Pendientes antes del motor de alertas
 
 1. Validar o modificar tiempos 5/15/30 minutos y distancias 500/1000 metros.
-2. Fijar margen/histeresis y precisión GPS aceptable.
+2. Fijar el margen/histéresis adicional del episodio y la precisión GPS máxima aceptable para que una lectura `OUTSIDE` cuente en la confirmación. Esto no cambia el mínimo de 25 m del clasificador básico.
 3. Decidir confirmación de reingreso y gestión de escaladas con datos tardíos.
 4. Formalizar umbral de rapidez imposible/saltos espurios. La idempotencia básica por `event_id` ya está definida.

@@ -149,14 +149,19 @@ id                uuid PK
 patient_id        uuid FK -> patients.id
 device_assignment_id uuid FK -> device_assignments.id
 status            OPEN | RESOLVED
-severity          LOW | MEDIUM | HIGH | CRITICAL
-outside_since     timestamptz
-opened_at         timestamptz
-updated_at        timestamptz
+started_at        timestamptz
+confirmed_at      timestamptz
 resolved_at       timestamptz null
+first_outside_location_id bigint FK -> locations.id
+confirmed_by_location_id bigint FK -> locations.id
+resolved_by_location_id bigint FK -> locations.id null
+created_at        timestamptz
+updated_at        timestamptz
 ```
 
-Un único episodio `OPEN` por paciente/tipo de evento de salida (restricción parcial apropiada). Las escaladas actualizan el episodio existente; no generan una fila nueva en cada lectura. No usar `LOW` para paciente normalmente seguro.
+Un único episodio `OPEN` por paciente. Dos lecturas confiables `OUTSIDE` consecutivas lo crean y dos `INSIDE` consecutivas lo resuelven; los tres puntos confirmatorios quedan vinculados a su asignación histórica. El MVP no almacena una jerarquía de niveles ni crea una fila nueva por cada lectura. Las escaladas `MEDIUM/HIGH/CRITICAL` quedan fuera del alcance y solo se reconsiderarán como ampliación posterior.
+
+**Estado completado (2026-10-25):** `20261026010952_geofence_alert_episodes.sql` crea la tabla, RLS de solo lectura por `patient_access`, publicación Realtime y procesamiento backend. `20261026012835_remove_alert_episode_severity.sql` elimina la columna de nivel que el MVP decidió no utilizar. Ambas migraciones están aplicadas en Supabase de desarrollo y los 55 casos pgTAP pasan sin dejar datos ficticios. El usuario validó manualmente apertura, actualización Realtime, reingreso e historial en la PWA.
 
 ### 10. `invitations`
 
@@ -192,7 +197,7 @@ El usuario solo administra sus propias suscripciones. No exponer listado global 
 
 ### Extensiones opcionales posteriores
 
-`audit_logs` limitado a cambios de geocerca, permisos e invitaciones; `alert_events` para historial de escaladas; `group_members` si se requiere administración compartida del grupo; `notification_outbox` para reintentos idempotentes. Introducirlas cuando la historia las necesite, no por anticipación.
+`audit_logs` limitado a cambios de geocerca, permisos e invitaciones; `group_members` si se requiere administración compartida del grupo; `notification_outbox` para reintentos idempotentes. Un futuro `alert_events` solo tendría sentido si se retomaran escaladas fuera del MVP. Introducir estas tablas cuando una historia aprobada las necesite, no por anticipación.
 
 ## Integridad / reglas transversales
 

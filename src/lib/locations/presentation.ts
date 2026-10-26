@@ -8,6 +8,8 @@ const locationDateFormatter = new Intl.DateTimeFormat('es-DO', {
 export type LocationGeofenceRelation =
 	'NOT_EVALUATED' | 'NO_ACTIVE_ZONE' | 'INSIDE' | 'OUTSIDE' | 'UNCERTAIN';
 
+export type GeofenceAlertEpisodeStatus = 'OPEN' | 'RESOLVED';
+
 type GeofenceRelationPresentation = {
 	title: string;
 	description: string;
@@ -37,6 +39,10 @@ export function presentLocationTime(recordedAt: string, now = Date.now()) {
 		ageLabel: formatLocationAge(recordedAt, now),
 		recordedAtLabel: locationDateFormatter.format(new Date(recordedAt))
 	};
+}
+
+export function presentDateTime(value: string): string {
+	return locationDateFormatter.format(new Date(value));
 }
 
 export function presentGeofenceRelation(

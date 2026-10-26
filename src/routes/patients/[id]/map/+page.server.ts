@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (!patient) httpError(404, 'Paciente no encontrado.');
 
 	const group = Array.isArray(patient.group) ? patient.group[0] : patient.group;
-	const [assignmentResult, safeZonesResult] = await Promise.all([
+	const [assignmentResult, safeZonesResult, alertEpisodesResult] = await Promise.all([
 		locals.supabase
 			.from('device_assignments')
 			.select(
@@ -45,7 +45,15 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 			.eq('patient_id', params.id)
 			.eq('is_active', true)
 			.is('archived_at', null)
-			.order('name', { ascending: true })
+			.order('name', { ascending: true }),
+		locals.supabase
+			.from('alert_episodes')
+			.select(
+				'id, patient_id, device_assignment_id, status, started_at, confirmed_at, resolved_at, first_outside_location_id, confirmed_by_location_id, resolved_by_location_id, created_at, updated_at'
+			)
+			.eq('patient_id', params.id)
+			.order('confirmed_at', { ascending: false })
+			.limit(10)
 	]);
 	const { data: assignments, error: assignmentError } = assignmentResult;
 
@@ -63,6 +71,20 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		centerLatitude: zone.center_latitude,
 		centerLongitude: zone.center_longitude,
 		radiusM: zone.radius_m
+	}));
+	const alertEpisodes = (alertEpisodesResult.data ?? []).map((episode) => ({
+		id: episode.id,
+		patientId: episode.patient_id,
+		deviceAssignmentId: episode.device_assignment_id,
+		status: episode.status as 'OPEN' | 'RESOLVED',
+		startedAt: episode.started_at,
+		confirmedAt: episode.confirmed_at,
+		resolvedAt: episode.resolved_at,
+		firstOutsideLocationId: episode.first_outside_location_id,
+		confirmedByLocationId: episode.confirmed_by_location_id,
+		resolvedByLocationId: episode.resolved_by_location_id,
+		createdAt: episode.created_at,
+		updatedAt: episode.updated_at
 	}));
 
 	let locationsAvailable = true;
@@ -172,6 +194,8 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		locationsAvailable,
 		safeZones,
 		safeZonesAvailable: !safeZonesResult.error,
+		alertEpisodes,
+		alertEpisodesAvailable: !alertEpisodesResult.error,
 		locationHistory,
 		historyAvailable,
 		manualLocationSimulatorEnabled:

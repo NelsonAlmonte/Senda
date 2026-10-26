@@ -45,7 +45,7 @@
 - Integridad referencial, operaciones atómicas e invariantes de asignaciones.
 - Comprobación final de acceso a pacientes, geocercas, invitaciones y ubicación mediante RLS/RPC.
 - Recepción autorizada de posiciones y asignación de la posición al dispositivo/asignación válida.
-- Clasificación canónica de cada lectura contra geocercas; posteriormente, confirmación de episodios de riesgo, persistencia y anti-duplicación.
+- Clasificación canónica de cada lectura contra geocercas y confirmación backend de episodios básicos, con persistencia, orden cronológico y anti-duplicación.
 - Detección programada de ubicación obsoleta.
 - Envío de Web Push y manejo de secretos necesarios para integraciones.
 
@@ -62,7 +62,7 @@ Clasificar la lectura contra geocercas activas con su precisión
        ↓
 Persistir relación INSIDE / OUTSIDE / UNCERTAIN / NO_ACTIVE_ZONE
        ↓
-Confirmar o actualizar episodio de riesgo (historia posterior)
+Abrir o resolver episodio de salida con dos lecturas confiables consecutivas
        ↓
 Supabase Realtime → clientes con permisos
        ↓
@@ -73,7 +73,7 @@ La ingestión puede ser una RPC protegida para simuladores autenticados en entor
 
 ## Eventos asíncronos
 
-- Web Push sale del backend cuando se crea o escala un episodio de alerta, mediante integración aislada del motor de BD.
+- Si se implementa Web Push, saldrá del backend al crearse un episodio, mediante una integración aislada del motor de BD; el MVP no contempla escaladas por severidad.
 - Si el envío push falla, **la ubicación y la alerta permanecen guardadas**; usar una cola/outbox o mecanismo idempotente cuando se implemente.
 - Supabase Cron puede verificar ubicaciones sin actualización cada minuto (parámetro ajustable); no usar temporizadores del navegador como fuente única para alertas de pérdida de señal.
 

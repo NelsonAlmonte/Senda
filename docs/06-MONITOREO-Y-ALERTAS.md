@@ -1,6 +1,6 @@
 # 06 — Geofencing, riesgo, conectividad y pruebas de alerta
 
-> **No son reglas médicas.** Los intervalos de transmisión, confirmación de salida y tolerancia inicial están acordados como punto de partida técnico. Los umbrales numéricos de severidad que siguen son **propuestas configurables**, aún no ratificadas definitivamente por el equipo.
+> **No son reglas médicas.** Los intervalos de transmisión, confirmación de salida y tolerancia inicial son decisiones técnicas del prototipo. El MVP comunica episodios activos o resueltos y no clasifica su gravedad clínica.
 
 ## Parámetros iniciales acordados
 
@@ -32,7 +32,7 @@ La prioridad al evaluar múltiples zonas es `INSIDE` → `UNCERTAIN` → `OUTSID
 
 ## Separar dos dimensiones
 
-**Riesgo**: `NORMAL`, `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`.
+**Episodio de salida**: sin episodio activo, `OPEN` o `RESOLVED` en el historial.
 
 **Conectividad / frescura**: `FRESH`, `STALE`, `NO_DATA` (terminología de implementación propuesta, se puede ajustar).
 
@@ -41,62 +41,60 @@ Si no hay coordenadas recientes, no afirmar que el paciente se encuentra a salvo
 ## Modelo de episodios
 
 ```text
-SIN EVENTO (ubicación válida dentro)
+SIN EPISODIO ACTIVO
     ↓ dos lecturas válidas confirman salida
-OPEN / LOW
-    ↓ tiempo acumulado
-OPEN / MEDIUM
-    ↓ distancia y tiempo, o distancia excepcional
-OPEN / HIGH
-    ↓ tiempo prolongado
-OPEN / CRITICAL
+OPEN
     ↓ regreso confirmado a zona segura
 RESOLVED
 ```
 
-Un episodio se **actualiza** cuando cambia de nivel. No crear un nuevo episodio por cada lectura. El regreso abre un periodo NORMAL, pero conserva el historial de alerta como `RESOLVED`.
+No se crea un episodio por cada lectura. El mismo registro permanece `OPEN` durante la salida y cambia a `RESOLVED` al confirmarse el reingreso. La conectividad y la relación de la última lectura con las geocercas continúan mostrándose por separado.
 
-## Umbrales propuestos para discutir
+### Historia 4C — episodio básico confirmado
 
-| Estado | Regla orientativa |
-|---|---|
-| `NORMAL` | Coordenada válida reciente, dentro de alguna zona activa |
-| `LOW` | Salida confirmada y menos de 5 minutos fuera |
-| `MEDIUM` | Fuera durante >= 5 minutos |
-| `HIGH` | Fuera >= 15 min **y** >= 500 m más allá del perímetro, **o** alejamiento >= 1000 m |
-| `CRITICAL` | Fuera >= 30 minutos, sin importar distancia |
+- Dos lecturas `OUTSIDE` confiables y consecutivas abren un único episodio `OPEN`.
+- Dos lecturas `INSIDE` confiables y consecutivas resuelven el episodio.
+- Para esta confirmación, una lectura es confiable si `accuracy_m` es nulo o no supera 100 m; el clasificador sigue aplicando su tolerancia efectiva mínima de 25 m.
+- `UNCERTAIN`, `NO_ACTIVE_ZONE`, `NOT_EVALUATED` o una precisión peor de 100 m no abren ni resuelven un episodio e interrumpen la pareja consecutiva.
+- El orden actual usa `recorded_at` y `id` dentro de la misma asignación. Una lectura atrasada se conserva, pero no retrocede ni confirma el estado actual.
+- El episodio guarda las lecturas que iniciaron y confirmaron la salida y la que confirmó el reingreso.
+- Los episodios no almacenan ni presentan niveles de severidad.
 
-Evaluar de `CRITICAL` a `HIGH`, `MEDIUM`, `LOW` para evitar solapamientos. Tiempo medido desde el primer punto fiable de la salida confirmada, con política consistente ante datos atrasados. **La distancia debe especificar siempre si es desde el centro o más allá del límite**; aquí se propone distancia **fuera del perímetro**.
+**Estado completado (2026-10-25):** migración, prueba pgTAP, consulta SSR, tarjeta textual, historial breve y actualización Realtime implementados. `20261026010952_geofence_alert_episodes.sql` está aplicada en Supabase de desarrollo y sus 55 casos pasan sin dejar datos ficticios. El usuario validó manualmente apertura, Realtime y resolución. El equipo decidió cerrar este motor como alcance suficiente del MVP.
+
+## Decisión de simplicidad del MVP
+
+El prototipo no cambia el episodio según minutos transcurridos ni distancia adicional fuera del perímetro. Los niveles `MEDIUM`, `HIGH` y `CRITICAL`, junto con umbrales como 5/15/30 minutos o 500/1000 metros, quedan explícitamente fuera del alcance. Pueden estudiarse después del MVP si pruebas con hardware real justifican esa complejidad.
 
 ## Resistencia a lecturas ruidosas
 
-- `accuracy_m` influye en si la lectura sirve para confirmar una salida. No utilizar una sola lectura de gran error como prueba suficiente.
-- La banda básica de incertidumbre ya usa 25 m como mínimo. El **margen/histéresis adicional del futuro episodio** para evitar flapping (entrada/salida en segundos) continúa pendiente de validación con simulador y hardware.
+- `accuracy_m` influye en si la lectura sirve para confirmar una salida. La historia 4C acepta hasta 100 m y exige dos lecturas consecutivas; una lectura con peor precisión interrumpe la confirmación.
+- La banda básica de incertidumbre usa 25 m como mínimo y la pareja de lecturas evita reaccionar a un único punto ruidoso. Una histéresis adicional solo se reconsiderará con evidencia de hardware real.
 - No crear eventos duplicados al reintentar enviar la misma posición. La ingestión inicial usa un `event_id` UUID único por asignación; el mismo evento y contenido es idempotente, mientras que reutilizarlo con contenido distinto se rechaza.
 - `recorded_at`: cuando se capturó; `received_at`: cuando llegó. No inferir la posición actual de un punto recibido fuera de orden.
 - Varias geocercas: si el paciente está dentro de **cualquiera** de las zonas activas válidas, no está fuera de zona permitida. Las zonas pueden superponerse y no existe un máximo artificial en base de datos. Las inactivas o archivadas no participan.
-- Calcular un reingreso confiable antes de resolver episodio. Una sola lectura momentánea dentro del borde puede ser insuficiente; concretar este criterio con las pruebas.
+- El reingreso básico requiere dos lecturas `INSIDE` confiables y consecutivas antes de resolver el episodio.
 
 ## Envío de notificaciones
 
-- Registrar el evento dentro de la aplicación para todos los niveles activos.
-- En principio, Web Push para `MEDIUM`, `HIGH`, `CRITICAL`; LOW solo in-app para evitar fatiga de notificaciones. **Esta política es recomendada, no decisión ratificada.**
-- No repetir Web Push cada 30 segundos si el episodio permanece en el mismo nivel.
-- Notificar escalada real y/o eventos importantes definidos; no incluir datos personales innecesarios en el cuerpo del push.
+- Registrar el episodio dentro de la aplicación al confirmarse la salida.
+- Si se implementa Web Push, enviar como máximo una notificación al abrir el episodio y definir aparte si corresponde otra al resolverlo.
+- No repetir Web Push con cada nueva ubicación mientras el episodio siga `OPEN`.
+- No incluir datos personales innecesarios en el cuerpo del push.
 
 ## Casos de prueba prioritarios
 
 | ID | Dato de entrada / situación | Resultado esperado |
 |---|---|---|
-| R01 | Punto reciente y válido dentro de zona | NORMAL |
+| R01 | Punto reciente y válido dentro de zona | Sin episodio activo |
 | R02 | Un único punto fuera, segundo dentro | Sin salida confirmada |
-| R03 | Dos puntos válidos consecutivos fuera con margen | OPEN / LOW |
-| R04 | Fuera 5 minutos | OPEN / MEDIUM (según propuesta) |
-| R05 | Fuera 16 min y +650 m del perímetro | OPEN / HIGH (según propuesta) |
-| R06 | Fuera 30 min | OPEN / CRITICAL (según propuesta) |
-| R07 | Fuera 2 min pero +1.2 km | OPEN / HIGH (según propuesta) |
+| R03 | Dos puntos válidos consecutivos fuera con margen | OPEN |
+| R04 | Continúan llegando puntos fuera | Mantener el mismo episodio OPEN |
+| R05 | Punto mucho más distante del perímetro | Mantener el mismo episodio OPEN, sin nivel adicional |
+| R06 | Episodio permanece abierto durante más tiempo | Mantener el mismo episodio OPEN, sin escalada temporal |
+| R07 | Punto distante poco después de abrir | Mantener el mismo episodio OPEN, sin nivel adicional |
 | R08 | Regresa y se confirma reingreso | RESOLVED |
-| R09 | Lectura aislada imprecisa fuera | No escalar sin confirmar |
+| R09 | Lectura aislada imprecisa fuera | No abrir episodio sin confirmar |
 | R10 | Sin ubicación durante >3 min | STALE, sin inventar ubicación |
 | R11 | Reaparece conectividad, puntos llegan desordenados | Estado actual no retrocede incorrectamente |
 | R12 | Dos zonas seguras superpuestas, dentro de una | No alertar por salida parcial |
@@ -105,21 +103,20 @@ Evaluar de `CRITICAL` a `HIGH`, `MEDIUM`, `LOW` para evitar solapamientos. Tiemp
 | R15 | Cambio de geocerca durante episodio | Reevaluación consistente y evento auditable |
 | R16 | Paciente sin asignación de dispositivo | Estado sin datos, sin falsas alertas |
 | R17 | Usuario revocado mantiene pestaña abierta | Sin lectura futura ni acceso persistente autorizado |
-| R18 | Simulación acelera el reloj | Cambios de nivel correctos sin dormir minutos reales |
+| R18 | Simulación acelera el envío | Apertura y resolución correctas sin depender de esperas reales |
 | R19 | Dos posiciones con salto físicamente implausible | Marcar sospechosa/descartar según política definida |
 
 ## Métricas a registrar para la tesis
 
 - Latencia entre recepción y actualización de interfaz.
-- Latencia entre segunda lectura confirmatoria y creación de alerta.
+- Latencia entre segunda lectura confirmatoria y creación del episodio.
 - Proporción de pruebas funcionales satisfactorias.
 - Tasa de alertas duplicadas e incidentes falsos en escenarios controlados.
 - Exactitud de la clasificación ante escenarios R01–R19.
-- Éxito y tiempo de entrega del Web Push según navegador/dispositivo donde esté soportado.
+- Si se implementa Web Push, éxito y tiempo de entrega según navegador/dispositivo donde esté soportado.
 
-## Pendientes antes del motor de alertas
+## Pendientes fuera del motor básico
 
-1. Validar o modificar tiempos 5/15/30 minutos y distancias 500/1000 metros.
-2. Fijar el margen/histéresis adicional del episodio y la precisión GPS máxima aceptable para que una lectura `OUTSIDE` cuente en la confirmación. Esto no cambia el mínimo de 25 m del clasificador básico.
-3. Decidir confirmación de reingreso y gestión de escaladas con datos tardíos.
-4. Formalizar umbral de rapidez imposible/saltos espurios. La idempotencia básica por `event_id` ya está definida.
+1. Evaluar con hardware real si la banda de 25 m, el máximo de precisión de 100 m y las dos lecturas consecutivas necesitan ajustes.
+2. Formalizar un umbral de rapidez imposible o saltos espurios si las pruebas reales muestran esa necesidad. La idempotencia básica por `event_id` ya está definida.
+3. Definir la política de Web Push sin introducir niveles de severidad.

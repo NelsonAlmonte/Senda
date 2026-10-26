@@ -2,10 +2,15 @@
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import PatientLocationRealtime, {
+		type AlertEpisodeRealtimeRow,
 		type LocationRealtimeRow,
 		type LocationRealtimeState
 	} from '#lib/locations/PatientLocationRealtime.svelte';
-	import { presentGeofenceRelation, presentLocationTime } from '#lib/locations/presentation.js';
+	import {
+		presentDateTime,
+		presentGeofenceRelation,
+		presentLocationTime
+	} from '#lib/locations/presentation.js';
 	import PatientLocationMap, {
 		type MapHistorySegment,
 		type MapSimulationPoint,
@@ -15,6 +20,7 @@
 
 	type LatestLocation = NonNullable<PageProps['data']['latestLocation']>;
 	type HistoryLocation = PageProps['data']['locationHistory'][number];
+	type AlertEpisode = PageProps['data']['alertEpisodes'][number];
 	type RealtimeState = 'IDLE' | LocationRealtimeState;
 	type SimulatorFeedback = { kind: 'success' | 'error'; message: string };
 
@@ -24,6 +30,10 @@
 	let patientName = $derived(`${data.patient.firstName} ${data.patient.lastName}`);
 	let latestLocation = $derived(data.latestLocation);
 	let locationHistory = $derived(data.locationHistory);
+	let alertEpisodes = $derived(data.alertEpisodes);
+	let activeAlertEpisode = $derived(
+		alertEpisodes.find((episode) => episode.status === 'OPEN') ?? null
+	);
 	let historySegments = $derived(buildHistorySegments(locationHistory));
 	let matchedSafeZoneName = $derived(
 		data.safeZones.find((zone) => zone.id === latestLocation?.matchedSafeZoneId)?.name ?? null
@@ -133,6 +143,27 @@
 			patientName,
 			historySegments: buildHistorySegments(nextHistory)
 		});
+	}
+
+	function handleRealtimeAlertEpisode(row: AlertEpisodeRealtimeRow) {
+		const episode: AlertEpisode = {
+			id: row.id,
+			patientId: row.patient_id,
+			deviceAssignmentId: row.device_assignment_id,
+			status: row.status,
+			startedAt: row.started_at,
+			confirmedAt: row.confirmed_at,
+			resolvedAt: row.resolved_at,
+			firstOutsideLocationId: row.first_outside_location_id,
+			confirmedByLocationId: row.confirmed_by_location_id,
+			resolvedByLocationId: row.resolved_by_location_id,
+			createdAt: row.created_at,
+			updatedAt: row.updated_at
+		};
+
+		alertEpisodes = [...alertEpisodes.filter((candidate) => candidate.id !== episode.id), episode]
+			.sort((left, right) => Date.parse(right.confirmedAt) - Date.parse(left.confirmedAt))
+			.slice(0, 10);
 	}
 
 	function handleRealtimeState(state: LocationRealtimeState) {
@@ -285,7 +316,9 @@
 				{#key data.assignment.id}
 					<PatientLocationRealtime
 						assignmentId={data.assignment.id}
+						patientId={data.patient.id}
 						onLocation={handleRealtimeLocation}
+						onAlertEpisode={handleRealtimeAlertEpisode}
 						onStateChange={handleRealtimeState}
 					/>
 				{/key}
@@ -564,6 +597,47 @@
 							</div>
 						{/if}
 
+						<section
+							class={[
+								'mt-6 rounded-2xl border p-4',
+								!data.alertEpisodesAvailable || activeAlertEpisode
+									? 'border-amber-700/25 bg-amber-50'
+									: 'border-brand/20 bg-surface-muted'
+							]}
+							aria-labelledby="alert-episode-title"
+							role={!data.alertEpisodesAvailable ? 'alert' : 'status'}
+							aria-live="polite"
+							aria-atomic="true"
+						>
+							<p class="text-xs font-bold tracking-[0.12em] text-muted uppercase">
+								Episodio de salida
+							</p>
+							{#if !data.alertEpisodesAvailable}
+								<h2 id="alert-episode-title" class="mt-1 font-bold text-amber-950">
+									No pudimos consultar los episodios
+								</h2>
+								<p class="mt-1 text-sm leading-6 text-amber-950">
+									La ubicación sigue disponible, pero el estado de salida no pudo verificarse.
+								</p>
+							{:else if activeAlertEpisode}
+								<h2 id="alert-episode-title" class="mt-1 font-bold text-amber-950">
+									Salida confirmada activa
+								</h2>
+								<p class="mt-1 text-sm leading-6 text-amber-950">
+									Dos lecturas confiables consecutivas quedaron fuera de las zonas permitidas. El
+									episodio se confirmó el {presentDateTime(activeAlertEpisode.confirmedAt)}.
+								</p>
+							{:else}
+								<h2 id="alert-episode-title" class="mt-1 font-bold text-ink">
+									Sin episodio de salida activo
+								</h2>
+								<p class="mt-1 text-sm leading-6 text-muted">
+									No existe una salida confirmada activa. La ubicación y su vigencia se muestran por
+									separado.
+								</p>
+							{/if}
+						</section>
+
 						{#if latestLocation && geofencePresentation}
 							<section
 								class={[
@@ -601,6 +675,35 @@
 								</p>
 							</section>
 						{/if}
+
+						<section class="mt-6 border-t border-ink/10 pt-5" aria-labelledby="episodes-title">
+							<h2 id="episodes-title" class="font-bold text-ink">Episodios recientes</h2>
+							{#if !data.alertEpisodesAvailable}
+								<p class="mt-2 text-sm leading-6 text-amber-900">
+									El historial no está disponible en este momento.
+								</p>
+							{:else if alertEpisodes.length === 0}
+								<p class="mt-2 text-sm leading-6 text-muted">
+									Todavía no se ha confirmado ninguna salida de las zonas permitidas.
+								</p>
+							{:else}
+								<ul class="mt-3 space-y-3">
+									{#each alertEpisodes as episode (episode.id)}
+										<li class="rounded-xl border border-ink/10 bg-white p-3 text-sm">
+											<p class="font-bold text-ink">
+												{episode.status === 'OPEN' ? 'Salida activa' : 'Salida resuelta'}
+											</p>
+											<p class="mt-1 leading-6 text-muted">
+												Confirmada el {presentDateTime(episode.confirmedAt)}.
+												{#if episode.resolvedAt}
+													Resuelta el {presentDateTime(episode.resolvedAt)}.
+												{/if}
+											</p>
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</section>
 
 						{#if latestLocation}
 							<dl class="mt-6 space-y-5 text-sm">

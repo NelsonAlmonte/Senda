@@ -29,7 +29,7 @@ La tabla `group_members` **no es obligatoria en la fase inicial**. Si aparece de
 4. **`locations SELECT`**: solo si la asignación histórica apunta a un paciente con acceso activo del usuario. La relación con geocercas, zona coincidente, tolerancia y distancia firmada forman parte de la misma fila y heredan exactamente este aislamiento.
 5. **`safe_zones SELECT`**: usuarios con acceso al paciente.
 6. **`safe_zones INSERT/UPDATE/DELETE`**: `ADMIN` o `MONITOR` autorizado.
-7. **`alert_episodes SELECT`**: usuarios con acceso al paciente.
+7. **`alert_episodes SELECT`**: usuarios con acceso activo al paciente; `ADMIN` y `MONITOR` pueden leer el mismo episodio. El cliente no recibe permisos directos de inserción, actualización o eliminación: el trigger backend es la única autoridad de escritura.
 8. **`patient_access SELECT`**: según necesidad de interfaz; limitar exposición de correos de terceros.
 9. **`patient_access INSERT/UPDATE/DELETE`**: prohibir CRUD abierto desde cliente; usar operación atómica autorizada.
 10. **`devices` / `device_assignments`**: vistas/operaciones específicas, no listado completo de inventario ajeno.

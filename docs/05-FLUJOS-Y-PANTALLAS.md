@@ -74,7 +74,7 @@ El historial se presenta dentro del mapa del paciente, con cantidad de lecturas 
 
 **Estado completado (2026-10-25):** el mapa, sus estados y la actualización automática por Postgres Changes están implementados con carga dinámica de Google Maps. La pantalla indica si la suscripción está conectando, activa o no disponible; una lectura nueva y autorizada actualiza marcador, coordenadas, timestamp, precisión e historial sin reconstruir el mapa. El mapa usa interacción directa sin exigir `Ctrl`, muestra las geocercas activas y mantiene los círculos sin interacción para no bloquear la selección de una ubicación simulada. El usuario validó manualmente la recepción simultánea con cuentas `ADMIN` y `MONITOR` en dos navegadores. El simulador Node reproduce una ruta ficticia de una sola pasada, con intervalo configurable y persistencia mediante la RPC común; el usuario validó su recorrido completo. La simulación manual en mapa solo aparece para `ADMIN` con dispositivo simulado y una bandera privada de entorno: permite seleccionar por click o escribir coordenadas, exige confirmación, persiste mediante la RPC común con origen `MANUAL` y espera Realtime para actualizar el marcador oficial. El usuario validó este flujo completo.
 
-**Historia 4B implementada (2026-10-25):** una lectura nueva muestra además **Dentro de una zona permitida**, **Fuera de las zonas permitidas**, **Ubicación cerca del límite** o **Sin geocerca activa**. El estado usa texto completo y no depende solo del color. `OUTSIDE` advierte expresamente que una lectura aislada todavía no constituye una alerta confirmada; `NOT_EVALUATED` explica que la lectura antecede al clasificador. La actualización Realtime transporta la misma clasificación persistida por PostgreSQL. La migración está aplicada en Supabase de desarrollo y sus 36 pruebas pgTAP pasan; falta validar manualmente estos estados en la PWA.
+**Historia 4B completada (2026-10-25):** una lectura nueva muestra además **Dentro de una zona permitida**, **Fuera de las zonas permitidas**, **Ubicación cerca del límite** o **Sin geocerca activa**. El estado usa texto completo y no depende solo del color. `OUTSIDE` advierte expresamente que una lectura aislada todavía no constituye una alerta confirmada; `NOT_EVALUATED` explica que la lectura antecede al clasificador. La actualización Realtime transporta la misma clasificación persistida por PostgreSQL. La migración está aplicada en Supabase de desarrollo, sus 36 pruebas pgTAP pasan y el usuario validó manualmente todos los estados y Realtime.
 
 ## Flujo D — Configurar geocerca
 
@@ -115,13 +115,15 @@ No usar el mero código como autorización definitiva ni como membresía del gru
 ## Flujo F — Consulta de alertas
 
 ```text
-Nueva posición → motor de riesgo → episodio OPEN / escalado
-    → actualización en /patients/:id/alerts
-    → Web Push según nivel y permisos
+Nueva posición → motor de episodios → episodio OPEN
+    → actualización en /patients/:id/map
+    → Web Push opcional al abrir el episodio
     → vuelta segura → episodio RESOLVED
 ```
 
-Alertas abiertas deben mostrar nivel, última lectura válida, cuándo comenzó el evento, hora de última actualización y si hay conexión reciente.
+Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, junto con la ubicación y conectividad presentadas por separado. El MVP no usa niveles de severidad ni necesita una pantalla adicional para explicar escaladas.
+
+**Historia 4C completada (2026-10-25):** `/patients/:id/map` separa la clasificación de la última lectura del episodio confirmado. Dos lecturas `OUTSIDE` confiables y consecutivas abren un episodio `OPEN`; dos `INSIDE` lo resuelven. La tarjeta actual y el historial breve se actualizan por Realtime y usan estado textual además de color. La migración está aplicada en desarrollo, sus 55 pruebas pgTAP pasan y el usuario validó el recorrido extremo a extremo. Los niveles y escaladas quedan fuera del MVP.
 
 ## Información mínima sugerida por pantalla (no UI final)
 
@@ -134,9 +136,8 @@ Alertas abiertas deben mostrar nivel, última lectura válida, cuándo comenzó 
 | `/groups/:id` | Datos básicos del grupo y pacientes del contexto que el usuario está autorizado a administrar/ver |
 | `/patients/:id` | Ficha mínima, últimos indicadores y accesos a módulos |
 | `/patients/:id/device` | Estado de asignación y formulario de serial simulado; solo para `ADMIN` |
-| `/patients/:id/map` | Posición, timestamp, radio/zonas, modo simulación controlado |
+| `/patients/:id/map` | Posición, timestamp, radio/zonas, episodio actual e historial breve, modo simulación controlado |
 | `/patients/:id/history` | Recorrido consultable en intervalo, origen de datos |
-| `/patients/:id/alerts` | Episodios, severidad, inicio, actualización y resolución |
 | `/patients/:id/safe-zones` | Geocercas circulares y edición por ADMIN/MONITOR |
 | `/patients/:id/access` | Personas autorizadas; invitar/revocar solo ADMIN |
 | `/invitations` | Invitaciones propias PENDING y acciones de aceptar/declinar |

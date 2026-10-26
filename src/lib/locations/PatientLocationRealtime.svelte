@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import type { LocationGeofenceRelation } from './presentation.js';
+	import type { GeofenceAlertEpisodeStatus, LocationGeofenceRelation } from './presentation.js';
 
 	export type LocationRealtimeRow = {
 		id: number;
@@ -19,6 +19,21 @@
 	};
 
 	export type LocationRealtimeState = 'CONNECTING' | 'CONNECTED' | 'ERROR';
+
+	export type AlertEpisodeRealtimeRow = {
+		id: string;
+		patient_id: string;
+		device_assignment_id: string;
+		status: GeofenceAlertEpisodeStatus;
+		started_at: string;
+		confirmed_at: string;
+		resolved_at: string | null;
+		first_outside_location_id: number;
+		confirmed_by_location_id: number;
+		resolved_by_location_id: number | null;
+		created_at: string;
+		updated_at: string;
+	};
 </script>
 
 <script lang="ts">
@@ -27,11 +42,13 @@
 
 	type Props = {
 		assignmentId: string;
+		patientId: string;
 		onLocation: (location: LocationRealtimeRow) => void;
+		onAlertEpisode: (episode: AlertEpisodeRealtimeRow) => void;
 		onStateChange: (state: LocationRealtimeState) => void;
 	};
 
-	let { assignmentId, onLocation, onStateChange }: Props = $props();
+	let { assignmentId, patientId, onLocation, onAlertEpisode, onStateChange }: Props = $props();
 
 	onMount(() => {
 		let disposed = false;
@@ -59,6 +76,30 @@
 				},
 				(payload) => {
 					if (!disposed) onLocation(payload.new);
+				}
+			)
+			.on<AlertEpisodeRealtimeRow>(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'alert_episodes',
+					filter: `patient_id=eq.${patientId}`
+				},
+				(payload) => {
+					if (!disposed) onAlertEpisode(payload.new);
+				}
+			)
+			.on<AlertEpisodeRealtimeRow>(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'alert_episodes',
+					filter: `patient_id=eq.${patientId}`
+				},
+				(payload) => {
+					if (!disposed) onAlertEpisode(payload.new);
 				}
 			)
 			.subscribe((status) => {

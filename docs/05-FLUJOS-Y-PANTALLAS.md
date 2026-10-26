@@ -24,7 +24,7 @@
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
 
-**Estado implementado (2026-10-24):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El dashboard distingue sin dispositivo, sin ubicaciones, lectura reciente, lectura desactualizada y fallo temporal de consulta, sin presentar todavía un estado de riesgo. `/patients/:id/map` muestra a `ADMIN` y `MONITOR` la última posición autorizada, su antigüedad y precisión, sin llamarla seguimiento en vivo.
+**Estado implementado (2026-10-26):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El dashboard distingue sin dispositivo, sin ubicaciones, lectura reciente, lectura desactualizada y fallo temporal de consulta. Además, destaca cualquier episodio `OPEN` autorizado con texto, fecha de confirmación y acceso directo al mapa; una única suscripción Realtime actualiza las tarjetas sin recargar. `/patients/:id/map` muestra a `ADMIN` y `MONITOR` la última posición autorizada, su antigüedad y precisión, sin llamarla seguimiento en vivo.
 
 ## Flujo A — Registro e inicio de sesión
 
@@ -124,6 +124,8 @@ Nueva posición → motor de episodios → episodio OPEN
 Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, junto con la ubicación y conectividad presentadas por separado. El MVP no usa niveles de severidad ni necesita una pantalla adicional para explicar escaladas.
 
 **Historia 4C completada (2026-10-25):** `/patients/:id/map` separa la clasificación de la última lectura del episodio confirmado. Dos lecturas `OUTSIDE` confiables y consecutivas abren un episodio `OPEN`; dos `INSIDE` lo resuelven. La tarjeta actual y el historial breve se actualizan por Realtime y usan estado textual además de color. La migración está aplicada en desarrollo, sus 55 pruebas pgTAP pasan y el usuario validó el recorrido extremo a extremo. Los niveles y escaladas quedan fuera del MVP.
+
+**Historia 4D completada y validada (2026-10-26):** `/dashboard` consulta por SSR el episodio `OPEN` de cada paciente autorizado y lo presenta antes del estado del dispositivo. La tarjeta indica **Salida confirmada activa**, muestra cuándo se confirmó y ofrece **Ver ubicación y detalles**. Una sola suscripción a `alert_episodes` procesa aperturas y resoluciones para todos los pacientes visibles; RLS continúa siendo la autorización efectiva. Los cambios se anuncian mediante una región de estado contextual sin mover el foco. Si falla la consulta o Realtime, la interfaz no supone que el paciente está seguro y ofrece una recuperación explícita. El usuario confirmó la aparición y desaparición automática de la tarjeta y el acceso correcto al mapa.
 
 ## Información mínima sugerida por pantalla (no UI final)
 

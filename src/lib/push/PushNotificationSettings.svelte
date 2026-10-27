@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import {
 		disablePushNotifications,
 		enablePushNotifications,
+		PushNotificationSessionError,
 		readPushNotificationStatus,
 		type PushNotificationStatus
 	} from './subscriptions.js';
@@ -34,6 +37,12 @@
 					? 'Notificaciones activadas en este dispositivo.'
 					: status.detail || 'No pudimos confirmar que las notificaciones estén activas.';
 		} catch (error) {
+			if (error instanceof PushNotificationSessionError) {
+				feedback = error.message;
+				await goto(resolve('/auth/login?next=%2Fsettings'));
+				return;
+			}
+
 			status = await readPushNotificationStatus();
 			feedback = error instanceof Error ? error.message : 'No pudimos activar las notificaciones.';
 		} finally {

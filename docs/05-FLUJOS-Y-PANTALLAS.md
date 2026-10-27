@@ -147,6 +147,8 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 
 En `/settings`, Web Push distingue **activadas**, **desactivadas**, **bloqueadas**, **no compatibles**, **configuración pendiente** y **error de comprobación**. El permiso del navegador por sí solo no significa que el dispositivo esté activo: también deben existir una suscripción de `PushManager` y su fila propia en `push_subscriptions`. La activación y desactivación se realizan por dispositivo.
 
+Antes de solicitar el permiso del sistema, la PWA valida la sesión remota de Supabase. Al regresar del diálogo del sistema la comprueba nuevamente antes de crear o reutilizar la suscripción del navegador. Si la sesión dejó de ser válida, redirige al inicio de sesión conservando `/settings` como destino y no deja una suscripción incompleta. Este ajuste responde al caso observado en Chrome para Android donde el permiso se concedía, pero Supabase devolvía `session_not_found` al intentar persistirlo.
+
 Cuando Web Push está desactivado o bloqueado, `/dashboard` muestra un recordatorio breve con enlace a configuración. Puede ocultarse durante la sesión actual, pero reaparece en una sesión posterior mientras siga desactivado. Navegadores no compatibles y errores técnicos no se presentan como si el usuario hubiera decidido desactivar las notificaciones.
 
 Al abrirse un episodio, cada navegador suscrito de un usuario autorizado recibe como máximo una notificación titulada **Alerta de zona segura** con el texto **Posible salida de una zona segura. Abre Senda para revisar de inmediato.** El mensaje evita nombres, coordenadas y datos clínicos. Al pulsarlo abre `/dashboard`, donde la sesión y RLS determinan qué episodio puede consultar la persona.

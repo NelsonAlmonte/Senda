@@ -10,6 +10,13 @@ export interface PushNotificationStatus {
 	state: PushNotificationState;
 }
 
+export class PushNotificationSessionError extends Error {
+	constructor() {
+		super('Tu sesión expiró. Inicia sesión nuevamente para configurar notificaciones.');
+		this.name = 'PushNotificationSessionError';
+	}
+}
+
 interface StoredPushSubscription {
 	id: string;
 }
@@ -56,7 +63,7 @@ async function currentUserId(): Promise<string> {
 	const { data, error } = await supabase.auth.getUser();
 
 	if (error || !data.user) {
-		throw new Error('Tu sesión expiró. Inicia sesión nuevamente para configurar notificaciones.');
+		throw new PushNotificationSessionError();
 	}
 
 	return data.user.id;
@@ -124,12 +131,21 @@ export async function enablePushNotifications(): Promise<void> {
 		throw new Error('Este navegador o contexto no admite notificaciones Web Push.');
 	}
 
+	// Validate the remote Auth session before opening the operating system prompt. A signed
+	// access token can remain in the browser after its server session has been revoked.
+	const userId = await currentUserId();
 	const key = applicationServerKey();
 	const permission =
 		Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
 
 	if (permission !== 'granted') {
 		throw new Error('No se concedió permiso para mostrar notificaciones.');
+	}
+
+	// Mobile browsers temporarily yield control to the system permission UI. Confirm that the
+	// same account is still valid before creating or reusing a browser subscription.
+	if ((await currentUserId()) !== userId) {
+		throw new PushNotificationSessionError();
 	}
 
 	const registration = await serviceWorkerRegistration();
@@ -154,7 +170,6 @@ export async function enablePushNotifications(): Promise<void> {
 		throw new Error('El navegador no devolvió las claves necesarias para Web Push.');
 	}
 
-	const userId = await currentUserId();
 	const supabase = createBrowserSupabaseClient();
 	const { error } = await supabase.from('push_subscriptions').upsert(
 		{

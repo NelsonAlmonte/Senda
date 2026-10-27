@@ -292,10 +292,10 @@
 	<div class="mx-auto w-full max-w-6xl">
 		<header class="flex flex-wrap items-center justify-between gap-4 border-b border-ink/10 pb-5">
 			<a
-				href={resolve('/dashboard')}
+				href={resolve('/patients/[id]', { id: data.patient.id })}
 				class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
 			>
-				<span aria-hidden="true">←</span><span class="ml-2">Volver al panel</span>
+				<span aria-hidden="true">←</span><span class="ml-2">Volver al paciente</span>
 			</a>
 			<p class="text-sm font-semibold text-muted">
 				Tu acceso: {data.patient.accessRole === 'ADMIN' ? 'Administrador' : 'Monitor'}

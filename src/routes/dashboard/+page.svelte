@@ -321,10 +321,10 @@
 							<div class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
 								{#if patient.accessRole === 'ADMIN'}
 									<a
-										href={resolve('/patients/[id]/access', { id: patient.id })}
+										href={resolve('/patients/[id]', { id: patient.id })}
 										class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
 									>
-										Compartir acceso
+										Administrar paciente
 									</a>
 								{/if}
 								{#if patient.assignment}

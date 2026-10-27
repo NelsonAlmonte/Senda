@@ -1,3 +1,4 @@
+-- Version aligned with the migration recorded in Supabase development.
 create extension if not exists pg_net;
 
 create or replace function private.enqueue_alert_episode_web_push()

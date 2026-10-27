@@ -1,3 +1,4 @@
+-- Version aligned with the migration recorded in Supabase development.
 create table public.push_subscriptions (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid not null references auth.users (id) on delete cascade,

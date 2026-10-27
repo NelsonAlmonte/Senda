@@ -1,3 +1,4 @@
+-- Version aligned with the migration recorded in Supabase development.
 drop trigger if exists alert_episodes_enqueue_web_push_after_insert
 on public.alert_episodes;
 

@@ -153,6 +153,8 @@ Cuando Web Push está desactivado o bloqueado, `/dashboard` muestra un recordato
 
 Al abrirse un episodio, cada navegador suscrito de un usuario autorizado recibe como máximo una notificación titulada **Alerta de zona segura** con el texto **Posible salida de una zona segura. Abre Senda para revisar de inmediato.** El mensaje evita nombres, coordenadas y datos clínicos. Al pulsarlo abre `/dashboard`, donde la sesión y RLS determinan qué episodio puede consultar la persona.
 
+Cuando un navegador Chromium determina que la PWA es instalable, Senda muestra una acción global y descartable **Instalar Senda**. La acción conserva el evento `beforeinstallprompt` y abre el diálogo nativo únicamente como respuesta al toque o clic del usuario; se oculta al recibir `appinstalled`, después de consumir el evento o durante el resto de la sesión si la persona elige **Ahora no**. En navegadores que no exponen esta API no se promete abrir el diálogo: la instalación continúa disponible, cuando el navegador la admite, desde su menú o mediante **Añadir a pantalla de inicio**.
+
 ## UX indispensable
 
 - No etiquetar una ubicación antigua como "en vivo".

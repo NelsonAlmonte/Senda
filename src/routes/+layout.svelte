@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { dev } from '$app/env';
+	import PwaInstallPrompt from '#lib/pwa/PwaInstallPrompt.svelte';
 	import { onMount } from 'svelte';
 	import './layout.css';
 	import type { LayoutProps } from './$types';
@@ -31,3 +32,5 @@
 </a>
 
 {@render children()}
+
+<PwaInstallPrompt />

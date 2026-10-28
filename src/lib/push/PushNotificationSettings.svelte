@@ -69,10 +69,10 @@
 </script>
 
 <section
-	class="mt-6 rounded-3xl border border-white/80 bg-white p-6 shadow-xl shadow-brand/8 sm:p-8"
+	class="mt-6 rounded-3xl border border-white/80 bg-white p-6 sm:p-8"
 	aria-labelledby="push-notifications-heading"
 >
-	<p class="text-sm font-bold tracking-[0.14em] text-brand uppercase">Alertas</p>
+	<p class="text-sm font-bold tracking-widest text-brand uppercase">Alertas</p>
 	<h2 id="push-notifications-heading" class="mt-2 text-2xl font-bold text-ink">
 		Notificaciones en este dispositivo
 	</h2>

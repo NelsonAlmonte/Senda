@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
+	type Props = { authenticated?: boolean };
+
+	let { authenticated = false }: Props = $props();
 	let installPrompt = $state<SendaBeforeInstallPromptEvent | null>(null);
 	let installing = $state(false);
 	let dismissed = $state(false);
@@ -90,7 +93,10 @@
 
 {#if !dismissed && (installPrompt || installing || feedback || manualGuide)}
 	<aside
-		class="fixed right-4 bottom-4 left-4 z-40 mx-auto max-w-xl rounded-2xl border border-brand/20 bg-white p-4 shadow-xl shadow-ink/15 sm:right-6 sm:bottom-6 sm:left-auto sm:w-[28rem]"
+		class={[
+			'fixed right-4 left-4 z-50 mx-auto max-w-xl rounded-2xl border border-brand/20 bg-white p-4 sm:right-6 sm:left-auto sm:w-112',
+			authenticated ? 'bottom-24 lg:bottom-6' : 'bottom-4 sm:bottom-6'
+		]}
 		aria-labelledby="pwa-install-title"
 	>
 		<p id="pwa-install-title" class="font-bold text-ink">

@@ -288,30 +288,9 @@
 	/>
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-12">
-	<div class="mx-auto w-full max-w-6xl">
-		<header class="flex flex-wrap items-center justify-between gap-4 border-b border-ink/10 pb-5">
-			<a
-				href={resolve('/patients/[id]', { id: data.patient.id })}
-				class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-			>
-				<span aria-hidden="true">←</span><span class="ml-2">Volver al paciente</span>
-			</a>
-			<p class="text-sm font-semibold text-muted">
-				Tu acceso: {data.patient.accessRole === 'ADMIN' ? 'Administrador' : 'Monitor'}
-			</p>
-		</header>
-
-		<section class="py-8 sm:py-12">
-			<p class="text-sm font-bold tracking-[0.14em] text-brand uppercase">Última ubicación</p>
-			<h1 class="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-				Mapa de {patientName}
-			</h1>
-			<p class="mt-3 max-w-2xl leading-7 text-muted">
-				{data.patient.groupName ?? 'Grupo no disponible'} · El mapa se actualiza cuando Senda recibe una
-				nueva lectura; no garantiza seguimiento continuo.
-			</p>
-
+<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-0">
+	<div class="w-full max-w-6xl">
+		<section class="py-4 sm:py-8">
 			{#if data.assignment && data.locationsAvailable}
 				{#key data.assignment.id}
 					<PatientLocationRealtime
@@ -324,7 +303,7 @@
 				{/key}
 
 				<div
-					class="mt-5 inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white px-4 py-2 text-sm font-semibold text-muted shadow-sm"
+					class="mt-5 inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white px-4 py-2 text-sm font-semibold text-muted"
 					role="status"
 					aria-live="polite"
 					aria-atomic="true"
@@ -351,7 +330,7 @@
 			{/if}
 
 			{#if !data.assignment}
-				<div class="mt-8 rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
+				<div class="mt-8 rounded-3xl border border-white/80 bg-white p-6">
 					<h2 class="text-xl font-bold text-ink">Sin dispositivo configurado</h2>
 					<p class="mt-2 max-w-2xl leading-7 text-muted">
 						Todavía no existe una asignación activa que pueda enviar ubicaciones para este paciente.
@@ -359,7 +338,7 @@
 					{#if data.patient.accessRole === 'ADMIN'}
 						<a
 							href={resolve('/patients/[id]/device', { id: data.patient.id })}
-							class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+							class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 						>
 							Configurar dispositivo
 						</a>
@@ -382,7 +361,7 @@
 					</a>
 				</div>
 			{:else if !latestLocation && !data.manualLocationSimulatorEnabled && data.safeZones.length === 0}
-				<div class="mt-8 rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
+				<div class="mt-8 rounded-3xl border border-white/80 bg-white p-6">
 					<h2 class="text-xl font-bold text-ink">Aún no hay ubicaciones</h2>
 					<p class="mt-2 max-w-2xl leading-7 text-muted">
 						El dispositivo {data.assignment.device.serialNumber} está configurado, pero todavía no ha
@@ -390,8 +369,8 @@
 					</p>
 				</div>
 			{:else}
-				<div class="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-					<div class="min-w-0 space-y-6">
+				<div class="mt-8 grid items-start gap-6 lg:grid-cols-3">
+					<div class="min-w-0 space-y-6 lg:col-span-2">
 						{#key data.assignment.id}
 							<PatientLocationMap
 								latitude={mapCenter.latitude}
@@ -408,7 +387,7 @@
 						{/key}
 
 						<section
-							class="rounded-2xl border border-ink/10 bg-white p-4 shadow-sm"
+							class="rounded-2xl border border-ink/10 bg-white p-4"
 							aria-labelledby="map-safe-zones-title"
 						>
 							<div class="flex flex-wrap items-center justify-between gap-3">
@@ -458,10 +437,10 @@
 
 						{#if data.manualLocationSimulatorEnabled}
 							<section
-								class="rounded-3xl border border-amber-700/25 bg-amber-50 p-5 shadow-lg shadow-amber-900/5 sm:p-6"
+								class="rounded-3xl border border-amber-700/25 bg-amber-50 p-5 sm:p-6"
 								aria-labelledby="manual-simulator-title"
 							>
-								<p class="text-sm font-bold tracking-[0.12em] text-amber-900 uppercase">
+								<p class="text-sm font-bold tracking-widest text-amber-900 uppercase">
 									Modo de prueba
 								</p>
 								<h2 id="manual-simulator-title" class="mt-1 text-xl font-bold text-amber-950">
@@ -477,7 +456,7 @@
 										type="button"
 										onclick={activateSimulationMode}
 										disabled={!mapController}
-										class="mt-5 min-h-12 cursor-pointer rounded-xl bg-amber-950 px-5 font-bold text-white shadow-sm transition hover:bg-amber-900 focus:ring-4 focus:ring-amber-900/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+										class="mt-5 min-h-12 cursor-pointer rounded-xl bg-amber-950 px-5 font-bold text-white transition hover:bg-amber-900 focus:ring-4 focus:ring-amber-900/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 									>
 										{mapController ? 'Elegir punto en el mapa' : 'Esperando el mapa…'}
 									</button>
@@ -533,7 +512,7 @@
 											<button
 												type="submit"
 												disabled={simulatorSubmitting || !selectedSimulationPoint}
-												class="min-h-12 cursor-pointer rounded-xl bg-amber-950 px-5 font-bold text-white shadow-sm transition hover:bg-amber-900 focus:ring-4 focus:ring-amber-900/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+												class="min-h-12 cursor-pointer rounded-xl bg-amber-950 px-5 font-bold text-white transition hover:bg-amber-900 focus:ring-4 focus:ring-amber-900/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 											>
 												{simulatorSubmitting ? 'Enviando ubicación…' : 'Confirmar ubicación'}
 											</button>
@@ -567,7 +546,7 @@
 						{/if}
 					</div>
 
-					<aside class="rounded-3xl border border-white/80 bg-white p-6 shadow-lg shadow-brand/5">
+					<aside class="rounded-3xl border border-white/80 bg-white p-6">
 						{#if !latestLocation}
 							<div class="rounded-2xl border border-amber-700/25 bg-amber-50 p-4">
 								<p class="font-bold text-amber-950">Aún no hay ubicaciones</p>
@@ -609,7 +588,7 @@
 							aria-live="polite"
 							aria-atomic="true"
 						>
-							<p class="text-xs font-bold tracking-[0.12em] text-muted uppercase">
+							<p class="text-xs font-bold tracking-widest text-muted uppercase">
 								Episodio de salida
 							</p>
 							{#if !data.alertEpisodesAvailable}
@@ -653,7 +632,7 @@
 								aria-live="polite"
 								aria-atomic="true"
 							>
-								<p class="text-xs font-bold tracking-[0.12em] text-muted uppercase">
+								<p class="text-xs font-bold tracking-widest text-muted uppercase">
 									Relación con geocercas
 								</p>
 								<h2
@@ -782,9 +761,7 @@
 									</p>
 								{:else}
 									<p class="mt-4 flex gap-2 text-sm leading-6 text-muted">
-										<span
-											class="mt-2.5 h-1 w-7 shrink-0 rounded-full bg-[#1f6f8b]"
-											aria-hidden="true"
+										<span class="mt-2.5 h-1 w-7 shrink-0 rounded-full bg-focus" aria-hidden="true"
 										></span>
 										<span>
 											La línea une lecturas consecutivas de una misma asignación; no representa una

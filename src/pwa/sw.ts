@@ -16,7 +16,7 @@ interface SendaPushPayload {
 }
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
-const DEFAULT_NOTIFICATION_URL = '/dashboard';
+const DEFAULT_NOTIFICATION_URL = '/alerts';
 
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();

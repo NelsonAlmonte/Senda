@@ -27,9 +27,7 @@
 </svelte:head>
 
 <main id="contenido-principal" class="grid min-h-dvh place-items-center px-5 py-10 sm:px-8">
-	<section
-		class="w-full max-w-lg rounded-3xl border border-white/80 bg-white p-6 shadow-xl shadow-brand/8 sm:p-8"
-	>
+	<section class="w-full max-w-lg rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
 		<a
 			href={resolve('/')}
 			class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
@@ -37,7 +35,7 @@
 			<span aria-hidden="true">←</span><span class="ml-2">Volver a Senda</span>
 		</a>
 
-		<p class="mt-7 text-sm font-bold tracking-[0.14em] text-brand uppercase">Nueva cuenta</p>
+		<p class="mt-7 text-sm font-bold tracking-widest text-brand uppercase">Nueva cuenta</p>
 		<h1 class="mt-2 text-3xl font-bold tracking-tight text-ink">Crea tu acceso</h1>
 		<p class="mt-3 leading-7 text-muted">
 			Después de crearla podrás registrar un dispositivo o introducir un código para monitorear.
@@ -173,7 +171,7 @@
 			<button
 				type="submit"
 				disabled={submitting || !data.supabaseConfigured}
-				class="min-h-12 w-full cursor-pointer rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+				class="min-h-12 w-full cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 				>{submitting ? 'Creando cuenta…' : 'Crear cuenta'}</button
 			>
 		</form>

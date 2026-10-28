@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
-	import { resolve } from '$app/paths';
 	import PushNotificationSettings from '#lib/push/PushNotificationSettings.svelte';
 	import type { PageProps } from './$types';
 
@@ -18,20 +17,10 @@
 
 <svelte:head><title>Mi perfil | Senda</title></svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-8 sm:px-8">
-	<div class="mx-auto w-full max-w-2xl">
-		<a
-			href={resolve('/dashboard')}
-			class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-			><span aria-hidden="true">←</span><span class="ml-2">Volver al panel</span></a
-		>
-
-		<section
-			class="mt-6 rounded-3xl border border-white/80 bg-white p-6 shadow-xl shadow-brand/8 sm:p-8"
-		>
-			<p class="text-sm font-bold tracking-[0.14em] text-brand uppercase">Configuración</p>
-			<h1 class="mt-2 text-3xl font-bold text-ink">Mi perfil</h1>
-			<p class="mt-3 leading-7 break-words text-muted">
+<main id="contenido-principal" class="min-h-dvh px-5 py-8 sm:px-8 lg:px-0">
+	<div class="w-full max-w-2xl">
+		<section class="rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
+			<p class="leading-7 break-words text-muted">
 				Cuenta: {data.user.email ?? 'Correo no disponible'}
 			</p>
 
@@ -87,5 +76,18 @@
 		</section>
 
 		<PushNotificationSettings />
+
+		<section class="mt-8 border-t border-ink/10 pt-6 lg:hidden" aria-labelledby="session-title">
+			<h2 id="session-title" class="text-lg font-bold text-ink">Sesión</h2>
+			<p class="mt-2 leading-7 text-muted">Cierra tu sesión en este dispositivo.</p>
+			<form method="POST" action="/auth/logout" class="mt-4">
+				<button
+					type="submit"
+					class="min-h-12 cursor-pointer rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+				>
+					Cerrar sesión
+				</button>
+			</form>
+		</section>
 	</div>
 </main>

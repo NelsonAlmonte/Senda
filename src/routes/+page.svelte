@@ -42,7 +42,7 @@
 				class="inline-flex min-h-12 items-center gap-3 rounded-xl pr-3 text-ink focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				aria-label="Senda, inicio"
 			>
-				<span class="grid size-11 place-items-center rounded-2xl bg-brand text-white shadow-sm">
+				<span class="grid size-11 place-items-center rounded-2xl bg-brand text-white">
 					<svg viewBox="0 0 24 24" class="size-6" aria-hidden="true">
 						<path
 							d="M12 21s6-4.35 6-11a6 6 0 1 0-12 0c0 6.65 6 11 6 11Z"
@@ -66,14 +66,14 @@
 			{#if data.user}
 				<a
 					href={resolve('/dashboard')}
-					class="inline-flex min-h-12 shrink-0 items-center rounded-xl bg-white px-4 text-sm font-bold text-brand shadow-sm focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 shrink-0 items-center rounded-xl bg-white px-4 text-sm font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
 					Ir al panel
 				</a>
 			{:else}
 				<a
 					href={resolve('/auth/login')}
-					class="inline-flex min-h-12 shrink-0 items-center rounded-xl bg-white px-4 text-sm font-bold text-brand shadow-sm focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 shrink-0 items-center rounded-xl bg-white px-4 text-sm font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
 					Iniciar sesión
 				</a>
@@ -81,10 +81,10 @@
 		</header>
 
 		<section
-			class="grid min-w-0 flex-1 grid-cols-1 items-center gap-12 py-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:py-20"
+			class="grid min-w-0 flex-1 grid-cols-1 items-center gap-12 py-16 lg:grid-cols-2 lg:py-20"
 		>
 			<div class="max-w-3xl min-w-0">
-				<p class="mb-4 text-sm font-bold tracking-[0.16em] text-brand uppercase">
+				<p class="mb-4 text-sm font-bold tracking-widest text-brand uppercase">
 					Monitoreo preventivo y alerta temprana
 				</p>
 				<h1
@@ -101,13 +101,13 @@
 					<div class="mt-8 flex flex-wrap gap-3">
 						<a
 							href={resolve('/auth/register')}
-							class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+							class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 						>
 							Crear cuenta
 						</a>
 						<a
 							href={resolve('/auth/login')}
-							class="inline-flex min-h-12 items-center justify-center rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink shadow-sm focus:ring-4 focus:ring-focus/30 focus:outline-none"
+							class="inline-flex min-h-12 items-center justify-center rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink focus:ring-4 focus:ring-focus/30 focus:outline-none"
 						>
 							Ya tengo cuenta
 						</a>
@@ -115,7 +115,7 @@
 				{/if}
 
 				<div
-					class="mt-8 inline-flex items-center gap-3 rounded-2xl border border-brand/20 bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm"
+					class="mt-8 inline-flex items-center gap-3 rounded-2xl border border-brand/20 bg-white px-4 py-3 text-sm font-semibold text-ink"
 				>
 					<span class="relative flex size-3" aria-hidden="true">
 						<span
@@ -128,7 +128,7 @@
 			</div>
 
 			<div
-				class="min-w-0 rounded-3xl border border-white/80 bg-white/85 p-5 shadow-xl shadow-brand/8 backdrop-blur-sm sm:p-7"
+				class="min-w-0 rounded-3xl border border-white/80 bg-white/85 p-5 backdrop-blur-sm sm:p-7"
 			>
 				<h2 class="text-xl font-bold text-ink">Fundamentos de esta fase</h2>
 				<p class="mt-2 leading-7 text-muted">

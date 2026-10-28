@@ -1,7 +1,7 @@
 <script module lang="ts">
-	export type DashboardAlertEpisodeRealtimeState = 'CONNECTING' | 'CONNECTED' | 'ERROR';
+	export type AlertEpisodeRealtimeState = 'CONNECTING' | 'CONNECTED' | 'ERROR';
 
-	export type DashboardAlertEpisodeRealtimeRow = {
+	export type AlertEpisodeRealtimeRow = {
 		id: string;
 		patient_id: string;
 		status: 'OPEN' | 'RESOLVED';
@@ -16,8 +16,8 @@
 	import { onMount } from 'svelte';
 
 	type Props = {
-		onAlertEpisode: (episode: DashboardAlertEpisodeRealtimeRow) => void;
-		onStateChange: (state: DashboardAlertEpisodeRealtimeState) => void;
+		onAlertEpisode: (episode: AlertEpisodeRealtimeRow) => void;
+		onStateChange: (state: AlertEpisodeRealtimeState) => void;
 	};
 
 	let { onAlertEpisode, onStateChange }: Props = $props();
@@ -35,17 +35,17 @@
 
 		onStateChange('CONNECTING');
 		const channel = supabase
-			.channel('dashboard-alert-episodes', {
+			.channel('alerts-module-episodes', {
 				config: { postgres_changes_options: { wait: true } }
 			})
-			.on<DashboardAlertEpisodeRealtimeRow>(
+			.on<AlertEpisodeRealtimeRow>(
 				'postgres_changes',
 				{ event: 'INSERT', schema: 'public', table: 'alert_episodes' },
 				(payload) => {
 					if (!disposed) onAlertEpisode(payload.new);
 				}
 			)
-			.on<DashboardAlertEpisodeRealtimeRow>(
+			.on<AlertEpisodeRealtimeRow>(
 				'postgres_changes',
 				{ event: 'UPDATE', schema: 'public', table: 'alert_episodes' },
 				(payload) => {

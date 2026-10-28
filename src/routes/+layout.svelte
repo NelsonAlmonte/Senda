@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { dev } from '$app/env';
+	import AppHeader from '#lib/navigation/AppHeader.svelte';
+	import AppNavigation from '#lib/navigation/AppNavigation.svelte';
 	import PwaInstallPrompt from '#lib/pwa/PwaInstallPrompt.svelte';
 	import { onMount } from 'svelte';
 	import './layout.css';
 	import type { LayoutProps } from './$types';
 
-	let { children }: LayoutProps = $props();
+	let { data, children }: LayoutProps = $props();
 
 	onMount(() => {
 		if ('serviceWorker' in navigator) {
@@ -26,11 +28,19 @@
 
 <a
 	href="#contenido-principal"
-	class="fixed top-3 left-3 z-50 -translate-y-24 rounded-lg bg-ink px-4 py-3 font-semibold text-white shadow-lg transition-transform focus:translate-y-0 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+	class="fixed top-3 left-3 z-50 -translate-y-24 rounded-lg bg-ink px-4 py-3 font-semibold text-white transition-transform focus:translate-y-0 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 >
 	Saltar al contenido
 </a>
 
-{@render children()}
+{#if data.user}
+	<AppNavigation />
+	<div class="pb-28 lg:pr-4 lg:pb-4 lg:pl-80">
+		<AppHeader hasActiveAlert={data.hasActiveAlert} />
+		{@render children()}
+	</div>
+{:else}
+	{@render children()}
+{/if}
 
-<PwaInstallPrompt />
+<PwaInstallPrompt authenticated={Boolean(data.user)} />

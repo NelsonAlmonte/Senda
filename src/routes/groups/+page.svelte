@@ -130,25 +130,11 @@
 	/>
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-12">
-	<div class="mx-auto w-full max-w-4xl">
-		<header class="flex flex-wrap items-center justify-between gap-4 border-b border-ink/10 pb-5">
-			<a
-				href={resolve('/dashboard')}
-				class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-			>
-				<span aria-hidden="true">←</span><span class="ml-2">Volver al panel</span>
-			</a>
-			<p class="text-sm font-semibold text-muted">Registro guiado</p>
-		</header>
-
-		<section class="py-8 sm:py-12">
-			<div class="rounded-3xl border border-white/80 bg-white p-6 shadow-xl shadow-brand/8 sm:p-8">
-				<p class="text-sm font-bold tracking-[0.14em] text-brand uppercase">Registrar en Senda</p>
-				<h1 class="mt-2 text-3xl font-bold tracking-tight text-ink">
-					Nuevo paciente y dispositivo
-				</h1>
-				<p class="mt-3 max-w-2xl leading-7 text-muted">
+<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-0">
+	<div class="w-full max-w-4xl">
+		<section class="py-4 sm:py-8">
+			<div class="rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
+				<p class="max-w-2xl leading-7 text-muted">
 					Primero elige su contexto de cuidado. El grupo nuevo se guardará junto con el primer
 					paciente para evitar configuraciones incompletas.
 				</p>
@@ -164,7 +150,7 @@
 									: 'border-ink/10 bg-white text-muted'
 							]}
 						>
-							<span class="block text-[0.7rem] font-semibold text-muted">Paso {item.number}</span>
+							<span class="block text-xs font-semibold text-muted">Paso {item.number}</span>
 							<span class="mt-1 block">{item.label}</span>
 						</li>
 					{/each}
@@ -321,7 +307,7 @@
 							type="button"
 							onclick={continueToPatient}
 							disabled={!data.groupsAvailable}
-							class="mt-7 min-h-12 w-full cursor-pointer rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+							class="mt-7 min-h-12 w-full cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 						>
 							Siguiente: datos del paciente
 						</button>
@@ -423,7 +409,7 @@
 								<button
 									type="submit"
 									disabled={submitting}
-									class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+									class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									{submitting ? 'Guardando…' : 'Guardar y continuar'}
 								</button>
@@ -460,10 +446,10 @@
 								</p>
 							</div>
 							<a
-								href={resolve('/dashboard')}
-								class="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+								href={resolve('/patients')}
+								class="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 							>
-								Ir al panel
+								Ir a pacientes
 							</a>
 						{:else}
 							{#if Object.keys(errors).length > 0}
@@ -518,12 +504,12 @@
 									<button
 										type="submit"
 										disabled={submitting}
-										class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+										class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 									>
 										{submitting ? 'Configurando…' : 'Configurar dispositivo'}
 									</button>
 									<a
-										href={resolve('/dashboard?created=patient')}
+										href={resolve('/patients?created=patient')}
 										class="inline-flex min-h-12 items-center justify-center rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
 									>
 										Configurar después

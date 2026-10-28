@@ -16,13 +16,15 @@
 - Episodios activos con jerarquía visible y texto directo; no depender del color ni introducir niveles que el MVP no calcula.
 - Evitar saturación visual, gradientes chillones, transiciones largas, neumorfismo de bajo contraste o "dashboard de flota".
 - Tarjetas sencillas, suficiente espacio, buen agrupamiento de información y encabezados entendibles.
+- No usar sombras en el contenido. Como excepción de separación sobre superficies móviles, el header y la barra inferior usan únicamente `shadow-sm`; el sidebar de escritorio permanece sin sombra.
+- Usar la escala estándar de Tailwind para radios, espaciado, tipografía, tracking, tamaños y rejillas. Las utilidades arbitrarias `[...]` se reservan únicamente para una restricción técnica sin equivalente estándar y deben justificarse en el código o la documentación.
 
 Colores de referencia **propuestos**: verde salvia `#A8CBB7`, azul `#BDD8E9`, blanco cálido `#F6F8F5`, lavanda `#E7E5F4`, texto `#344B52`. Ajustar contrastes con herramientas WCAG antes de adoptarlos como tokens.
 
-## Bibliotecas y tipografía (recomendaciones, no acuerdos obligatorios)
+## Bibliotecas y tipografía
 
-- Componentes: **shadcn-svelte**, compatible con Tailwind, evaluar integración/versión.
-- Iconos: **Lucide** (una familia consistente).
+- Componentes: **shadcn-svelte** continúa como opción futura; no se incorpora al shell inicial porque la navegación no necesita componentes complejos y añadirla ampliaría dependencias y estilos sin beneficio proporcional.
+- Iconos: **`@lucide/svelte@1.63.0`**, confirmado el 2026-10-28 para la navegación. Importar cada icono por subruta, acompañarlo siempre con etiqueta textual y ocultar el SVG redundante a tecnologías de asistencia.
 - Tipografía: **Inter** o **Nunito Sans**, preferencia provisional por Inter.
 - Modo claro como enfoque inicial; no implementar tematización múltiple/dark mode sin necesidad.
 
@@ -50,15 +52,31 @@ Riesgo alto: fuera de zona segura
 
 No usar únicamente un punto verde/rojo para comunicar estado; incluir texto. El estado `UBICACIÓN DESACTUALIZADA` tiene prioridad incluso si el riesgo anterior era `NORMAL`.
 
+## Navegación modular
+
+- El área autenticada tiene tres módulos funcionales de primer nivel: **Pacientes**, **Alertas** y **Perfil**, además de **Inicio** como bienvenida mínima.
+- En móvil se presentan en una barra inferior fija inspirada en Material 3: icono arriba, etiqueta abajo e indicador ovalado únicamente detrás del icono activo. La barra flota con separación lateral e inferior, borde redondeado y sin borde superior aislado. Desde `lg` se convierte en un sidebar oscuro flotante, separado 16 px de los bordes izquierdo, superior e inferior. Es una única navegación semántica adaptativa, no dos menús duplicados.
+- Cada destino usa icono Lucide más etiqueta visible. El estado activo combina texto, color, fondo y `aria-current`; nunca depende solo del icono o del color.
+- Los objetivos táctiles miden al menos 48 px, el foco de teclado es visible y la barra móvil conserva separación respecto del borde inferior del viewport. El contenido y la promoción de instalación dejan espacio para no quedar tapados; la safe area debe comprobarse manualmente en iPhone instalado.
+- **Pacientes** permanece activo también en sus operaciones auxiliares (`/groups`, `/access-code`, `/onboarding` y rutas de paciente); **Perfil** incluye `/settings`.
+- **Pacientes** usa `HeartHandshake` para representar cuidado, en lugar de un icono de grupo. El header translúcido usa `Bell` y `CircleUserRound` como accesos directos a Alertas y Perfil.
+- El header es la única fuente del título contextual dentro del área autenticada. Las pantallas no repiten un `h1` y una descripción de ubicación; las rutas de paciente muestran allí su nombre dinámico. Cuando se puede regresar, el header presenta una flecha con nombre accesible y comportamiento predecible hacia la pantalla padre.
+- El sidebar determina la columna general del área autenticada y el header añade padding horizontal propio para que título e iconos respiren dentro de su superficie. El título usa una escala compacta: en rutas principales recibe `ms-2`; en subrutas ese margen desaparece y su lugar lo ocupa la flecha real de retorno. Los botones de icono del header son circulares y mantienen objetivos táctiles de 48 px.
+- Si existe una alerta `OPEN` autorizada, la campana muestra un punto rojo y cambia su nombre accesible a **Alertas: hay una alerta activa**. La carga inicial es SSR y una suscripción Realtime mantiene el indicador actualizado; el color no es el único significado.
+- **Cerrar sesión** se mantiene separado de la navegación principal: al fondo del sidebar en escritorio y dentro de Perfil en móvil. No se añade una cuarta opción de navegación sin una necesidad real.
+- `/dashboard` es únicamente la bienvenida **Hola, USUARIO.**; no repite módulos, acciones, pacientes ni cierre de sesión.
+
+**Criterios aplicados mediante UI UX Pro Max (2026-10-28):** navegación persistente con etiqueta e icono, estado activo inequívoco, foco visible, objetivos táctiles amplios, compensación del contenido para elementos fijos, soporte de área segura y adaptación bottom navigation/sidebar sin duplicar la estructura. La segunda iteración añade jerarquía Material 3 en móvil, sidebar flotante con separación espacial, acción destructiva aislada y controles de header de 48 px con nombres accesibles. La tercera iteración elimina sombras del contenido, mantiene la columna general definida por el sidebar, centraliza títulos y retorno en el header y hace flotar también la barra móvil. El ajuste posterior compacta el título, usa margen inicial condicional en rutas principales, aumenta el padding interno del header y reserva `shadow-sm` para separar las dos barras flotantes del contenido. La búsqueda UX específica confirmó que el retorno debe ser predecible y preservar el modelo de navegación; Senda enlaza a la pantalla padre conocida sin reemplazar el botón del navegador. La validación visual manual en móvil y escritorio continúa pendiente.
+
 ## Onboarding y estados incompletos
 
 - Después del registro, presentar dos acciones claras: configurar un dispositivo o ingresar un código de acceso. No tratarlas como roles permanentes de la cuenta.
 - Aplicar divulgación progresiva: contexto `FAMILY`/`CARE_CENTER`, paciente y dispositivo en pasos separados, con indicador de progreso y navegación hacia atrás.
-- Permitir **Configurar dispositivo después**. El dashboard mostrará **Sin dispositivo configurado**, una explicación breve y el botón **Configurar ahora** junto al paciente correspondiente.
+- Permitir **Configurar dispositivo después**. `/patients` mostrará **Sin dispositivo configurado**, una explicación breve y el botón **Configurar ahora** junto al paciente correspondiente.
 - Un paciente sin dispositivo no debe mostrarse como seguro, conectado ni monitoreado. Usar un estado informativo neutral, no una alerta clínica.
 - Al canjear un código, mostrar antes de aceptar únicamente el nombre mínimo del paciente y su contexto; dejar claro que el acceso será `MONITOR` sobre ese paciente, no sobre todo el grupo.
 
-**Estado implementado (2026-10-24):** `/onboarding` presenta las dos acciones como opciones equivalentes y no permanentes; `/groups` separa Grupo, Paciente y Dispositivo en un asistente con progreso y retorno; `/access-code` usa divulgación progresiva para revisar la información mínima antes de aceptar. En las tarjetas del dashboard, el permiso se expresa como **Tu acceso: Administrador/Monitor** y se separa de la identidad del paciente para no atribuirle ese rol por error.
+**Estado implementado (2026-10-24; reorganizado el 2026-10-28):** `/onboarding` presenta las dos acciones como opciones equivalentes y no permanentes; `/groups` separa Grupo, Paciente y Dispositivo en un asistente con progreso y retorno; `/access-code` usa divulgación progresiva para revisar la información mínima antes de aceptar. En las tarjetas de `/patients`, el permiso se expresa como **Tu acceso: Administrador/Monitor** y se separa de la identidad del paciente para no atribuirle ese rol por error.
 
 El mapa de última ubicación reserva su espacio durante la carga para evitar saltos, ofrece recuperación ante error y conserva estados útiles sin dispositivo o sin lecturas. La frescura se comunica con texto además de color. Cuando existe precisión GPS, el círculo azul se identifica expresamente como precisión y no como geocerca o zona segura. Las geocercas activas se muestran con círculos verdes no interactivos y una lista textual de nombres y radios; el mapa de monitoreo usa la misma interacción directa sin `Ctrl` que el editor.
 
@@ -66,7 +84,7 @@ La relación de la lectura con las geocercas se presenta en una tarjeta separada
 
 El episodio confirmado se presenta en una tercera tarjeta separada: **Salida confirmada activa**, **Sin episodio de salida activo** o error de consulta. Incluye texto y fecha de confirmación, sin presentar niveles ni depender del ámbar como única señal. Debajo se mantiene un historial breve de episodios activos/resueltos; Realtime actualiza la región de estado sin mover el foco.
 
-En el dashboard, solo los episodios activos reciben una tarjeta destacada para no saturar cada paciente con estados normales repetidos. La tarjeta incluye el texto **Salida confirmada activa**, la fecha y un enlace contextual al mapa. El borde ámbar refuerza la jerarquía, pero nunca sustituye el texto. Aperturas y resoluciones se anuncian en una única región `status` contextual; los errores de consulta o conexión se muestran de forma visible y no se interpretan como ausencia de episodios.
+En `/alerts`, los episodios activos aparecen antes del historial y reciben una tarjeta destacada con el nombre del paciente, el texto **Salida confirmada activa**, la fecha y un enlace contextual al mapa. El borde ámbar refuerza la jerarquía, pero nunca sustituye el texto. Los resueltos se ordenan cronológicamente debajo. Aperturas y resoluciones se anuncian en una única región `status` contextual; los errores de consulta o conexión se muestran de forma visible y no se interpretan como ausencia de episodios.
 
 ## Editor de geocercas
 
@@ -82,7 +100,7 @@ En el dashboard, solo los episodios activos reciben una tarjeta destacada para n
 
 - Compatibilidad de instalación según capacidades reales del navegador/OS.
 - Web Push requiere consentimiento. En iOS, verificar funcionamiento como app añadida a pantalla de inicio.
-- El estado de Web Push debe expresarse con texto y no solo con color. `/settings` ofrece una acción clara para activar, desactivar o volver a comprobar; el dashboard muestra un recordatorio descartable durante la sesión únicamente cuando el usuario puede actuar porque las notificaciones están desactivadas o bloqueadas.
+- El estado de Web Push debe expresarse con texto y no solo con color. `/settings` ofrece una acción clara para activar, desactivar o volver a comprobar; **Perfil** permanece visible en la navegación principal y no se añade otro recordatorio al dashboard mínimo.
 - Pedir permiso solo como consecuencia de la acción explícita **Activar notificaciones**. Si el navegador lo bloqueó, explicar que Senda no puede cambiar ese permiso y orientar hacia la configuración del sitio.
 - Service worker: **no cachear respuestas de Supabase con ubicaciones/personas/historial por defecto**. Cachear recursos estáticos con política segura; evitar filtraciones entre usuarios al cambiar de sesión.
 - Cuando haya versión nueva, manejar actualización/reload de forma visible y sin pérdida silenciosa de acciones.

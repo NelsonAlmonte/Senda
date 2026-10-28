@@ -10,12 +10,13 @@
 /onboarding
 /access-code
 /dashboard
+/patients
+/alerts
 /groups
 /groups/:id
 /patients/:id
 /patients/:id/map
 /patients/:id/history
-/patients/:id/alerts
 /patients/:id/safe-zones
 /patients/:id/access
 /invitations
@@ -24,7 +25,7 @@
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
 
-**Estado implementado (2026-10-26):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El dashboard distingue sin dispositivo, sin ubicaciones, lectura reciente, lectura desactualizada y fallo temporal de consulta. Además, destaca cualquier episodio `OPEN` autorizado con texto, fecha de confirmación y acceso directo al mapa; una única suscripción Realtime actualiza las tarjetas sin recargar. `/patients/:id/map` muestra a `ADMIN` y `MONITOR` la última posición autorizada, su antigüedad y precisión, sin llamarla seguimiento en vivo.
+**Estado reorganizado (2026-10-28):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` queda como bienvenida mínima; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada. Esta reorganización está implementada localmente y pendiente de validación manual responsive y de datos reales.
 
 ## Flujo A — Registro e inicio de sesión
 
@@ -45,14 +46,14 @@ Usuario autenticado → crear o seleccionar grupo (nombre, FAMILY o CARE_CENTER)
   → alta paciente → crear patient_access ADMIN para creador autorizado
   → decidir “Configurar dispositivo ahora” o “Configurar después”
   → si eligió ahora: introducir un serial simulado preexistente y crear la asignación
-  → si eligió después: dashboard con paciente y estado SIN DISPOSITIVO
+  → si eligió después: módulo Pacientes con estado SIN DISPOSITIVO
 ```
 
 La interfaz presenta este recorrido en una sola página con tres pasos visibles: **Grupo**, **Paciente** y **Dispositivo**, y permite volver del segundo al primero. Para un centro: `type=CARE_CENTER`; para hogar: `type=FAMILY`. No añadir administración hospitalaria. Con la alternativa simple aprobada, un grupo nuevo se persiste atómicamente junto con su primer paciente; los pacientes siguientes pueden reutilizar un grupo existente. Un paciente forma parte de un contexto grupal, pero sus permisos no son heredados de todos los miembros del grupo.
 
-En el dashboard, **Agregar paciente** abre el asistente priorizando un grupo existente, mientras **Crear grupo** prioriza un contexto nuevo. Ambas acciones conservan el alta del paciente dentro del mismo recorrido, porque el MVP no mantiene grupos vacíos. **Ingresar código** permanece como una acción independiente.
+En `/patients`, **Agregar paciente** abre el asistente priorizando un grupo existente, mientras **Crear grupo** prioriza un contexto nuevo. Ambas acciones conservan el alta del paciente dentro del mismo recorrido, porque el MVP no mantiene grupos vacíos. **Ingresar código** permanece como una acción independiente.
 
-Posponer el dispositivo no revierte el alta del grupo ni del paciente. El dashboard debe mostrar un aviso pequeño y accionable bajo el paciente: **Sin dispositivo configurado** + **Configurar ahora**. No presentar ubicación, riesgo `NORMAL` ni monitoreo activo hasta que exista una asignación y datos válidos.
+Posponer el dispositivo no revierte el alta del grupo ni del paciente. El módulo Pacientes debe mostrar un aviso pequeño y accionable bajo el paciente: **Sin dispositivo configurado** + **Configurar ahora**. No presentar ubicación, riesgo `NORMAL` ni monitoreo activo hasta que exista una asignación y datos válidos.
 
 ## Flujo C — Dispositivo simulado y mapa
 
@@ -97,7 +98,7 @@ El editor usa interacción directa con el mapa: la rueda amplía sin exigir `Ctr
 
 La zona seleccionada se destaca; las demás activas se presentan con menor énfasis; la provisional usa una apariencia ámbar y texto explícito; una zona inactiva permanece oculta salvo al seleccionarla en la lista. Crear, editar, activar, desactivar y archivar están disponibles para `ADMIN` y `MONITOR`. Archivar no elimina físicamente la fila.
 
-**Estado completado (2026-10-25):** la ruta, el editor gráfico, la lista accesible, las acciones SSR y el enlace desde cada paciente del dashboard están implementados. La migración está aplicada en Supabase de desarrollo y su suite pgTAP pasa 29 casos. El usuario validó manualmente el flujo completo, incluidos el zoom directo, el arrastre del círculo, la selección de centros superpuestos, la limpieza del estado provisional y la visualización de las zonas activas en el mapa de monitoreo.
+**Estado completado (2026-10-25):** la ruta, el editor gráfico, la lista accesible, las acciones SSR y el enlace desde cada paciente están implementados. La migración está aplicada en Supabase de desarrollo y su suite pgTAP pasa 29 casos. El usuario validó manualmente el flujo completo, incluidos el zoom directo, el arrastre del círculo, la selección de centros superpuestos, la limpieza del estado provisional y la visualización de las zonas activas en el mapa de monitoreo. Desde el 2026-10-28, ese enlace parte del módulo `/patients`.
 
 ## Flujo E — Código de acceso e invitación
 
@@ -117,6 +118,7 @@ No usar el mero código como autorización definitiva ni como membresía del gru
 ```text
 Nueva posición → motor de episodios → episodio OPEN
     → actualización en /patients/:id/map
+    → aparición prioritaria en /alerts
     → Web Push opcional al abrir el episodio
     → vuelta segura → episodio RESOLVED
 ```
@@ -127,13 +129,17 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 
 **Historia 4D completada y validada (2026-10-26):** `/dashboard` consulta por SSR el episodio `OPEN` de cada paciente autorizado y lo presenta antes del estado del dispositivo. La tarjeta indica **Salida confirmada activa**, muestra cuándo se confirmó y ofrece **Ver ubicación y detalles**. Una sola suscripción a `alert_episodes` procesa aperturas y resoluciones para todos los pacientes visibles; RLS continúa siendo la autorización efectiva. Los cambios se anuncian mediante una región de estado contextual sin mover el foco. Si falla la consulta o Realtime, la interfaz no supone que el paciente está seguro y ofrece una recuperación explícita. El usuario confirmó la aparición y desaparición automática de la tarjeta y el acceso correcto al mapa.
 
+**Reorganización de módulos (2026-10-28):** la capacidad validada en 4D se trasladó a `/alerts`. La pantalla consulta hasta 100 episodios autorizados, coloca todos los `OPEN` arriba con el nombre del paciente destacado y muestra los `RESOLVED` como historial. Una suscripción Realtime invalida la carga SSR ante aperturas o resoluciones; la consulta y los eventos siguen filtrados por RLS. `/dashboard` ya no presenta pacientes ni alertas. La nueva composición queda pendiente de validación manual extremo a extremo.
+
 ## Información mínima sugerida por pantalla (no UI final)
 
 | Ruta | Contenido imprescindible |
 |---|---|
 | `/onboarding` | Elección inicial entre registrar dispositivo o monitorear con un código; ambas acciones siguen disponibles después |
 | `/access-code` | Entrada, vista previa mínima y aceptación de un código de acceso `MONITOR` |
-| `/dashboard` | Pacientes autorizados, riesgo conocido, conectividad, última actualización, acciones separadas de alta y aviso accionable cuando falta dispositivo |
+| `/dashboard` | Bienvenida mínima con el nombre del usuario |
+| `/patients` | Pacientes autorizados, estado de dispositivo/ubicación, acciones de alta y navegación a sus operaciones |
+| `/alerts` | Episodios autorizados globales: alertas `OPEN` primero e historial `RESOLVED` después |
 | `/groups` | Asistente de grupo nuevo/existente, paciente y configuración opcional del dispositivo |
 | `/groups/:id` | Datos básicos del grupo y pacientes del contexto que el usuario está autorizado a administrar/ver |
 | `/patients/:id` | Ficha mínima, últimos indicadores y accesos a módulos |
@@ -143,15 +149,17 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 | `/patients/:id/safe-zones` | Geocercas circulares y edición por ADMIN/MONITOR |
 | `/patients/:id/access` | Personas autorizadas; invitar/revocar solo ADMIN |
 | `/invitations` | Invitaciones propias PENDING y acciones de aceptar/declinar |
-| `/settings` | Perfil y activación de Web Push; información básica |
+| `/settings` | Perfil, activación de Web Push y cierre de sesión en móvil; en escritorio, la sesión se cierra desde el pie del sidebar |
 
 En `/settings`, Web Push distingue **activadas**, **desactivadas**, **bloqueadas**, **no compatibles**, **configuración pendiente** y **error de comprobación**. El permiso del navegador por sí solo no significa que el dispositivo esté activo: también deben existir una suscripción de `PushManager` y su fila propia en `push_subscriptions`. La activación y desactivación se realizan por dispositivo.
 
 Antes de solicitar el permiso del sistema, la PWA valida la sesión remota de Supabase. Al regresar del diálogo del sistema la comprueba nuevamente antes de crear o reutilizar la suscripción del navegador. Si la sesión dejó de ser válida, redirige al inicio de sesión conservando `/settings` como destino y no deja una suscripción incompleta. Este ajuste responde al caso observado en Chrome para Android donde el permiso se concedía, pero Supabase devolvía `session_not_found` al intentar persistirlo.
 
-Cuando Web Push está desactivado o bloqueado, `/dashboard` muestra un recordatorio breve con enlace a configuración. Puede ocultarse durante la sesión actual, pero reaparece en una sesión posterior mientras siga desactivado. Navegadores no compatibles y errores técnicos no se presentan como si el usuario hubiera decidido desactivar las notificaciones.
+El estado y los controles de Web Push se consultan desde `/settings`; la navegación persistente y el acceso directo del header mantienen **Perfil** accesible sin añadir recordatorios al inicio. Navegadores no compatibles y errores técnicos no se presentan como si el usuario hubiera decidido desactivar las notificaciones. En escritorio, **Cerrar sesión** se separa de los módulos y queda al fondo del sidebar; en móvil permanece dentro de Perfil porque el sidebar no existe en ese ancho.
 
-Al abrirse un episodio, cada navegador suscrito de un usuario autorizado recibe como máximo una notificación titulada **Alerta de zona segura** con el texto **Posible salida de una zona segura. Abre Senda para revisar de inmediato.** El mensaje evita nombres, coordenadas y datos clínicos. Al pulsarlo abre `/dashboard`, donde la sesión y RLS determinan qué episodio puede consultar la persona.
+El header autenticado incluye el título contextual de la ruta, una campana que conduce a `/alerts` y un acceso a `/settings`. En rutas anidadas de paciente, el título incorpora su nombre y una flecha accesible regresa a la pantalla padre; por ello las páginas no repiten encabezados de ubicación dentro del contenido. En rutas principales el título recibe un margen inicial pequeño; en subrutas ese margen desaparece y se muestra la flecha. La carga SSR consulta únicamente si existe al menos un episodio `OPEN` visible por RLS y muestra un punto rojo en la campana cuando corresponde; el nombre accesible del control expresa también ese estado, por lo que no depende solo del color. Una suscripción Realtime global invalida esa consulta ante aperturas o resoluciones. El sidebar mantiene la columna general en escritorio, el header añade padding interno para separar sus controles de los bordes y la barra inferior móvil flota con márgenes y radio equivalentes.
+
+Al abrirse un episodio, cada navegador suscrito de un usuario autorizado recibe como máximo una notificación titulada **Alerta de zona segura** con el texto **Posible salida de una zona segura. Abre Senda para revisar de inmediato.** El mensaje evita nombres, coordenadas y datos clínicos. Al pulsarlo abre `/alerts`, donde la sesión y RLS determinan qué episodios puede consultar la persona. El 2026-10-28 se desplegó en Supabase de desarrollo la versión 2 de `send-geofence-alert` con ese destino y se comprobó que inicia y responde; queda pendiente repetir el flujo extremo a extremo con una alerta real y el clic de la notificación.
 
 Cuando un navegador Chromium determina que la PWA es instalable, Senda muestra una acción global y descartable **Instalar Senda**. La acción conserva el evento `beforeinstallprompt` y abre el diálogo nativo únicamente como respuesta al toque o clic del usuario; se oculta al recibir `appinstalled`, después de consumir el evento o durante la navegación actual si la persona elige **Ahora no**. Una recarga completa permite que la promoción vuelva a aparecer; la elección no se guarda como rechazo permanente. En iPhone/iPad se presenta una guía para abrir la página en Safari y usar **Compartir → Añadir a pantalla de inicio**, además de **Abrir como app** cuando la opción esté disponible; en Safari para macOS Sonoma 14 o posterior se indica **Archivo → Añadir al Dock**. La guía tampoco aparece al ejecutar Senda como PWA instalada.
 
@@ -161,4 +169,4 @@ Cuando un navegador Chromium determina que la PWA es instalable, Senda muestra u
 - Diferenciar `NORMAL`, riesgo activo y `UBICACIÓN DESACTUALIZADA`.
 - Manejar falta de geocerca, sin asignación, sin ubicación y ausencia de permisos como estados explícitos.
 - La invitación a MONITOR no debe habilitar acciones de ADMIN aunque aparezcan por error controles gráficos.
-- Los flujos de varios pasos deben mostrar progreso y permitir volver. La decisión de configurar después debe terminar en un estado vacío útil, nunca en un dashboard en blanco.
+- Los flujos de varios pasos deben mostrar progreso y permitir volver. La decisión de configurar después debe terminar en un estado vacío útil en `/patients`, nunca en una pantalla en blanco.

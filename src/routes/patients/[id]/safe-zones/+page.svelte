@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
-	import { resolve } from '$app/paths';
 	import SafeZoneEditorMap, {
 		type SafeZoneDraft,
 		type SafeZoneEditorMapController,
@@ -173,37 +172,15 @@
 	/>
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-12">
-	<div class="mx-auto w-full max-w-6xl">
-		<header class="flex flex-wrap items-center justify-between gap-4 border-b border-ink/10 pb-5">
-			<a
-				href={resolve('/patients/[id]', { id: data.patient.id })}
-				class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-			>
-				<span aria-hidden="true">←</span><span class="ml-2">Volver al paciente</span>
-			</a>
-			<p class="text-sm font-semibold text-muted">
-				Tu acceso: {data.patient.accessRole === 'ADMIN' ? 'Administrador' : 'Monitor'}
-			</p>
-		</header>
-
-		<section class="py-8 sm:py-12">
-			<p class="text-sm font-bold tracking-[0.14em] text-brand uppercase">Zonas permitidas</p>
-			<div class="mt-2 flex flex-wrap items-start justify-between gap-4">
-				<div>
-					<h1 class="text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-						Geocercas de {patientName}
-					</h1>
-					<p class="mt-3 max-w-3xl leading-7 text-muted">
-						{data.patient.groupName ?? 'Grupo no disponible'} · Si una ubicación válida está dentro de
-						cualquiera de las geocercas activas, se considera dentro de una zona permitida.
-					</p>
-				</div>
+<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-0">
+	<div class="w-full max-w-6xl">
+		<section class="py-4 sm:py-8">
+			<div class="flex justify-end">
 				{#if data.safeZonesAvailable && editorMode === 'NONE'}
 					<button
 						type="button"
 						onclick={startCreate}
-						class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+						class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 					>
 						Agregar geocerca
 					</button>
@@ -237,8 +214,8 @@
 					</div>
 				{/if}
 
-				<div class="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-					<div class="min-w-0">
+				<div class="mt-8 grid items-start gap-6 lg:grid-cols-3">
+					<div class="min-w-0 lg:col-span-2">
 						<SafeZoneEditorMap
 							latitude={data.mapCenter.latitude}
 							longitude={data.mapCenter.longitude}
@@ -279,7 +256,7 @@
 					<aside class="space-y-6">
 						{#if editorMode !== 'NONE'}
 							<section
-								class="rounded-3xl border border-white/80 bg-white p-5 shadow-lg shadow-brand/5 sm:p-6"
+								class="rounded-3xl border border-white/80 bg-white p-5 sm:p-6"
 								aria-labelledby="zone-editor-title"
 							>
 								<h2 id="zone-editor-title" class="text-xl font-bold text-ink">
@@ -420,7 +397,7 @@
 										<button
 											type="submit"
 											disabled={submitting || !draft}
-											class="min-h-12 cursor-pointer rounded-xl bg-brand px-4 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+											class="min-h-12 cursor-pointer rounded-xl bg-brand px-4 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 										>
 											{submitting ? 'Guardando…' : 'Guardar geocerca'}
 										</button>
@@ -438,7 +415,7 @@
 						{/if}
 
 						<section
-							class="rounded-3xl border border-white/80 bg-white p-5 shadow-lg shadow-brand/5 sm:p-6"
+							class="rounded-3xl border border-white/80 bg-white p-5 sm:p-6"
 							aria-labelledby="saved-zones-title"
 						>
 							<div class="flex items-center justify-between gap-3">

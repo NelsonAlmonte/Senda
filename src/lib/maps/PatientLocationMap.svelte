@@ -300,7 +300,7 @@
 </script>
 
 <section
-	class="relative min-h-88 overflow-hidden rounded-3xl border border-ink/10 bg-surface-muted shadow-lg shadow-brand/5 sm:min-h-112"
+	class="relative min-h-88 overflow-hidden rounded-3xl border border-ink/10 bg-surface-muted sm:min-h-112"
 	aria-label={`Mapa de ubicación, recorrido reciente y geocercas activas de ${patientName}`}
 	aria-busy={mapState === 'LOADING'}
 >
@@ -337,7 +337,7 @@
 				<button
 					type="button"
 					onclick={() => (retryKey += 1)}
-					class="mt-4 min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white shadow-sm transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+					class="mt-4 min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 				>
 					Reintentar
 				</button>

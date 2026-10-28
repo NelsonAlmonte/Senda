@@ -115,7 +115,7 @@ describe('send-geofence-alert handler', () => {
 			title: 'Alerta de zona segura',
 			body: 'Posible salida de una zona segura. Abre Senda para revisar de inmediato.',
 			tag: `senda-episode-${EPISODE_ID}`,
-			url: '/dashboard'
+			url: '/alerts'
 		});
 		assert.equal(JSON.stringify(receivedPayload).includes(PATIENT_ID), false);
 		assert.deepEqual(await response.json(), { delivered: 1, removed: 0, failed: 0 });

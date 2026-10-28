@@ -57,6 +57,6 @@ export const actions: Actions = {
 			});
 		}
 
-		redirect(303, '/dashboard?access=accepted');
+		redirect(303, '/patients?access=accepted');
 	}
 };

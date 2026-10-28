@@ -240,6 +240,6 @@ export const actions: Actions = {
 			});
 		}
 
-		redirect(303, '/dashboard?configured=device');
+		redirect(303, '/patients?configured=device');
 	}
 };

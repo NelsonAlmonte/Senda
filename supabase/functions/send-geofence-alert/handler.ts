@@ -124,7 +124,7 @@ export function createPushDeliveryHandler(dependencies: DeliveryDependencies) {
 			title: 'Alerta de zona segura',
 			body: 'Posible salida de una zona segura. Abre Senda para revisar de inmediato.',
 			tag: `senda-episode-${body.record.id}`,
-			url: '/dashboard'
+			url: '/alerts'
 		};
 
 		for (const subscription of subscriptions) {

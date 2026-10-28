@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { resolve } from '$app/paths';
 	import type { PageProps } from './$types';
 
 	let { form }: PageProps = $props();
@@ -13,21 +12,10 @@
 	<meta name="description" content="Acepta acceso para monitorear un paciente en Senda." />
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-8 sm:px-8 lg:px-12">
-	<section class="mx-auto w-full max-w-2xl py-8 sm:py-12">
-		<a
-			href={resolve('/onboarding')}
-			class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-		>
-			<span aria-hidden="true">←</span><span class="ml-2">Volver a las opciones</span>
-		</a>
-
-		<div
-			class="mt-5 rounded-3xl border border-white/80 bg-white p-6 shadow-xl shadow-brand/8 sm:p-8"
-		>
-			<p class="text-sm font-bold tracking-[0.14em] text-brand uppercase">Acceso compartido</p>
-			<h1 class="mt-2 text-3xl font-bold tracking-tight text-ink">Monitorea a un familiar</h1>
-			<p class="mt-3 leading-7 text-muted">
+<main id="contenido-principal" class="min-h-dvh px-5 py-8 sm:px-8 lg:px-0">
+	<section class="w-full max-w-2xl py-4 sm:py-8">
+		<div class="rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
+			<p class="leading-7 text-muted">
 				Introduce el código que te dio la persona administradora. Obtendrás acceso únicamente al
 				paciente indicado, no a todo su grupo.
 			</p>

@@ -91,6 +91,7 @@ Seguir `docs/08-PLAN-Y-PRUEBAS.md`. Por cada historia:
 4. Añadir migraciones y pruebas pertinentes (incluidas negativas de permisos).
 5. Ejecutar lint, typecheck, pruebas y build disponibles; reportar resultados reales.
 6. Enumerar archivos modificados, comportamiento verificado y limitaciones.
+7. Si la historia cambia de forma material el comportamiento, requisitos, arquitectura, esquema/migraciones, permisos, configuración, flujo de uso o estado real del MVP, actualizar en la misma historia los `.md` afectados (`README.md` y/o `docs/`). No crear por defecto una rama, commit o push separado únicamente para sincronizar documentación; incluirla con el cambio de código correspondiente. No generar ruido documental por ajustes triviales y nunca registrar como validado algo que no se probó.
 
 No declarar una funcionalidad "terminada" si no se probó su flujo de extremo a extremo. No simular resultados de test.
 
@@ -107,6 +108,7 @@ Las directrices del MVP exigen una demostración **funcional**, no un mockup. La
 - Trabajar una historia pequeña por rama, partiendo de `main` actualizado y con el árbol de trabajo revisado.
 - Nombrar ramas con un prefijo coherente con el cambio: `feat/`, `fix/`, `docs/`, `refactor/`, `test/` o `chore/`, seguido de una descripción breve en kebab-case.
 - No mezclar cambios previos o ajenos con la historia activa. Revisar `git status` y `git diff` antes de editar y antes de cerrar la rama.
+- Las actualizaciones documentales exigidas por una funcionalidad importante forman parte de esa misma rama y commit de código. Solo usar una rama exclusivamente documental cuando el usuario solicite trabajo de documentación independiente.
 - Usar Conventional Commits en inglés con la forma `type(optional-scope): description`; por ejemplo, `feat(patients): add group and patient onboarding`.
 - Al terminar la historia, ejecutar las verificaciones disponibles e informar resultados reales. Codex no debe ejecutar `git add`, commit, push, pull, merge, rebase ni cambios de rama hasta que el usuario lo indique explícitamente; cuando lo indique, puede usar la consola normal. Las autorizaciones técnicas que imponga el entorno no pueden omitirse.
 - El flujo predeterminado cierra la historia mediante merge directo de la rama en `main` y push de `main`, siempre después de que el usuario lo indique. Usar pull request solo si el usuario lo solicita expresamente. Después del merge, actualizar `main` antes de crear la siguiente rama.

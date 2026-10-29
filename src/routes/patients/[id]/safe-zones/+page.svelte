@@ -172,7 +172,7 @@
 	/>
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-0">
+<main id="contenido-principal" class="px-5 py-6 sm:px-8 lg:px-0">
 	<div class="w-full max-w-6xl">
 		<section class="py-4 sm:py-8">
 			<div class="flex justify-end">

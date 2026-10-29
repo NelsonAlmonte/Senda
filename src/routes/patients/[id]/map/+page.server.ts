@@ -34,9 +34,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	const [assignmentResult, safeZonesResult, alertEpisodesResult] = await Promise.all([
 		locals.supabase
 			.from('device_assignments')
-			.select(
-				'id, assigned_at, unassigned_at, device:devices!inner(id, serial_number, device_kind)'
-			)
+			.select('id, assigned_at, unassigned_at, device:devices!inner(id, device_kind)')
 			.eq('patient_id', params.id)
 			.order('assigned_at', { ascending: true }),
 		locals.supabase
@@ -53,7 +51,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 			)
 			.eq('patient_id', params.id)
 			.order('confirmed_at', { ascending: false })
-			.limit(10)
+			.limit(5)
 	]);
 	const { data: assignments, error: assignmentError } = assignmentResult;
 
@@ -185,7 +183,6 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 						assignedAt: assignment.assigned_at,
 						device: {
 							id: device.id,
-							serialNumber: device.serial_number,
 							kind: device.device_kind
 						}
 					}
@@ -198,7 +195,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		alertEpisodesAvailable: !alertEpisodesResult.error,
 		locationHistory,
 		historyAvailable,
-		manualLocationSimulatorEnabled:
+		manualLocationEnabled:
 			SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR &&
 			access.access_role === 'ADMIN' &&
 			device?.device_kind === 'SIMULATED'
@@ -206,13 +203,13 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 };
 
 export const actions: Actions = {
-	simulateLocation: async ({ locals, params, request }) => {
+	saveManualLocation: async ({ locals, params, request }) => {
 		if (!locals.user || !locals.supabase) {
 			redirect(303, `/auth/login?next=/patients/${params.id}/map`);
 		}
 
 		if (!SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR) {
-			httpError(404, 'La simulación manual no está habilitada en este entorno.');
+			httpError(404, 'La ubicación manual no está habilitada en este entorno.');
 		}
 
 		const formData = await request.formData();
@@ -221,13 +218,13 @@ export const actions: Actions = {
 
 		if (latitude === null || latitude < -90 || latitude > 90) {
 			return fail(400, {
-				message: 'La latitud debe ser un número entre -90 y 90.'
+				message: 'Selecciona una ubicación válida en el mapa.'
 			});
 		}
 
 		if (longitude === null || longitude < -180 || longitude > 180) {
 			return fail(400, {
-				message: 'La longitud debe ser un número entre -180 y 180.'
+				message: 'Selecciona una ubicación válida en el mapa.'
 			});
 		}
 
@@ -246,7 +243,7 @@ export const actions: Actions = {
 		}
 
 		if (access?.access_role !== 'ADMIN') {
-			httpError(403, 'Solo un administrador del paciente puede simular ubicaciones.');
+			httpError(403, 'Solo un administrador del paciente puede registrar ubicaciones manuales.');
 		}
 
 		const { error } = await locals.supabase.rpc('ingest_simulated_location', {
@@ -261,24 +258,23 @@ export const actions: Actions = {
 
 		if (error) {
 			if (error.code === '42501') {
-				httpError(403, 'No tienes permiso para simular ubicaciones de este paciente.');
+				httpError(403, 'No tienes permiso para registrar ubicaciones manuales de este paciente.');
 			}
 
 			if (error.message.includes('Patient has no active simulated device.')) {
 				return fail(409, {
-					message:
-						'El paciente necesita un dispositivo simulado activo antes de enviar ubicaciones.'
+					message: 'El paciente necesita un dispositivo activo antes de registrar ubicaciones.'
 				});
 			}
 
 			return fail(400, {
-				message: 'No pudimos guardar la ubicación simulada. Revisa el punto e inténtalo nuevamente.'
+				message: 'No pudimos guardar la ubicación. Revisa el punto e inténtalo nuevamente.'
 			});
 		}
 
 		return {
 			success: true,
-			message: 'Ubicación simulada enviada. El mapa se actualizará al recibirla por Realtime.'
+			message: 'Ubicación guardada. El mapa se actualizará automáticamente.'
 		};
 	}
 };

@@ -64,7 +64,7 @@ revoked_at   timestamptz null
 ```
 
 - Índice único parcial para impedir dos accesos **activos** al mismo par `(patient_id,user_id)`; si se conservan filas revocadas, no usar `UNIQUE(patient_id,user_id)` global sin analizar el reotorgamiento.
-- Nunca usar `relationship` como permiso.
+- `relationship` pertenece al acceso concreto, no al grupo. Es opcional, nunca se usa como permiso y los flujos actuales de creación/código lo dejan en `null`; la interfaz no lo presenta hasta que exista una captura explícita aprobada.
 - Proteger contra eliminación/revocación del último `ADMIN` activo de cada paciente.
 
 ### 5. `devices` (MVP simulado)

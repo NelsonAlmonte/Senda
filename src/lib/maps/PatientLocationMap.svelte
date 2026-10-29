@@ -25,15 +25,15 @@
 
 	export type MapLocationUpdater = (location: MapLocationUpdate) => void;
 
-	export type MapSimulationPoint = {
+	export type MapManualLocationPoint = {
 		latitude: number;
 		longitude: number;
 	};
 
 	export type PatientLocationMapController = {
 		updateLocation: MapLocationUpdater;
-		setSimulationMode: (enabled: boolean) => void;
-		setSimulationPoint: (point: MapSimulationPoint | null) => void;
+		setManualLocationMode: (enabled: boolean) => void;
+		setManualLocationPoint: (point: MapManualLocationPoint | null) => void;
 	};
 </script>
 
@@ -50,8 +50,8 @@
 		historySegments: MapHistorySegment[];
 		safeZones: MapSafeZone[];
 		hasLocation?: boolean;
-		manualSimulationEnabled?: boolean;
-		onSimulationPointChange?: (point: MapSimulationPoint) => void;
+		manualLocationEnabled?: boolean;
+		onManualLocationPointChange?: (point: MapManualLocationPoint) => void;
 		onReady?: (controller: PatientLocationMapController | null) => void;
 	};
 	type MapClickEvent = {
@@ -66,8 +66,8 @@
 		historySegments,
 		safeZones,
 		hasLocation = true,
-		manualSimulationEnabled = false,
-		onSimulationPointChange,
+		manualLocationEnabled = false,
+		onManualLocationPointChange,
 		onReady
 	}: Props = $props();
 	let mapState = $state<'LOADING' | 'READY' | 'ERROR'>('LOADING');
@@ -84,8 +84,8 @@
 				historySegments,
 				safeZones,
 				hasLocation,
-				manualSimulationEnabled,
-				onSimulationPointChange,
+				manualLocationEnabled,
+				onManualLocationPointChange,
 				onReady
 			}));
 			let disposed = false;
@@ -212,9 +212,9 @@
 						if (location.panToLocation !== false) map.panTo(nextPosition);
 					};
 
-					let simulationMode = false;
-					let simulationMarker: InstanceType<typeof AdvancedMarkerElement> | null = null;
-					const simulationPin = initialState.manualSimulationEnabled
+					let manualLocationMode = false;
+					let manualLocationMarker: InstanceType<typeof AdvancedMarkerElement> | null = null;
+					const manualLocationPin = initialState.manualLocationEnabled
 						? new PinElement({
 								background: '#fff3c4',
 								borderColor: '#92400e',
@@ -223,57 +223,57 @@
 							})
 						: null;
 
-					const setSimulationPoint = (point: MapSimulationPoint | null) => {
-						if (!initialState.manualSimulationEnabled) return;
+					const setManualLocationPoint = (point: MapManualLocationPoint | null) => {
+						if (!initialState.manualLocationEnabled) return;
 
 						if (!point) {
-							if (simulationMarker) simulationMarker.map = null;
+							if (manualLocationMarker) manualLocationMarker.map = null;
 							return;
 						}
 
 						const position = { lat: point.latitude, lng: point.longitude };
-						if (simulationMarker) {
-							simulationMarker.map = map;
-							simulationMarker.position = position;
-						} else if (simulationPin) {
-							simulationMarker = new AdvancedMarkerElement({
+						if (manualLocationMarker) {
+							manualLocationMarker.map = map;
+							manualLocationMarker.position = position;
+						} else if (manualLocationPin) {
+							manualLocationMarker = new AdvancedMarkerElement({
 								map,
 								position,
-								title: 'Ubicación simulada pendiente de confirmar',
-								content: simulationPin
+								title: 'Ubicación manual pendiente de guardar',
+								content: manualLocationPin
 							});
 						}
 					};
 
-					const setSimulationMode = (enabled: boolean) => {
-						simulationMode = initialState.manualSimulationEnabled && enabled;
-						map.setOptions({ draggableCursor: simulationMode ? 'crosshair' : null });
+					const setManualLocationMode = (enabled: boolean) => {
+						manualLocationMode = initialState.manualLocationEnabled && enabled;
+						map.setOptions({ draggableCursor: manualLocationMode ? 'crosshair' : null });
 					};
 
-					const mapClickListener = initialState.manualSimulationEnabled
+					const mapClickListener = initialState.manualLocationEnabled
 						? map.addListener('click', (event: MapClickEvent) => {
-								if (!simulationMode || !event.latLng) return;
+								if (!manualLocationMode || !event.latLng) return;
 
 								const point = {
 									latitude: event.latLng.lat(),
 									longitude: event.latLng.lng()
 								};
-								setSimulationPoint(point);
-								initialState.onSimulationPointChange?.(point);
+								setManualLocationPoint(point);
+								initialState.onManualLocationPointChange?.(point);
 							})
 						: null;
 
 					const controller: PatientLocationMapController = {
 						updateLocation,
-						setSimulationMode,
-						setSimulationPoint
+						setManualLocationMode,
+						setManualLocationPoint
 					};
 
 					removeMapResources = () => {
 						mapClickListener?.remove();
-						if (simulationMarker) {
-							simulationMarker.map = null;
-							simulationMarker.remove();
+						if (manualLocationMarker) {
+							manualLocationMarker.map = null;
+							manualLocationMarker.remove();
 						}
 						marker.map = null;
 						marker.remove();
@@ -300,7 +300,7 @@
 </script>
 
 <section
-	class="relative min-h-88 overflow-hidden rounded-3xl border border-ink/10 bg-surface-muted sm:min-h-112"
+	class="relative min-h-112 overflow-hidden rounded-2xl bg-surface-muted shadow-sm sm:min-h-128 xl:min-h-144"
 	aria-label={`Mapa de ubicación, recorrido reciente y geocercas activas de ${patientName}`}
 	aria-busy={mapState === 'LOADING'}
 >

@@ -130,7 +130,7 @@
 	/>
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-0">
+<main id="contenido-principal" class="px-5 py-6 sm:px-8 lg:px-0">
 	<div class="w-full max-w-4xl">
 		<section class="py-4 sm:py-8">
 			<div class="rounded-3xl border border-white/80 bg-white p-6 sm:p-8">

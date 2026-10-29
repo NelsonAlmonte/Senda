@@ -8,7 +8,6 @@ type PatientAccessRosterRow = {
 	access_id: string;
 	display_name: string;
 	access_role: string;
-	relationship: string | null;
 	granted_at: string;
 	is_current_user: boolean;
 };
@@ -59,7 +58,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			id: access.access_id,
 			displayName: access.display_name,
 			role: access.access_role as 'ADMIN' | 'MONITOR',
-			relationship: access.relationship as 'FAMILY' | 'CAREGIVER' | 'OTHER' | null,
 			grantedAt: access.granted_at,
 			isCurrentUser: access.is_current_user
 		}))

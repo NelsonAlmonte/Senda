@@ -1,11 +1,12 @@
-import { presentLocationTime } from '#lib/locations/presentation.js';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ depends, locals, url }) => {
 	if (!locals.user || !locals.supabase) {
 		redirect(303, `/auth/login?next=${encodeURIComponent(url.pathname)}`);
 	}
+
+	depends('senda:patient-alerts');
 
 	const accessResult = await locals.supabase
 		.from('patient_access')
@@ -48,28 +49,26 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			device: { id: string; serialNumber: string; kind: string };
 		}
 	>();
-	const latestLocationsByAssignment = new Map<
-		string,
-		{
-			latitude: number;
-			longitude: number;
-			accuracyM: number | null;
-			recordedAt: string;
-			receivedAt: string;
-			source: string;
-		}
-	>();
+	const activeAlertPatientIds = new Set<string>();
 	let devicesAvailable = true;
-	let locationsAvailable = true;
+	let alertsAvailable = true;
 
 	if (patientIds.length > 0) {
-		const assignmentResult = await locals.supabase
-			.from('device_assignments')
-			.select('id, patient_id, assigned_at, device:devices!inner(id, serial_number, device_kind)')
-			.in('patient_id', patientIds)
-			.is('unassigned_at', null);
+		const [assignmentResult, alertResult] = await Promise.all([
+			locals.supabase
+				.from('device_assignments')
+				.select('id, patient_id, assigned_at, device:devices!inner(id, serial_number, device_kind)')
+				.in('patient_id', patientIds)
+				.is('unassigned_at', null),
+			locals.supabase
+				.from('alert_episodes')
+				.select('patient_id')
+				.in('patient_id', patientIds)
+				.eq('status', 'OPEN')
+		]);
 
 		devicesAvailable = !assignmentResult.error;
+		alertsAvailable = !alertResult.error;
 
 		for (const assignment of assignmentResult.data ?? []) {
 			const device = Array.isArray(assignment.device) ? assignment.device[0] : assignment.device;
@@ -86,54 +85,22 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			});
 		}
 
-		const assignmentIds = [...assignmentsByPatient.values()].map((assignment) => assignment.id);
-		if (assignmentIds.length > 0) {
-			const locationResult = await locals.supabase
-				.from('latest_locations')
-				.select(
-					'device_assignment_id, latitude, longitude, accuracy_m, recorded_at, received_at, source'
-				)
-				.in('device_assignment_id', assignmentIds);
-
-			locationsAvailable = !locationResult.error;
-			for (const location of locationResult.data ?? []) {
-				latestLocationsByAssignment.set(location.device_assignment_id, {
-					latitude: location.latitude,
-					longitude: location.longitude,
-					accuracyM: location.accuracy_m,
-					recordedAt: location.recorded_at,
-					receivedAt: location.received_at,
-					source: location.source
-				});
-			}
+		for (const alert of alertResult.data ?? []) {
+			activeAlertPatientIds.add(alert.patient_id);
 		}
 	}
 
-	const now = Date.now();
-	const patients = authorizedPatients.map((patient) => {
-		const assignment = assignmentsByPatient.get(patient.id);
-		if (!assignment) return { ...patient, assignment: null };
-
-		const location = latestLocationsByAssignment.get(assignment.id);
-		return {
-			...patient,
-			assignment: {
-				...assignment,
-				latestLocation: location
-					? {
-							...location,
-							...presentLocationTime(location.recordedAt, now)
-						}
-					: null
-			}
-		};
-	});
+	const patients = authorizedPatients.map((patient) => ({
+		...patient,
+		assignment: assignmentsByPatient.get(patient.id) ?? null,
+		hasActiveAlert: activeAlertPatientIds.has(patient.id)
+	}));
 
 	return {
 		patients,
 		patientsAvailable: !accessResult.error,
 		devicesAvailable,
-		locationsAvailable,
+		alertsAvailable,
 		patientCreated: url.searchParams.get('created') === 'patient',
 		deviceConfigured: url.searchParams.get('configured') === 'device',
 		accessAccepted: url.searchParams.get('access') === 'accepted'

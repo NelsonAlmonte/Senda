@@ -35,7 +35,7 @@
 
 {#if data.user}
 	<AppNavigation />
-	<div class="pb-28 lg:pr-4 lg:pb-4 lg:pl-80">
+	<div class="min-h-dvh pt-2 pb-28 sm:pt-4 lg:pr-4 lg:pb-4 lg:pl-80">
 		<AppHeader hasActiveAlert={data.hasActiveAlert} />
 		{@render children()}
 	</div>

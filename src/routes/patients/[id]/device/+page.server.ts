@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	const group = Array.isArray(patient.group) ? patient.group[0] : patient.group;
 	const { data: assignment, error: assignmentError } = await locals.supabase
 		.from('device_assignments')
-		.select('id, assigned_at, device:devices!inner(id, serial_number, device_kind)')
+		.select('id, assigned_at, device:devices!inner(id)')
 		.eq('patient_id', params.id)
 		.is('unassigned_at', null)
 		.maybeSingle();
@@ -59,12 +59,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 			assignment && device
 				? {
 						id: assignment.id,
-						assignedAt: assignment.assigned_at,
-						device: {
-							id: device.id,
-							serialNumber: device.serial_number,
-							kind: device.device_kind
-						}
+						assignedAt: assignment.assigned_at
 					}
 				: null,
 		onboarding: url.searchParams.get('onboarding') === '1'
@@ -100,7 +95,7 @@ export const actions: Actions = {
 			if (error.message.includes('Serial is not registered.')) {
 				return fail(400, {
 					errors: {
-						serialNumber: 'Ese serial no está registrado en el inventario simulado de Senda.'
+						serialNumber: 'Ese serial no está registrado en el inventario de Senda.'
 					},
 					values
 				});

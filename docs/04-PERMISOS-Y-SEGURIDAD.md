@@ -13,7 +13,7 @@
 | Revocar accesos | Sí | No |
 | Asignar o retirar dispositivo simulado | Sí | No |
 
-`relationship` es información descriptiva y no condiciona permisos. El usuario puede ser cuidador profesional, pariente o externo al centro; el permiso reside en `patient_access`.
+`relationship` es un dato opcional de `patient_access`, no de `groups`, y no condiciona permisos. Los flujos actuales no lo solicitan y lo conservan en `null`, por lo que la interfaz omite esa etiqueta. Si se captura en una ampliación futura, el usuario podrá describirse como cuidador profesional, pariente o externo al centro; el permiso seguirá residiendo exclusivamente en `patient_access`.
 
 ## Grupo ≠ permiso para ubicar pacientes
 

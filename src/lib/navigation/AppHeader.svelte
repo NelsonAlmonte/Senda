@@ -92,7 +92,10 @@
 			return;
 		}
 
-		const refreshIndicator = () => void invalidate('senda:active-alert-indicator');
+		const refreshAlerts = () => {
+			void invalidate('senda:active-alert-indicator');
+			void invalidate('senda:patient-alerts');
+		};
 		const channel = supabase
 			.channel('app-header-active-alert', {
 				config: { postgres_changes_options: { wait: true } }
@@ -100,12 +103,12 @@
 			.on(
 				'postgres_changes',
 				{ event: 'INSERT', schema: 'public', table: 'alert_episodes' },
-				refreshIndicator
+				refreshAlerts
 			)
 			.on(
 				'postgres_changes',
 				{ event: 'UPDATE', schema: 'public', table: 'alert_episodes' },
-				refreshIndicator
+				refreshAlerts
 			)
 			.subscribe();
 
@@ -116,7 +119,7 @@
 </script>
 
 <header
-	class="sticky top-2 z-30 mx-2 rounded-2xl border border-white/80 bg-white/90 shadow-sm backdrop-blur-xl sm:top-4 sm:mx-4 lg:mx-0 lg:shadow-none"
+	class="sticky top-2 z-30 mx-2 mb-2 rounded-2xl bg-white shadow-md sm:top-4 sm:mx-4 sm:mb-0 lg:mx-0"
 >
 	<div class="flex min-h-16 w-full items-center gap-2 px-4 sm:px-6 lg:px-4">
 		{#if header.back}

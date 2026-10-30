@@ -45,10 +45,16 @@
 		patientId: string;
 		onLocation: (location: LocationRealtimeRow) => void;
 		onAlertEpisode: (episode: AlertEpisodeRealtimeRow) => void;
-		onStateChange: (state: LocationRealtimeState) => void;
+		onStateChange?: (state: LocationRealtimeState) => void;
 	};
 
-	let { assignmentId, patientId, onLocation, onAlertEpisode, onStateChange }: Props = $props();
+	let {
+		assignmentId,
+		patientId,
+		onLocation,
+		onAlertEpisode,
+		onStateChange = () => undefined
+	}: Props = $props();
 
 	onMount(() => {
 		let disposed = false;

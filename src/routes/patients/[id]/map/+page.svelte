@@ -1,10 +1,23 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import {
+		BellRing,
+		CircleAlert,
+		CircleCheckBig,
+		Clock3,
+		MapPin,
+		MapPinPlus,
+		MapPinned,
+		ShieldCheck,
+		Siren
+	} from '@lucide/svelte';
+	import Alert from '#lib/components/ui/Alert.svelte';
+	import Heading from '#lib/components/ui/Heading.svelte';
+	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import PatientLocationRealtime, {
 		type AlertEpisodeRealtimeRow,
-		type LocationRealtimeRow,
-		type LocationRealtimeState
+		type LocationRealtimeRow
 	} from '#lib/locations/PatientLocationRealtime.svelte';
 	import {
 		presentDateTime,
@@ -13,16 +26,17 @@
 	} from '#lib/locations/presentation.js';
 	import PatientLocationMap, {
 		type MapHistorySegment,
-		type MapSimulationPoint,
+		type MapManualLocationPoint,
 		type PatientLocationMapController
 	} from '#lib/maps/PatientLocationMap.svelte';
+	import type { UiTone } from '#lib/types/ui.js';
 	import type { PageProps } from './$types';
 
 	type LatestLocation = NonNullable<PageProps['data']['latestLocation']>;
 	type HistoryLocation = PageProps['data']['locationHistory'][number];
 	type AlertEpisode = PageProps['data']['alertEpisodes'][number];
-	type RealtimeState = 'IDLE' | LocationRealtimeState;
-	type SimulatorFeedback = { kind: 'success' | 'error'; message: string };
+	type ManualLocationFeedback = { kind: 'success' | 'error'; message: string };
+	type StatusPresentation = { title: string; info: string; tone: UiTone };
 
 	const defaultMapCenter = { latitude: 18.4861, longitude: -69.9312 };
 
@@ -47,14 +61,24 @@
 				)
 			: null
 	);
-	let realtimeState = $state<RealtimeState>('IDLE');
+	let alertStatus = $derived(
+		presentAlertStatus(data.alertEpisodesAvailable, activeAlertEpisode, latestLocation)
+	);
+	let freshnessStatus = $derived(
+		presentFreshnessStatus(latestLocation, data.manualLocationEnabled)
+	);
+	let readingStatus = $derived(
+		presentReadingStatus(latestLocation, geofencePresentation, activeAlertEpisode !== null)
+	);
 	let mapController = $state<PatientLocationMapController | null>(null);
-	let simulationMode = $state(false);
-	let simulatorSubmitting = $state(false);
-	let simulatorFeedback = $state<SimulatorFeedback | null>(null);
+	let manualLocationMode = $state(false);
+	let manualLocationSubmitting = $state(false);
+	let manualLocationFeedback = $state<ManualLocationFeedback | null>(null);
 	let latitudeInput = $state<number | undefined>();
 	let longitudeInput = $state<number | undefined>();
-	let selectedSimulationPoint = $derived(parseSimulationPoint(latitudeInput, longitudeInput));
+	let selectedManualLocationPoint = $derived(
+		parseManualLocationPoint(latitudeInput, longitudeInput)
+	);
 	let mapCenter = $derived(
 		latestLocation
 			? { latitude: latestLocation.latitude, longitude: latestLocation.longitude }
@@ -145,6 +169,127 @@
 		});
 	}
 
+	function presentEpisodeInfo(episode: AlertEpisode): string {
+		const confirmed = `Confirmada el ${presentDateTime(episode.confirmedAt)}.`;
+		return episode.resolvedAt
+			? `${confirmed} Resuelta el ${presentDateTime(episode.resolvedAt)}.`
+			: confirmed;
+	}
+
+	function presentAlertStatus(
+		available: boolean,
+		activeEpisode: AlertEpisode | null,
+		location: LatestLocation | null
+	): StatusPresentation {
+		if (!available) {
+			return {
+				title: 'Estado de alertas no disponible',
+				info: 'No pudimos verificar si existe una salida activa en este momento.',
+				tone: 'warning'
+			};
+		}
+
+		if (activeEpisode) {
+			let context = '';
+			switch (location?.geofenceRelation) {
+				case 'OUTSIDE':
+					context = ' La última lectura continúa fuera de las zonas permitidas.';
+					break;
+				case 'INSIDE':
+					context =
+						' Se recibió una lectura dentro de una zona; hace falta otra lectura confiable consecutiva para resolver la salida.';
+					break;
+				case 'UNCERTAIN':
+					context = ' La última lectura no permite confirmar el reingreso.';
+					break;
+				case 'NO_ACTIVE_ZONE':
+					context = ' La última lectura no pudo compararse con una geocerca activa.';
+					break;
+				case 'NOT_EVALUATED':
+					context = ' La última lectura no tiene una evaluación de geocerca disponible.';
+					break;
+			}
+
+			return {
+				title: 'Salida confirmada activa',
+				info: `Confirmada el ${presentDateTime(activeEpisode.confirmedAt)}.${context}`,
+				tone: 'danger'
+			};
+		}
+
+		if (location?.geofenceRelation === 'OUTSIDE') {
+			return {
+				title: 'Salida todavía no confirmada',
+				info: 'La última lectura quedó fuera de las zonas permitidas, pero no existe un episodio confirmado activo.',
+				tone: 'warning'
+			};
+		}
+
+		if (location?.geofenceRelation === 'UNCERTAIN') {
+			return {
+				title: 'Ubicación por confirmar',
+				info: 'La última lectura no permite determinar si el paciente está dentro o fuera.',
+				tone: 'warning'
+			};
+		}
+
+		return {
+			title: 'Sin salida confirmada',
+			info: 'No existe un episodio de salida activo.',
+			tone: 'positive'
+		};
+	}
+
+	function presentFreshnessStatus(
+		location: LatestLocation | null,
+		manualLocationEnabled: boolean
+	): StatusPresentation {
+		if (!location) {
+			return {
+				title: 'Última actualización',
+				info: manualLocationEnabled
+					? 'Aún no hay ubicaciones. Puedes registrar la primera desde el mapa.'
+					: 'Aún no hay ubicaciones. El mapa se actualizará al recibir la primera lectura.',
+				tone: 'neutral'
+			};
+		}
+
+		if (location.freshness === 'STALE') {
+			return {
+				title: 'Ubicación desactualizada',
+				info: `La última lectura fue ${location.ageLabel}. No representa una posición en vivo.`,
+				tone: 'warning'
+			};
+		}
+
+		return {
+			title: 'Última actualización',
+			info: `Lectura recibida ${location.ageLabel}.`,
+			tone: 'neutral'
+		};
+	}
+
+	function presentReadingStatus(
+		location: LatestLocation | null,
+		presentation: typeof geofencePresentation,
+		hasActiveEpisode: boolean
+	): StatusPresentation {
+		if (!location || !presentation) {
+			return {
+				title: 'Última lectura',
+				info: 'Pendiente de una ubicación para evaluar las zonas permitidas.',
+				tone: 'neutral'
+			};
+		}
+
+		return {
+			title: 'Última lectura',
+			info: presentation.title,
+			tone:
+				location.geofenceRelation === 'OUTSIDE' && hasActiveEpisode ? 'danger' : presentation.tone
+		};
+	}
+
 	function handleRealtimeAlertEpisode(row: AlertEpisodeRealtimeRow) {
 		const episode: AlertEpisode = {
 			id: row.id,
@@ -163,11 +308,7 @@
 
 		alertEpisodes = [...alertEpisodes.filter((candidate) => candidate.id !== episode.id), episode]
 			.sort((left, right) => Date.parse(right.confirmedAt) - Date.parse(left.confirmedAt))
-			.slice(0, 10);
-	}
-
-	function handleRealtimeState(state: LocationRealtimeState) {
-		realtimeState = state;
+			.slice(0, 5);
 	}
 
 	function handleMapReady(controller: PatientLocationMapController | null) {
@@ -184,10 +325,10 @@
 		});
 	}
 
-	function parseSimulationPoint(
+	function parseManualLocationPoint(
 		latitudeValue: number | undefined,
 		longitudeValue: number | undefined
-	): MapSimulationPoint | null {
+	): MapManualLocationPoint | null {
 		if (
 			latitudeValue === undefined ||
 			longitudeValue === undefined ||
@@ -204,74 +345,53 @@
 		return { latitude: latitudeValue, longitude: longitudeValue };
 	}
 
-	function activateSimulationMode() {
+	function activateManualLocationMode() {
 		if (!mapController) return;
 
-		simulationMode = true;
-		simulatorFeedback = null;
-		mapController.setSimulationMode(true);
+		manualLocationMode = true;
+		manualLocationFeedback = null;
+		mapController.setManualLocationMode(true);
 	}
 
-	function handleSimulationPointChange(point: MapSimulationPoint) {
+	function handleManualLocationPointChange(point: MapManualLocationPoint) {
 		latitudeInput = Number(point.latitude.toFixed(6));
 		longitudeInput = Number(point.longitude.toFixed(6));
-		simulatorFeedback = null;
+		manualLocationFeedback = null;
 	}
 
-	function syncSimulationPointFromInputs() {
-		simulatorFeedback = null;
-		mapController?.setSimulationPoint(parseSimulationPoint(latitudeInput, longitudeInput));
-	}
-
-	function handleLatitudeInput(event: Event & { currentTarget: HTMLInputElement }) {
-		latitudeInput = Number.isNaN(event.currentTarget.valueAsNumber)
-			? undefined
-			: event.currentTarget.valueAsNumber;
-		syncSimulationPointFromInputs();
-	}
-
-	function handleLongitudeInput(event: Event & { currentTarget: HTMLInputElement }) {
-		longitudeInput = Number.isNaN(event.currentTarget.valueAsNumber)
-			? undefined
-			: event.currentTarget.valueAsNumber;
-		syncSimulationPointFromInputs();
-	}
-
-	function resetSimulationSelection() {
-		simulationMode = false;
+	function resetManualLocationSelection() {
+		manualLocationMode = false;
 		latitudeInput = undefined;
 		longitudeInput = undefined;
-		mapController?.setSimulationPoint(null);
-		mapController?.setSimulationMode(false);
+		mapController?.setManualLocationPoint(null);
+		mapController?.setManualLocationMode(false);
 	}
 
-	function cancelSimulation() {
-		resetSimulationSelection();
-		simulatorFeedback = null;
+	function cancelManualLocation() {
+		resetManualLocationSelection();
+		manualLocationFeedback = null;
 	}
 
-	const enhanceSimulation: SubmitFunction = () => {
-		simulatorSubmitting = true;
-		simulatorFeedback = null;
+	const enhanceManualLocation: SubmitFunction = () => {
+		manualLocationSubmitting = true;
+		manualLocationFeedback = null;
 
 		return async ({ result, update }) => {
-			simulatorSubmitting = false;
+			manualLocationSubmitting = false;
 
 			if (result.type === 'success') {
 				const resultData = result.data as { message?: string } | undefined;
-				resetSimulationSelection();
-				simulatorFeedback = {
+				resetManualLocationSelection();
+				manualLocationFeedback = {
 					kind: 'success',
 					message:
-						resultData?.message ??
-						'Ubicación simulada enviada. El mapa se actualizará al recibirla por Realtime.'
+						resultData?.message ?? 'Ubicación guardada. El mapa se actualizará automáticamente.'
 				};
 			} else if (result.type === 'failure') {
 				const resultData = result.data as { message?: string } | undefined;
-				simulatorFeedback = {
+				manualLocationFeedback = {
 					kind: 'error',
-					message:
-						resultData?.message ?? 'No pudimos guardar la ubicación simulada. Inténtalo nuevamente.'
+					message: resultData?.message ?? 'No pudimos guardar la ubicación. Inténtalo nuevamente.'
 				};
 			}
 
@@ -284,13 +404,18 @@
 	<title>Mapa de {patientName} | Senda</title>
 	<meta
 		name="description"
-		content={`Consulta la última ubicación y el recorrido reciente de ${patientName} en Senda.`}
+		content={`Consulta la última ubicación y las geocercas activas de ${patientName} en Senda.`}
 	/>
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-0">
-	<div class="w-full max-w-6xl">
-		<section class="py-4 sm:py-8">
+<main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
+	<div class="w-full">
+		<div class="max-w-3xl">
+			<h2 id="patient-map-title" class="mb-8 text-2xl font-bold text-ink">
+				Ubicación del paciente
+			</h2>
+		</div>
+		<section>
 			{#if data.assignment && data.locationsAvailable}
 				{#key data.assignment.id}
 					<PatientLocationRealtime
@@ -298,39 +423,12 @@
 						patientId={data.patient.id}
 						onLocation={handleRealtimeLocation}
 						onAlertEpisode={handleRealtimeAlertEpisode}
-						onStateChange={handleRealtimeState}
 					/>
 				{/key}
-
-				<div
-					class="mt-5 inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white px-4 py-2 text-sm font-semibold text-muted"
-					role="status"
-					aria-live="polite"
-					aria-atomic="true"
-				>
-					<span
-						class={[
-							'size-2.5 shrink-0 rounded-full',
-							realtimeState === 'CONNECTED'
-								? 'bg-brand'
-								: realtimeState === 'ERROR'
-									? 'bg-amber-700'
-									: 'animate-pulse bg-muted motion-reduce:animate-none'
-						]}
-						aria-hidden="true"
-					></span>
-					{#if realtimeState === 'CONNECTED'}
-						Actualizaciones automáticas activas
-					{:else if realtimeState === 'ERROR'}
-						Actualizaciones automáticas no disponibles
-					{:else}
-						Conectando actualizaciones automáticas…
-					{/if}
-				</div>
 			{/if}
 
 			{#if !data.assignment}
-				<div class="mt-8 rounded-3xl border border-white/80 bg-white p-6">
+				<div class="rounded-2xl bg-white p-6 shadow-sm">
 					<h2 class="text-xl font-bold text-ink">Sin dispositivo configurado</h2>
 					<p class="mt-2 max-w-2xl leading-7 text-muted">
 						Todavía no existe una asignación activa que pueda enviar ubicaciones para este paciente.
@@ -345,182 +443,184 @@
 					{/if}
 				</div>
 			{:else if !data.locationsAvailable}
-				<div
-					class="mt-8 rounded-3xl border border-amber-700/25 bg-amber-50 p-6 text-amber-950"
-					role="alert"
-				>
-					<h2 class="text-xl font-bold">No pudimos consultar la ubicación</h2>
-					<p class="mt-2 max-w-2xl leading-7">
-						El paciente y su dispositivo siguen disponibles. Inténtalo nuevamente en unos minutos.
-					</p>
+				<div class="max-w-3xl rounded-2xl bg-white p-6 shadow-sm">
+					<Alert
+						icon={CircleAlert}
+						title="No pudimos consultar la ubicación"
+						subtitle="El paciente y su dispositivo siguen disponibles. Inténtalo nuevamente en unos minutos."
+						color="warning"
+					/>
 					<a
 						href={resolve('/patients/[id]/map', { id: data.patient.id })}
-						class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-amber-950 px-5 font-bold text-white focus:ring-4 focus:ring-amber-900/30 focus:outline-none"
+						class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white focus:ring-4 focus:ring-focus/35 focus:outline-none"
 					>
 						Reintentar
 					</a>
 				</div>
-			{:else if !latestLocation && !data.manualLocationSimulatorEnabled && data.safeZones.length === 0}
-				<div class="mt-8 rounded-3xl border border-white/80 bg-white p-6">
+			{:else if !latestLocation && !data.manualLocationEnabled && data.safeZones.length === 0}
+				<div class="rounded-2xl bg-white p-6 shadow-sm">
 					<h2 class="text-xl font-bold text-ink">Aún no hay ubicaciones</h2>
 					<p class="mt-2 max-w-2xl leading-7 text-muted">
-						El dispositivo {data.assignment.device.serialNumber} está configurado, pero todavía no ha
-						enviado una posición. Esta pantalla la mostrará cuando llegue la primera lectura.
+						El dispositivo está configurado, pero todavía no ha enviado una ubicación. Esta pantalla
+						la mostrará cuando llegue la primera lectura.
 					</p>
 				</div>
 			{:else}
-				<div class="mt-8 grid items-start gap-6 lg:grid-cols-3">
-					<div class="min-w-0 space-y-6 lg:col-span-2">
-						{#key data.assignment.id}
-							<PatientLocationMap
-								latitude={mapCenter.latitude}
-								longitude={mapCenter.longitude}
-								accuracyM={latestLocation?.accuracyM ?? null}
-								{patientName}
-								{historySegments}
-								safeZones={data.safeZones}
-								hasLocation={latestLocation !== null}
-								manualSimulationEnabled={data.manualLocationSimulatorEnabled}
-								onSimulationPointChange={handleSimulationPointChange}
-								onReady={handleMapReady}
-							/>
-						{/key}
+				{#key data.assignment.id}
+					<PatientLocationMap
+						latitude={mapCenter.latitude}
+						longitude={mapCenter.longitude}
+						accuracyM={latestLocation?.accuracyM ?? null}
+						{patientName}
+						{historySegments}
+						safeZones={data.safeZones}
+						hasLocation={latestLocation !== null}
+						manualLocationEnabled={data.manualLocationEnabled}
+						onManualLocationPointChange={handleManualLocationPointChange}
+						onReady={handleMapReady}
+					/>
+				{/key}
 
-						<section
-							class="rounded-2xl border border-ink/10 bg-white p-4"
-							aria-labelledby="map-safe-zones-title"
-						>
-							<div class="flex flex-wrap items-center justify-between gap-3">
-								<div>
-									<h2 id="map-safe-zones-title" class="font-bold text-ink">Geocercas activas</h2>
-									{#if !data.safeZonesAvailable}
-										<p class="mt-1 text-sm leading-6 text-amber-900" role="alert">
-											No pudimos consultar las geocercas. La ubicación sigue disponible.
-										</p>
-									{:else if data.safeZones.length === 0}
-										<p class="mt-1 text-sm leading-6 text-muted">
-											No hay zonas activas para mostrar. Esto no significa que el paciente esté en
-											una zona segura.
-										</p>
-									{:else}
-										<p class="mt-1 flex items-center gap-2 text-sm leading-6 text-muted">
-											<span
-												class="size-3 shrink-0 rounded-full border-2 border-brand bg-brand/25"
-												aria-hidden="true"
-											></span>
-											{data.safeZones.length}
-											{data.safeZones.length === 1
-												? 'zona permitida visible'
-												: 'zonas permitidas visibles'}
-										</p>
-									{/if}
+				<div class="mt-6 grid items-start gap-6 xl:grid-cols-12">
+					<div class="space-y-6 xl:col-span-8">
+						<section class="rounded-2xl bg-white p-6 shadow-sm">
+							<Heading
+								icon={MapPinned}
+								title="Estado de ubicación"
+								subtitle="Estado de la salida, vigencia y relación de la última lectura con las zonas permitidas."
+							/>
+							<div class="mt-6 space-y-4">
+								<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
+									<InfoItem
+										icon={activeAlertEpisode
+											? Siren
+											: alertStatus.tone === 'warning'
+												? CircleAlert
+												: BellRing}
+										title={alertStatus.title}
+										info={alertStatus.info}
+										tone={alertStatus.tone}
+									/>
 								</div>
+
+								<div class="grid gap-4 sm:grid-cols-2">
+									<InfoItem
+										icon={Clock3}
+										title={freshnessStatus.title}
+										info={freshnessStatus.info}
+										tone={freshnessStatus.tone}
+									/>
+									<InfoItem
+										icon={MapPin}
+										title={readingStatus.title}
+										info={readingStatus.info}
+										tone={readingStatus.tone}
+									/>
+								</div>
+							</div>
+							{#if latestLocation?.accuracyM !== null && latestLocation?.accuracyM !== undefined && latestLocation.accuracyM > 0}
+								<p class="mt-6 border-t border-ink/10 pt-4 text-sm leading-6 text-muted">
+									El círculo azul representa la precisión informada. No es una zona permitida.
+								</p>
+							{/if}
+						</section>
+
+						<section class="rounded-2xl bg-white p-6 shadow-sm">
+							<Heading
+								icon={ShieldCheck}
+								title="Geocercas activas"
+								subtitle="Zonas permitidas visibles sobre el mapa del paciente."
+							/>
+							<div class="mt-6">
+								{#if !data.safeZonesAvailable}
+									<Alert
+										icon={CircleAlert}
+										title="Geocercas no disponibles"
+										subtitle="La ubicación sigue disponible. Inténtalo nuevamente en unos minutos."
+										color="warning"
+									/>
+								{:else if data.safeZones.length === 0}
+									<p class="text-sm leading-6 text-muted">
+										No hay zonas activas para mostrar. Esto no significa que el paciente esté en una
+										zona segura.
+									</p>
+								{:else}
+									<ul class="flex flex-wrap gap-2" aria-label="Geocercas visibles en el mapa">
+										{#each data.safeZones as zone (zone.id)}
+											<li
+												class="rounded-full bg-surface-muted px-3 py-2 text-sm font-semibold text-ink"
+											>
+												{zone.name} · {zone.radiusM.toLocaleString('es-DO')} m
+											</li>
+										{/each}
+									</ul>
+								{/if}
+							</div>
+							<div class="mt-6 border-t border-ink/10 pt-4">
 								<a
 									href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
-									class="inline-flex min-h-11 items-center rounded-xl px-3 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+									class="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 								>
 									Configurar geocercas
 								</a>
 							</div>
-							{#if data.safeZones.length > 0}
-								<ul class="mt-3 flex flex-wrap gap-2" aria-label="Geocercas visibles en el mapa">
-									{#each data.safeZones as zone (zone.id)}
-										<li
-											class="rounded-full border border-brand/20 bg-surface-muted px-3 py-1.5 text-sm font-semibold text-ink"
-										>
-											{zone.name} · {zone.radiusM.toLocaleString('es-DO')} m
-										</li>
-									{/each}
-								</ul>
-							{/if}
 						</section>
 
-						{#if data.manualLocationSimulatorEnabled}
-							<section
-								class="rounded-3xl border border-amber-700/25 bg-amber-50 p-5 sm:p-6"
-								aria-labelledby="manual-simulator-title"
-							>
-								<p class="text-sm font-bold tracking-widest text-amber-900 uppercase">
-									Modo de prueba
-								</p>
-								<h2 id="manual-simulator-title" class="mt-1 text-xl font-bold text-amber-950">
-									Simular una ubicación manual
-								</h2>
-								<p class="mt-2 max-w-2xl text-sm leading-6 text-amber-950">
-									La ubicación se guardará como una lectura real de prueba. El marcador amarillo
-									solo representa el punto pendiente de confirmar.
-								</p>
+						{#if data.manualLocationEnabled}
+							<section class="rounded-2xl bg-white p-6 shadow-sm">
+								<Heading
+									icon={MapPinPlus}
+									title="Registrar ubicación manual"
+									subtitle="Selecciona directamente en el mapa el punto que deseas guardar."
+								/>
 
-								{#if !simulationMode}
-									<button
-										type="button"
-										onclick={activateSimulationMode}
-										disabled={!mapController}
-										class="mt-5 min-h-12 cursor-pointer rounded-xl bg-amber-950 px-5 font-bold text-white transition hover:bg-amber-900 focus:ring-4 focus:ring-amber-900/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-									>
-										{mapController ? 'Elegir punto en el mapa' : 'Esperando el mapa…'}
-									</button>
+								{#if !manualLocationMode}
+									<div class="mt-6 border-t border-ink/10 pt-4">
+										<button
+											type="button"
+											onclick={activateManualLocationMode}
+											disabled={!mapController}
+											class="min-h-12 cursor-pointer rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+										>
+											{mapController ? 'Elegir ubicación en el mapa' : 'Esperando el mapa…'}
+										</button>
+									</div>
 								{:else}
 									<form
 										method="POST"
-										action="?/simulateLocation"
-										use:enhance={enhanceSimulation}
-										class="mt-5"
+										action="?/saveManualLocation"
+										use:enhance={enhanceManualLocation}
+										class="mt-6 border-t border-ink/10 pt-4"
 									>
-										<p class="text-sm leading-6 font-semibold text-amber-950">
-											Haz clic o toca el mapa para elegir el punto. También puedes escribir las
-											coordenadas.
+										<p class="text-sm leading-6 font-semibold text-ink">
+											Haz clic o toca el mapa para elegir la ubicación.
 										</p>
-										<div class="mt-4 grid gap-4 sm:grid-cols-2">
-											<div>
-												<label for="simulation-latitude" class="text-sm font-bold text-amber-950">
-													Latitud
-												</label>
-												<input
-													id="simulation-latitude"
-													name="latitude"
-													type="number"
-													min="-90"
-													max="90"
-													step="any"
-													required
-													value={latitudeInput ?? ''}
-													oninput={handleLatitudeInput}
-													class="mt-2 min-h-12 w-full rounded-xl border border-amber-900/25 bg-white px-4 font-mono text-base text-ink outline-none focus:border-amber-900 focus:ring-4 focus:ring-amber-900/15"
-												/>
-											</div>
-											<div>
-												<label for="simulation-longitude" class="text-sm font-bold text-amber-950">
-													Longitud
-												</label>
-												<input
-													id="simulation-longitude"
-													name="longitude"
-													type="number"
-													min="-180"
-													max="180"
-													step="any"
-													required
-													value={longitudeInput ?? ''}
-													oninput={handleLongitudeInput}
-													class="mt-2 min-h-12 w-full rounded-xl border border-amber-900/25 bg-white px-4 font-mono text-base text-ink outline-none focus:border-amber-900 focus:ring-4 focus:ring-amber-900/15"
-												/>
-											</div>
-										</div>
+										<input type="hidden" name="latitude" value={latitudeInput ?? ''} />
+										<input type="hidden" name="longitude" value={longitudeInput ?? ''} />
 
-										<div class="mt-5 flex flex-col gap-3 sm:flex-row">
+										{#if selectedManualLocationPoint}
+											<div class="mt-3">
+												<Alert
+													icon={MapPin}
+													title="Ubicación seleccionada"
+													subtitle="Puedes guardarla o elegir otro punto en el mapa."
+												/>
+											</div>
+										{/if}
+
+										<div class="mt-4 flex flex-col gap-3 sm:flex-row">
 											<button
 												type="submit"
-												disabled={simulatorSubmitting || !selectedSimulationPoint}
-												class="min-h-12 cursor-pointer rounded-xl bg-amber-950 px-5 font-bold text-white transition hover:bg-amber-900 focus:ring-4 focus:ring-amber-900/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+												disabled={manualLocationSubmitting || !selectedManualLocationPoint}
+												class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 											>
-												{simulatorSubmitting ? 'Enviando ubicación…' : 'Confirmar ubicación'}
+												{manualLocationSubmitting ? 'Guardando ubicación…' : 'Guardar ubicación'}
 											</button>
 											<button
 												type="button"
-												onclick={cancelSimulation}
-												disabled={simulatorSubmitting}
-												class="min-h-12 cursor-pointer rounded-xl border border-amber-900/25 bg-white px-5 font-bold text-amber-950 transition hover:bg-amber-100 focus:ring-4 focus:ring-amber-900/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+												onclick={cancelManualLocation}
+												disabled={manualLocationSubmitting}
+												class="min-h-12 cursor-pointer rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 											>
 												Cancelar
 											</button>
@@ -528,248 +628,69 @@
 									</form>
 								{/if}
 
-								{#if simulatorFeedback}
-									<div
-										class={[
-											'mt-5 rounded-2xl border p-4 text-sm leading-6 font-semibold',
-											simulatorFeedback.kind === 'success'
-												? 'border-brand/25 bg-white text-ink'
-												: 'border-red-700/25 bg-red-50 text-red-950'
-										]}
-										role={simulatorFeedback.kind === 'error' ? 'alert' : 'status'}
-										aria-live="polite"
-									>
-										{simulatorFeedback.message}
+								{#if manualLocationFeedback}
+									<div class="mt-5">
+										<Alert
+											icon={manualLocationFeedback.kind === 'success'
+												? CircleCheckBig
+												: CircleAlert}
+											title={manualLocationFeedback.kind === 'success'
+												? 'Ubicación guardada'
+												: 'No pudimos guardar la ubicación'}
+											subtitle={manualLocationFeedback.message}
+											color={manualLocationFeedback.kind === 'success' ? 'positive' : 'danger'}
+										/>
 									</div>
 								{/if}
 							</section>
 						{/if}
 					</div>
 
-					<aside class="rounded-3xl border border-white/80 bg-white p-6">
-						{#if !latestLocation}
-							<div class="rounded-2xl border border-amber-700/25 bg-amber-50 p-4">
-								<p class="font-bold text-amber-950">Aún no hay ubicaciones</p>
-								<p class="mt-1 text-sm leading-6 text-amber-950">
-									{#if data.manualLocationSimulatorEnabled}
-										El dispositivo está listo. Usa el modo de prueba para enviar la primera lectura.
-									{:else}
-										El mapa muestra las geocercas activas, pero todavía no existe una lectura de
-										ubicación.
-									{/if}
-								</p>
-							</div>
-						{:else if latestLocation.freshness === 'FRESH'}
-							<div class="rounded-2xl border border-brand/20 bg-surface-muted p-4">
-								<p class="font-bold text-ink">Ubicación reciente</p>
-								<p class="mt-1 text-sm leading-6 text-muted">
-									Última lectura {latestLocation.ageLabel}.
-								</p>
-							</div>
-						{:else}
-							<div class="rounded-2xl border border-amber-700/25 bg-amber-50 p-4">
-								<p class="font-bold text-amber-950">Ubicación desactualizada</p>
-								<p class="mt-1 text-sm leading-6 text-amber-950">
-									La última lectura fue {latestLocation.ageLabel}. No representa una posición en
-									vivo.
-								</p>
-							</div>
-						{/if}
-
-						<section
-							class={[
-								'mt-6 rounded-2xl border p-4',
-								!data.alertEpisodesAvailable || activeAlertEpisode
-									? 'border-amber-700/25 bg-amber-50'
-									: 'border-brand/20 bg-surface-muted'
-							]}
-							aria-labelledby="alert-episode-title"
-							role={!data.alertEpisodesAvailable ? 'alert' : 'status'}
-							aria-live="polite"
-							aria-atomic="true"
-						>
-							<p class="text-xs font-bold tracking-widest text-muted uppercase">
-								Episodio de salida
-							</p>
+					<aside class="space-y-6 xl:col-span-4">
+						<section class="rounded-2xl bg-white p-6 shadow-sm">
+							<Heading
+								icon={BellRing}
+								title="Episodios recientes"
+								subtitle="Las cinco salidas confirmadas más recientes."
+							/>
 							{#if !data.alertEpisodesAvailable}
-								<h2 id="alert-episode-title" class="mt-1 font-bold text-amber-950">
-									No pudimos consultar los episodios
-								</h2>
-								<p class="mt-1 text-sm leading-6 text-amber-950">
-									La ubicación sigue disponible, pero el estado de salida no pudo verificarse.
-								</p>
-							{:else if activeAlertEpisode}
-								<h2 id="alert-episode-title" class="mt-1 font-bold text-amber-950">
-									Salida confirmada activa
-								</h2>
-								<p class="mt-1 text-sm leading-6 text-amber-950">
-									Dos lecturas confiables consecutivas quedaron fuera de las zonas permitidas. El
-									episodio se confirmó el {presentDateTime(activeAlertEpisode.confirmedAt)}.
-								</p>
-							{:else}
-								<h2 id="alert-episode-title" class="mt-1 font-bold text-ink">
-									Sin episodio de salida activo
-								</h2>
-								<p class="mt-1 text-sm leading-6 text-muted">
-									No existe una salida confirmada activa. La ubicación y su vigencia se muestran por
-									separado.
-								</p>
-							{/if}
-						</section>
-
-						{#if latestLocation && geofencePresentation}
-							<section
-								class={[
-									'mt-6 rounded-2xl border p-4',
-									geofencePresentation.tone === 'positive'
-										? 'border-brand/20 bg-surface-muted'
-										: geofencePresentation.tone === 'warning'
-											? 'border-amber-700/25 bg-amber-50'
-											: 'border-ink/10 bg-white'
-								]}
-								aria-labelledby="geofence-relation-title"
-								role="status"
-								aria-live="polite"
-								aria-atomic="true"
-							>
-								<p class="text-xs font-bold tracking-widest text-muted uppercase">
-									Relación con geocercas
-								</p>
-								<h2
-									id="geofence-relation-title"
-									class={[
-										'mt-1 font-bold',
-										geofencePresentation.tone === 'warning' ? 'text-amber-950' : 'text-ink'
-									]}
-								>
-									{geofencePresentation.title}
-								</h2>
-								<p
-									class={[
-										'mt-1 text-sm leading-6',
-										geofencePresentation.tone === 'warning' ? 'text-amber-950' : 'text-muted'
-									]}
-								>
-									{geofencePresentation.description}
-								</p>
-							</section>
-						{/if}
-
-						<section class="mt-6 border-t border-ink/10 pt-5" aria-labelledby="episodes-title">
-							<h2 id="episodes-title" class="font-bold text-ink">Episodios recientes</h2>
-							{#if !data.alertEpisodesAvailable}
-								<p class="mt-2 text-sm leading-6 text-amber-900">
-									El historial no está disponible en este momento.
-								</p>
+								<div class="mt-6">
+									<Alert
+										icon={CircleAlert}
+										title="Historial no disponible"
+										subtitle="Inténtalo nuevamente en unos minutos."
+										color="warning"
+									/>
+								</div>
 							{:else if alertEpisodes.length === 0}
-								<p class="mt-2 text-sm leading-6 text-muted">
+								<p class="mt-6 text-sm leading-6 text-muted">
 									Todavía no se ha confirmado ninguna salida de las zonas permitidas.
 								</p>
 							{:else}
-								<ul class="mt-3 space-y-3">
+								<ul class="mt-6 space-y-3">
 									{#each alertEpisodes as episode (episode.id)}
-										<li class="rounded-xl border border-ink/10 bg-white p-3 text-sm">
-											<p class="font-bold text-ink">
-												{episode.status === 'OPEN' ? 'Salida activa' : 'Salida resuelta'}
-											</p>
-											<p class="mt-1 leading-6 text-muted">
-												Confirmada el {presentDateTime(episode.confirmedAt)}.
-												{#if episode.resolvedAt}
-													Resuelta el {presentDateTime(episode.resolvedAt)}.
-												{/if}
-											</p>
+										<li>
+											<InfoItem
+												icon={episode.status === 'OPEN' ? Siren : CircleCheckBig}
+												title={episode.status === 'OPEN' ? 'Salida activa' : 'Salida resuelta'}
+												info={presentEpisodeInfo(episode)}
+												tone={episode.status === 'OPEN' ? 'danger' : 'positive'}
+											/>
 										</li>
 									{/each}
 								</ul>
 							{/if}
-						</section>
-
-						{#if latestLocation}
-							<dl class="mt-6 space-y-5 text-sm">
-								<div>
-									<dt class="font-semibold text-muted">Coordenadas</dt>
-									<dd class="mt-1 font-mono text-ink">
-										{latestLocation.latitude.toFixed(5)},
-										{latestLocation.longitude.toFixed(5)}
-									</dd>
-								</div>
-								<div>
-									<dt class="font-semibold text-muted">Registrada</dt>
-									<dd class="mt-1 leading-6 text-ink">
-										<time datetime={latestLocation.recordedAt}>
-											{latestLocation.recordedAtLabel}
-										</time>
-									</dd>
-								</div>
-								<div>
-									<dt class="font-semibold text-muted">Dispositivo</dt>
-									<dd class="mt-1 font-mono break-all text-ink">
-										{data.assignment.device.serialNumber}
-									</dd>
-								</div>
-								{#if latestLocation.accuracyM !== null}
-									<div>
-										<dt class="font-semibold text-muted">Precisión informada</dt>
-										<dd class="mt-1 text-ink">
-											{latestLocation.accuracyM.toFixed(1)} m
-										</dd>
-									</div>
-								{/if}
-							</dl>
-
-							{#if latestLocation.accuracyM !== null && latestLocation.accuracyM > 0}
-								<p class="mt-6 border-t border-ink/10 pt-5 text-sm leading-6 text-muted">
-									El círculo azul representa la precisión GPS informada. No es una zona segura.
-								</p>
-							{/if}
-						{/if}
-
-						<section class="mt-6 border-t border-ink/10 pt-5" aria-labelledby="history-title">
-							<h2 id="history-title" class="font-bold text-ink">Recorrido reciente</h2>
-							{#if !data.historyAvailable}
-								<p class="mt-2 text-sm leading-6 text-amber-900" role="alert">
-									No pudimos consultar el historial. La última ubicación sigue disponible.
-								</p>
-							{:else if locationHistory.length === 0}
-								<p class="mt-2 text-sm leading-6 text-muted">Aún no hay lecturas para trazar.</p>
-							{:else}
-								<p class="mt-2 text-sm leading-6 text-muted">
-									{locationHistory.length}
-									{locationHistory.length === 1 ? 'lectura mostrada' : 'lecturas mostradas'} (máximo 200).
-								</p>
-								<dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-1">
-									<div>
-										<dt class="font-semibold text-muted">Desde</dt>
-										<dd class="mt-1 text-ink">
-											<time datetime={locationHistory[0].recordedAt}>
-												{locationHistory[0].recordedAtLabel}
-											</time>
-										</dd>
-									</div>
-									<div>
-										<dt class="font-semibold text-muted">Hasta</dt>
-										<dd class="mt-1 text-ink">
-											<time datetime={locationHistory.at(-1)?.recordedAt}>
-												{locationHistory.at(-1)?.recordedAtLabel}
-											</time>
-										</dd>
-									</div>
-								</dl>
-								{#if locationHistory.length === 1}
-									<p class="mt-4 text-sm leading-6 text-muted">
-										Se necesita otra lectura para dibujar el recorrido.
-									</p>
-								{:else}
-									<p class="mt-4 flex gap-2 text-sm leading-6 text-muted">
-										<span class="mt-2.5 h-1 w-7 shrink-0 rounded-full bg-focus" aria-hidden="true"
-										></span>
-										<span>
-											La línea une lecturas consecutivas de una misma asignación; no representa una
-											conexión continua.
-										</span>
-									</p>
-								{/if}
-							{/if}
+							<div class="mt-6 border-t border-ink/10 pt-4">
+								<button
+									type="button"
+									disabled
+									title="Historial completo pendiente de implementación"
+									class="min-h-12 w-full cursor-not-allowed rounded-full bg-surface-muted px-5 font-bold text-muted opacity-70"
+								>
+									Ver todos los episodios
+								</button>
+								<p class="mt-2 text-center text-xs text-muted">Historial completo próximamente.</p>
+							</div>
 						</section>
 					</aside>
 				</div>

@@ -1,4 +1,14 @@
 <script lang="ts">
+	import Alert from '#lib/components/ui/Alert.svelte';
+	import Heading from '#lib/components/ui/Heading.svelte';
+	import Initials from '#lib/components/ui/Initials.svelte';
+	import CalendarDays from '@lucide/svelte/icons/calendar-days';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Eye from '@lucide/svelte/icons/eye';
+	import KeyRound from '@lucide/svelte/icons/key-round';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import UserMinus from '@lucide/svelte/icons/user-minus';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -6,19 +16,6 @@
 		dateStyle: 'medium',
 		timeZone: 'America/Santo_Domingo'
 	});
-
-	function relationshipLabel(relationship: 'FAMILY' | 'CAREGIVER' | 'OTHER' | null) {
-		switch (relationship) {
-			case 'FAMILY':
-				return 'Familiar';
-			case 'CAREGIVER':
-				return 'Cuidador';
-			case 'OTHER':
-				return 'Otra relación';
-			default:
-				return 'Relación no indicada';
-		}
-	}
 </script>
 
 <svelte:head>
@@ -26,118 +23,133 @@
 	<meta name="description" content="Consulta y administra los accesos activos de un paciente." />
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-6 sm:px-8 lg:px-0">
-	<div class="w-full max-w-4xl">
+<main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
+	<div class="w-full">
+		<h2 class="mb-8 text-2xl font-bold text-ink">Personas autorizadas</h2>
+
 		{#if form?.error}
-			<div
-				class="mt-6 rounded-2xl border border-red-700/25 bg-red-50 p-4 text-sm font-semibold text-red-950"
-				role="alert"
-			>
-				{form.error}
+			<div class="mb-8 max-w-3xl">
+				<Alert
+					icon={CircleAlert}
+					title="No pudimos completar la acción"
+					subtitle={form.error}
+					color="danger"
+				/>
 			</div>
 		{:else if form?.successMessage}
-			<div
-				class="mt-6 rounded-2xl border border-brand/20 bg-surface-muted p-4 text-sm font-semibold text-ink"
-				role="status"
-			>
-				{form.successMessage}
+			<div class="mb-8 max-w-3xl">
+				<Alert
+					icon={CircleCheck}
+					title="Acceso actualizado"
+					subtitle={form.successMessage}
+					color="positive"
+				/>
 			</div>
 		{/if}
 
-		<section class="mt-8 rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
-			<h2 class="text-2xl font-bold text-ink">Compartir con otra persona</h2>
-			<p class="mt-2 max-w-2xl leading-7 text-muted">
-				El código funciona una sola vez y concede el rol Monitor únicamente sobre este paciente.
-			</p>
+		<div class="grid gap-6 xl:grid-cols-12">
+			<section class="order-2 lg:order-1 xl:col-span-7">
+				<ul class="grid items-start gap-5 sm:grid-cols-2">
+					{#each data.accessRoster as access (access.id)}
+						<li class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
+							<div class="flex-1 p-6">
+								<div class="flex min-w-0 items-start gap-4">
+									<Initials text={access.displayName} />
+									<div class="min-w-0">
+										<div class="flex flex-wrap items-center gap-2">
+											<h4 class="text-lg font-bold wrap-break-word text-ink">
+												{access.displayName}
+											</h4>
+											{#if access.isCurrentUser}
+												<span
+													class="rounded-full bg-surface-muted px-3 py-1 text-xs font-bold text-brand"
+													>Tu acceso</span
+												>
+											{/if}
+										</div>
 
-			{#if form?.accessCode}
-				<div class="mt-6 rounded-2xl bg-surface-muted p-5 text-center" role="status">
-					<p class="text-sm font-bold text-ink">Código generado</p>
-					<p class="mt-3 font-mono text-2xl font-bold tracking-widest break-all text-brand">
-						{form.accessCode}
-					</p>
-					<p class="mt-3 text-sm leading-6 text-muted">
-						Cópialo ahora. Senda no vuelve a mostrar el código completo.
-					</p>
-				</div>
-			{/if}
-
-			<form method="POST" action="?/createCode" class="mt-6">
-				<button
-					type="submit"
-					class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-				>
-					{form?.accessCode ? 'Generar otro código' : 'Generar código de acceso'}
-				</button>
-			</form>
-		</section>
-
-		<section aria-labelledby="active-access-title" class="py-8 sm:py-10">
-			<div class="flex flex-wrap items-end justify-between gap-3">
-				<div>
-					<h2 id="active-access-title" class="text-2xl font-bold text-ink">Accesos activos</h2>
-					<p class="mt-2 leading-7 text-muted">
-						{data.accessRoster.length}
-						{data.accessRoster.length === 1 ? 'persona autorizada' : 'personas autorizadas'}.
-					</p>
-				</div>
-			</div>
-
-			<ul class="mt-6 space-y-4">
-				{#each data.accessRoster as access (access.id)}
-					<li class="rounded-2xl border border-white/80 bg-white p-5 sm:p-6">
-						<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-							<div class="min-w-0">
-								<div class="flex flex-wrap items-center gap-2">
-									<h3 class="text-lg font-bold break-words text-ink">{access.displayName}</h3>
-									{#if access.isCurrentUser}
-										<span
-											class="rounded-full bg-surface-muted px-3 py-1 text-xs font-bold text-brand"
-											>Tú</span
-										>
-									{/if}
+										<div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
+											<span class="inline-flex items-center gap-2">
+												{#if access.role === 'ADMIN'}
+													<ShieldCheck aria-hidden="true" size={18} strokeWidth={2} />
+													Administrador
+												{:else}
+													<Eye aria-hidden="true" size={18} strokeWidth={2} />
+													Monitor
+												{/if}
+											</span>
+											<span class="inline-flex items-center gap-2">
+												<CalendarDays aria-hidden="true" size={18} strokeWidth={2} />
+												Desde
+												<time datetime={access.grantedAt}>
+													{dateFormatter.format(new Date(access.grantedAt))}
+												</time>
+											</span>
+										</div>
+									</div>
 								</div>
-								<p class="mt-2 text-sm leading-6 text-muted">
-									{access.role === 'ADMIN' ? 'Administrador' : 'Monitor'} · {relationshipLabel(
-										access.relationship
-									)}
-								</p>
-								<p class="mt-1 text-sm leading-6 text-muted">
-									Acceso concedido el
-									<time datetime={access.grantedAt}
-										>{dateFormatter.format(new Date(access.grantedAt))}</time
-									>.
-								</p>
 							</div>
 
 							{#if access.role === 'MONITOR'}
-								<details class="group w-full sm:w-auto sm:min-w-52">
-									<summary
-										class="flex min-h-12 cursor-pointer list-none items-center justify-center rounded-xl border border-red-800/25 bg-white px-4 font-bold text-red-800 transition hover:bg-red-50 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
-									>
-										Revocar acceso
-									</summary>
-									<div class="mt-3 rounded-2xl border border-red-800/20 bg-red-50 p-4">
-										<p class="text-sm leading-6 text-red-950">
-											¿Revocar el acceso de <strong>{access.displayName}</strong>? Perderá
-											inmediatamente el acceso al paciente, su dispositivo y sus ubicaciones.
-										</p>
-										<form method="POST" action="?/revoke" class="mt-3">
-											<input type="hidden" name="accessId" value={access.id} />
-											<button
-												type="submit"
-												class="min-h-12 w-full cursor-pointer rounded-xl bg-red-800 px-4 font-bold text-white transition hover:bg-red-900 focus:ring-4 focus:ring-red-700/30 focus:outline-none"
-											>
-												Sí, revocar acceso
-											</button>
-										</form>
-									</div>
-								</details>
+								<div class="border-t border-ink/10 p-4">
+									<details class="group">
+										<summary
+											class="flex min-h-12 w-full cursor-pointer list-none items-center justify-center gap-2 rounded-full border border-red-800/25 px-5 font-bold text-red-800 transition-colors hover:bg-red-50 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
+										>
+											<UserMinus aria-hidden="true" size={19} strokeWidth={2} />
+											Revocar acceso
+										</summary>
+										<div class="mt-3 rounded-2xl bg-red-50 p-4">
+											<p class="text-sm leading-6 text-red-950">
+												¿Revocar el acceso de <strong>{access.displayName}</strong>? Perderá
+												inmediatamente el acceso al paciente, su dispositivo y sus ubicaciones.
+											</p>
+											<form method="POST" action="?/revoke" class="mt-4">
+												<input type="hidden" name="accessId" value={access.id} />
+												<button
+													type="submit"
+													class="min-h-12 w-full cursor-pointer rounded-full bg-red-800 px-5 font-bold text-white transition-colors hover:bg-red-900 focus:ring-4 focus:ring-red-700/30 focus:outline-none"
+												>
+													Sí, revocar acceso
+												</button>
+											</form>
+										</div>
+									</details>
+								</div>
 							{/if}
-						</div>
-					</li>
-				{/each}
-			</ul>
-		</section>
+						</li>
+					{/each}
+				</ul>
+			</section>
+
+			<aside class="order-1 self-start rounded-2xl bg-white p-6 shadow-sm lg:order-2 xl:col-span-5">
+				<Heading
+					icon={KeyRound}
+					title="Compartir acceso"
+					subtitle="Genera un código de un solo uso. La otra persona obtendrá acceso Monitor únicamente a este paciente."
+				/>
+
+				{#if form?.accessCode}
+					<div class="mt-6 rounded-2xl bg-surface-muted p-5 text-center" role="status">
+						<p class="text-sm font-bold text-ink">Código generado</p>
+						<p class="mt-3 font-mono text-2xl font-bold tracking-widest break-all text-brand">
+							{form.accessCode}
+						</p>
+						<p class="mt-3 text-sm leading-6 text-muted">
+							Cópialo ahora. Senda no vuelve a mostrar el código completo.
+						</p>
+					</div>
+				{/if}
+
+				<form method="POST" action="?/createCode" class="mt-6">
+					<button
+						type="submit"
+						class="min-h-12 w-full cursor-pointer rounded-full bg-brand px-5 font-bold text-white transition-colors hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+					>
+						{form?.accessCode ? 'Generar otro código' : 'Generar código de acceso'}
+					</button>
+				</form>
+			</aside>
+		</div>
 	</div>
 </main>

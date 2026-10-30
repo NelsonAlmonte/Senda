@@ -17,7 +17,7 @@
 
 <svelte:head><title>Mi perfil | Senda</title></svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-8 sm:px-8 lg:px-0">
+<main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
 	<div class="w-full max-w-2xl">
 		<section class="rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
 			<p class="leading-7 break-words text-muted">

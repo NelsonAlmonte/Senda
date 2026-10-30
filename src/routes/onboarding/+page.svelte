@@ -7,7 +7,7 @@
 	<meta name="description" content="Elige cómo comenzar a usar Senda." />
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-8 sm:px-8 lg:px-0">
+<main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
 	<section class="w-full max-w-4xl py-4 sm:py-8">
 		<p class="max-w-2xl text-lg leading-8 text-muted">
 			No estás eligiendo un tipo permanente de cuenta. Podrás usar ambas opciones más adelante.

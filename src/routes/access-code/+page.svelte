@@ -12,7 +12,7 @@
 	<meta name="description" content="Acepta acceso para monitorear un paciente en Senda." />
 </svelte:head>
 
-<main id="contenido-principal" class="min-h-dvh px-5 py-8 sm:px-8 lg:px-0">
+<main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
 	<section class="w-full max-w-2xl py-4 sm:py-8">
 		<div class="rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
 			<p class="leading-7 text-muted">

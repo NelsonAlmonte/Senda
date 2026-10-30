@@ -1,10 +1,20 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import Alert from '#lib/components/ui/Alert.svelte';
+	import Heading from '#lib/components/ui/Heading.svelte';
 	import SafeZoneEditorMap, {
 		type SafeZoneDraft,
 		type SafeZoneEditorMapController,
 		type SafeZoneMapItem
 	} from '#lib/maps/SafeZoneEditorMap.svelte';
+	import Archive from '@lucide/svelte/icons/archive';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import CircleOff from '@lucide/svelte/icons/circle-off';
+	import MapPinned from '@lucide/svelte/icons/map-pinned';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Plus from '@lucide/svelte/icons/plus';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import type { PageProps } from './$types';
 
 	type EditorMode = 'NONE' | 'CREATE' | 'EDIT';
@@ -118,17 +128,6 @@
 		selectedZoneId = zoneId;
 	}
 
-	function handleCoordinateInput(
-		event: Event & { currentTarget: HTMLInputElement },
-		coordinate: 'latitude' | 'longitude'
-	) {
-		const value = event.currentTarget.valueAsNumber;
-		const nextValue = Number.isNaN(value) ? undefined : value;
-		if (coordinate === 'latitude') centerLatitude = nextValue;
-		else centerLongitude = nextValue;
-		setMapDraft();
-	}
-
 	function handleRadiusInput(event: Event & { currentTarget: HTMLInputElement }) {
 		const value = event.currentTarget.valueAsNumber;
 		if (!Number.isNaN(value)) radiusM = value;
@@ -172,68 +171,64 @@
 	/>
 </svelte:head>
 
-<main id="contenido-principal" class="px-5 py-6 sm:px-8 lg:px-0">
-	<div class="w-full max-w-6xl">
-		<section class="py-4 sm:py-8">
-			<div class="flex justify-end">
-				{#if data.safeZonesAvailable && editorMode === 'NONE'}
-					<button
-						type="button"
-						onclick={startCreate}
-						class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-					>
-						Agregar geocerca
-					</button>
-				{/if}
-			</div>
-
-			{#if !data.safeZonesAvailable}
-				<div
-					class="mt-7 rounded-2xl border border-amber-700/25 bg-amber-50 p-5 text-amber-950"
-					role="alert"
+<main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
+	<div class="w-full">
+		<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<h2 class="text-2xl font-bold text-ink">Zonas permitidas</h2>
+			{#if data.safeZonesAvailable && editorMode === 'NONE'}
+				<button
+					type="button"
+					onclick={startCreate}
+					class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 				>
-					<p class="font-bold">La configuración de geocercas aún no está disponible</p>
-					<p class="mt-1 text-sm leading-6">
-						Aplica la migración de esta historia al proyecto Supabase de desarrollo y vuelve a
-						cargar.
-					</p>
+					<Plus aria-hidden="true" size={18} strokeWidth={2} />
+					Agregar geocerca
+				</button>
+			{/if}
+		</div>
+
+		{#if !data.safeZonesAvailable}
+			<div class="max-w-3xl">
+				<Alert
+					icon={CircleAlert}
+					title="No pudimos consultar las geocercas"
+					subtitle="La información del paciente sigue disponible. Inténtalo nuevamente en unos minutos."
+					color="warning"
+				/>
+			</div>
+		{:else}
+			{#if form?.message}
+				<div class="mb-6 max-w-3xl">
+					<Alert
+						icon={form.success ? CircleCheck : CircleAlert}
+						title={form.success ? 'Geocerca actualizada' : 'No pudimos completar la acción'}
+						subtitle={form.message}
+						color={form.success ? 'positive' : 'danger'}
+					/>
 				</div>
-			{:else}
-				{#if form?.message}
-					<div
-						class={[
-							'mt-7 rounded-2xl border p-4 text-sm leading-6 font-semibold',
-							form.success
-								? 'border-brand/25 bg-surface-muted text-ink'
-								: 'border-red-700/25 bg-red-50 text-red-950'
-						]}
-						role={form.success ? 'status' : 'alert'}
-						aria-live="polite"
+			{/if}
+
+			<div class="grid items-start gap-6 xl:grid-cols-12">
+				<div class="min-w-0 xl:col-span-8">
+					<SafeZoneEditorMap
+						latitude={data.mapCenter.latitude}
+						longitude={data.mapCenter.longitude}
+						{patientName}
+						zones={data.safeZones}
+						{selectedZoneId}
+						{draft}
+						{selectionMode}
+						onCenterSelected={handleCenterSelected}
+						onDraftCenterChanged={handleDraftCenterChanged}
+						onZoneSelected={handleZoneSelected}
+						onReady={handleMapReady}
+					/>
+
+					<section
+						class="mt-4 rounded-2xl bg-white p-4 shadow-sm"
+						aria-label="Ayuda y leyenda del mapa"
 					>
-						{form.message}
-					</div>
-				{/if}
-
-				<div class="mt-8 grid items-start gap-6 lg:grid-cols-3">
-					<div class="min-w-0 lg:col-span-2">
-						<SafeZoneEditorMap
-							latitude={data.mapCenter.latitude}
-							longitude={data.mapCenter.longitude}
-							{patientName}
-							zones={data.safeZones}
-							{selectedZoneId}
-							{draft}
-							{selectionMode}
-							onCenterSelected={handleCenterSelected}
-							onDraftCenterChanged={handleDraftCenterChanged}
-							onZoneSelected={handleZoneSelected}
-							onReady={handleMapReady}
-						/>
-
-						<div
-							class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted"
-							aria-label="Leyenda del mapa"
-						>
+						<div class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
 							<p class="flex items-center gap-2">
 								<span
 									class="size-3 rounded-full border-2 border-brand bg-brand/25"
@@ -251,100 +246,121 @@
 								</p>
 							{/if}
 						</div>
-					</div>
 
-					<aside class="space-y-6">
-						{#if editorMode !== 'NONE'}
-							<section
-								class="rounded-3xl border border-white/80 bg-white p-5 sm:p-6"
-								aria-labelledby="zone-editor-title"
-							>
-								<h2 id="zone-editor-title" class="text-xl font-bold text-ink">
-									{editorMode === 'CREATE' ? 'Nueva geocerca' : 'Editar geocerca'}
-								</h2>
-								<p class="mt-2 text-sm leading-6 text-muted">
-									Elige el centro en el mapa, arrastra el círculo provisional o escribe las
-									coordenadas. Ajusta después el radio.
-								</p>
+						<p
+							class="mt-4 border-t border-ink/10 pt-4 text-sm leading-6 text-muted"
+							role="status"
+							aria-live="polite"
+						>
+							{#if selectionMode}
+								Toca o haz clic en el mapa para definir el centro de la geocerca.
+							{:else if draft}
+								Arrastra el círculo provisional para ajustar su centro o modifica el radio desde el
+								editor.
+							{:else if selectedZone}
+								Mostrando <strong class="text-ink">{selectedZone.name}</strong>. Las zonas inactivas
+								aparecen en el mapa solamente cuando las seleccionas.
+							{:else}
+								Selecciona una geocerca guardada para resaltarla en el mapa.
+							{/if}
+						</p>
+					</section>
+				</div>
 
-								<form method="POST" action="?/save" use:enhance={enhanceForm} class="mt-5">
+				<aside class="xl:col-span-4">
+					{#if editorMode !== 'NONE'}
+						<section
+							class="overflow-hidden rounded-2xl bg-white shadow-sm"
+							aria-label={editorMode === 'CREATE' ? 'Nueva geocerca' : 'Editar geocerca'}
+						>
+							<form method="POST" action="?/save" use:enhance={enhanceForm}>
+								<div class="p-6">
+									<div>
+										<Heading
+											icon={ShieldCheck}
+											title={editorMode === 'CREATE' ? 'Nueva geocerca' : 'Editar geocerca'}
+											subtitle="Define la zona directamente sobre el mapa y ajusta su alcance."
+										/>
+									</div>
+
+									<ol class="mt-6 space-y-3" aria-label="Pasos para configurar la geocerca">
+										<li class="flex gap-3 rounded-2xl bg-canvas p-4">
+											<span
+												class="flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-ink"
+												aria-hidden="true">1</span
+											>
+											<div>
+												<p class="font-bold text-ink">Ubica el centro</p>
+												<p class="mt-1 text-sm leading-6 text-muted">
+													Toca el mapa o arrastra el círculo provisional.
+												</p>
+											</div>
+										</li>
+										<li class="flex gap-3 rounded-2xl bg-canvas p-4">
+											<span
+												class="flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-ink"
+												aria-hidden="true">2</span
+											>
+											<div>
+												<p class="font-bold text-ink">Ajusta el alcance</p>
+												<p class="mt-1 text-sm leading-6 text-muted">
+													Usa el control de radio y comprueba el círculo en el mapa.
+												</p>
+											</div>
+										</li>
+									</ol>
+
 									<input
 										type="hidden"
 										name="zoneId"
 										value={editorMode === 'EDIT' ? (selectedZoneId ?? '') : ''}
 									/>
+									<input type="hidden" name="centerLatitude" value={centerLatitude ?? ''} />
+									<input type="hidden" name="centerLongitude" value={centerLongitude ?? ''} />
 
-									<label for="zone-name" class="text-sm font-bold text-ink">Nombre</label>
-									<input
-										id="zone-name"
-										name="name"
-										type="text"
-										maxlength="60"
-										required
-										bind:value={name}
-										placeholder="Ej. Casa"
-										class="mt-2 min-h-12 w-full rounded-xl border border-ink/15 bg-white px-4 text-base text-ink outline-none focus:border-brand focus:ring-4 focus:ring-focus/25"
-									/>
-
-									<div class="mt-5 flex flex-wrap items-center justify-between gap-3">
-										<p class="text-sm font-bold text-ink">Centro del círculo</p>
-										<button
-											type="button"
-											onclick={chooseCenter}
-											class="min-h-11 cursor-pointer rounded-xl px-3 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
-										>
-											{draft ? 'Cambiar centro' : 'Elegir en el mapa'}
-										</button>
-									</div>
-									{#if selectionMode}
-										<p
-											class="mt-2 rounded-xl bg-amber-50 p-3 text-sm leading-6 font-semibold text-amber-950"
-											role="status"
-										>
-											Toca o haz clic en el mapa para colocar el centro.
-										</p>
-									{/if}
-
-									<div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-										<div>
-											<label for="zone-latitude" class="text-sm font-semibold text-muted"
-												>Latitud</label
-											>
-											<input
-												id="zone-latitude"
-												name="centerLatitude"
-												type="number"
-												min="-90"
-												max="90"
-												step="any"
-												required
-												value={centerLatitude ?? ''}
-												oninput={(event) => handleCoordinateInput(event, 'latitude')}
-												onchange={() => setMapDraft(true)}
-												class="mt-2 min-h-12 w-full rounded-xl border border-ink/15 bg-white px-3 font-mono text-base text-ink outline-none focus:border-brand focus:ring-4 focus:ring-focus/25"
-											/>
-										</div>
-										<div>
-											<label for="zone-longitude" class="text-sm font-semibold text-muted"
-												>Longitud</label
-											>
-											<input
-												id="zone-longitude"
-												name="centerLongitude"
-												type="number"
-												min="-180"
-												max="180"
-												step="any"
-												required
-												value={centerLongitude ?? ''}
-												oninput={(event) => handleCoordinateInput(event, 'longitude')}
-												onchange={() => setMapDraft(true)}
-												class="mt-2 min-h-12 w-full rounded-xl border border-ink/15 bg-white px-3 font-mono text-base text-ink outline-none focus:border-brand focus:ring-4 focus:ring-focus/25"
-											/>
-										</div>
+									<div class="mt-6 border-t border-ink/10 pt-6">
+										<label for="zone-name" class="text-sm font-bold text-ink">Nombre</label>
+										<input
+											id="zone-name"
+											name="name"
+											type="text"
+											maxlength="60"
+											required
+											bind:value={name}
+											placeholder="Ej. Casa"
+											class="mt-2 min-h-12 w-full rounded-xl border border-ink/15 bg-white px-4 text-base text-ink outline-none focus:border-brand focus:ring-4 focus:ring-focus/25"
+										/>
 									</div>
 
-									<fieldset class="mt-5">
+									<div class="mt-6">
+										<div class="flex flex-wrap items-start justify-between gap-3">
+											<div>
+												<p class="text-sm font-bold text-ink">Centro de la zona</p>
+												<p class="mt-1 text-sm leading-6 text-muted">
+													Se define visualmente sobre el mapa.
+												</p>
+											</div>
+											<button
+												type="button"
+												onclick={chooseCenter}
+												class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-canvas px-4 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+											>
+												<MapPinned aria-hidden="true" size={18} strokeWidth={2} />
+												{draft ? 'Cambiar centro' : 'Elegir en el mapa'}
+											</button>
+										</div>
+										{#if selectionMode}
+											<p class="mt-3 text-sm leading-6 font-semibold text-brand">
+												Toca o haz clic en el mapa para colocar el centro.
+											</p>
+										{:else if draft}
+											<p class="mt-3 text-sm leading-6 text-muted">
+												Centro definido. Puedes arrastrar el círculo para afinarlo.
+											</p>
+										{/if}
+									</div>
+
+									<fieldset class="mt-6">
 										<legend class="text-sm font-bold text-ink">Radio</legend>
 										<p class="mt-1 text-sm text-muted">Entre 50 y 5,000 metros.</p>
 										<label for="zone-radius-slider" class="sr-only">Radio mediante deslizador</label
@@ -382,7 +398,7 @@
 									</fieldset>
 
 									<label
-										class="mt-5 flex min-h-12 cursor-pointer items-center gap-3 rounded-xl bg-surface-muted px-4 py-3 font-semibold text-ink"
+										class="mt-6 flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl bg-surface-muted px-4 py-3 font-semibold text-ink"
 									>
 										<input
 											name="isActive"
@@ -392,142 +408,146 @@
 										/>
 										Zona activa
 									</label>
+								</div>
 
-									<div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-										<button
-											type="submit"
-											disabled={submitting || !draft}
-											class="min-h-12 cursor-pointer rounded-xl bg-brand px-4 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-										>
-											{submitting ? 'Guardando…' : 'Guardar geocerca'}
-										</button>
-										<button
-											type="button"
-											onclick={cancelEditor}
-											disabled={submitting}
-											class="min-h-12 cursor-pointer rounded-xl border border-ink/15 bg-white px-4 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-										>
-											Cancelar
-										</button>
-									</div>
-								</form>
-							</section>
-						{/if}
-
+								<div
+									class="grid gap-2 border-t border-ink/10 p-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2"
+								>
+									<button
+										type="submit"
+										disabled={submitting || !draft}
+										class="min-h-12 cursor-pointer rounded-full bg-brand px-4 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										{submitting ? 'Guardando…' : 'Guardar geocerca'}
+									</button>
+									<button
+										type="button"
+										onclick={cancelEditor}
+										disabled={submitting}
+										class="min-h-12 cursor-pointer rounded-full px-4 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										Cancelar
+									</button>
+								</div>
+							</form>
+						</section>
+					{:else}
 						<section
-							class="rounded-3xl border border-white/80 bg-white p-5 sm:p-6"
-							aria-labelledby="saved-zones-title"
+							class="overflow-hidden rounded-2xl bg-white shadow-sm"
+							aria-label="Geocercas guardadas"
 						>
-							<div class="flex items-center justify-between gap-3">
-								<h2 id="saved-zones-title" class="text-xl font-bold text-ink">
-									Geocercas guardadas
-								</h2>
-								<span class="text-sm font-semibold text-muted">{data.safeZones.length}</span>
-							</div>
+							<div class="p-6">
+								<Heading
+									icon={ShieldCheck}
+									title="Geocercas guardadas"
+									subtitle={data.safeZones.length === 1
+										? '1 zona configurada para este paciente.'
+										: `${data.safeZones.length} zonas configuradas para este paciente.`}
+								/>
 
-							{#if data.safeZones.length === 0}
-								<p class="mt-3 text-sm leading-6 text-muted">
-									Aún no hay zonas. El sistema no debe interpretar esta ausencia como un estado
-									seguro.
-								</p>
-							{:else}
-								<ul class="mt-4 space-y-3">
-									{#each data.safeZones as zone (zone.id)}
-										<li
-											class={[
-												'rounded-2xl border p-4',
-												selectedZoneId === zone.id
-													? 'border-brand/45 bg-surface-muted'
-													: 'border-ink/10 bg-white'
-											]}
-										>
-											<button
-												type="button"
-												onclick={() => handleZoneSelected(zone.id)}
-												aria-pressed={selectedZoneId === zone.id}
-												class="min-h-11 w-full cursor-pointer text-left focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								{#if data.safeZones.length === 0}
+									<div class="mt-6 rounded-2xl bg-canvas p-4">
+										<p class="font-bold text-ink">Aún no hay geocercas</p>
+										<p class="mt-1 text-sm leading-6 text-muted">
+											La ausencia de zonas permitidas no se interpreta como un estado seguro.
+										</p>
+									</div>
+								{:else}
+									<ul class="mt-6 space-y-3">
+										{#each data.safeZones as zone (zone.id)}
+											<li
+												class={[
+													'overflow-hidden rounded-2xl',
+													selectedZoneId === zone.id ? 'bg-surface-muted' : 'bg-canvas'
+												]}
 											>
-												<span class="block font-bold text-ink">{zone.name}</span>
-												<span class="mt-1 block text-sm text-muted">
-													{zone.isActive ? 'Activa' : 'Inactiva'} · {zone.radiusM.toLocaleString(
-														'es-DO'
-													)} m
-												</span>
-											</button>
-											<div class="mt-3 flex flex-wrap gap-3 border-t border-ink/10 pt-3">
 												<button
 													type="button"
-													onclick={() => startEdit(zone)}
-													disabled={editorMode !== 'NONE'}
-													class="min-h-11 cursor-pointer rounded-xl px-3 font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+													onclick={() => handleZoneSelected(zone.id)}
+													aria-pressed={selectedZoneId === zone.id}
+													class="flex min-h-16 w-full cursor-pointer items-start gap-3 p-4 text-left"
 												>
-													Editar
-												</button>
-												{#if zoneToArchiveId === zone.id}
-													<form
-														method="POST"
-														action="?/archive"
-														use:enhance={enhanceForm}
-														class="w-full rounded-xl border border-red-700/20 bg-red-50 p-3"
+													<span
+														class="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"
 													>
-														<input type="hidden" name="zoneId" value={zone.id} />
-														<p class="text-sm leading-6 font-semibold text-red-950">
-															Se conservará el registro, pero dejará de participar en la evaluación.
-														</p>
-														<div class="mt-2 flex flex-wrap gap-2">
+														<MapPinned aria-hidden="true" size={20} strokeWidth={2} />
+													</span>
+													<span class="min-w-0 flex-1">
+														<span class="block font-bold wrap-break-word text-ink">{zone.name}</span
+														>
+														<span class="mt-1 flex items-center gap-2 text-sm text-muted">
+															{#if zone.isActive}
+																<CircleCheck aria-hidden="true" size={16} strokeWidth={2} />
+																Activa
+															{:else}
+																<CircleOff aria-hidden="true" size={16} strokeWidth={2} />
+																Inactiva
+															{/if}
+															<span aria-hidden="true">·</span>
+															{zone.radiusM.toLocaleString('es-DO')} m
+														</span>
+													</span>
+												</button>
+
+												<div class="border-t border-ink/10 p-3">
+													{#if zoneToArchiveId === zone.id}
+														<form method="POST" action="?/archive" use:enhance={enhanceForm}>
+															<input type="hidden" name="zoneId" value={zone.id} />
+															<div class="rounded-2xl bg-red-50 p-4">
+																<p class="text-sm leading-6 font-semibold text-red-950">
+																	Se conservará el registro, pero dejará de participar en la
+																	evaluación.
+																</p>
+																<div class="mt-3 flex flex-wrap gap-2">
+																	<button
+																		type="submit"
+																		disabled={submitting}
+																		class="min-h-11 cursor-pointer rounded-full bg-red-800 px-4 font-bold text-white focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+																	>
+																		{submitting ? 'Archivando…' : 'Confirmar archivo'}
+																	</button>
+																	<button
+																		type="button"
+																		onclick={() => (zoneToArchiveId = null)}
+																		disabled={submitting}
+																		class="min-h-11 cursor-pointer rounded-full px-4 font-bold text-red-950 focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+																	>
+																		Cancelar
+																	</button>
+																</div>
+															</div>
+														</form>
+													{:else}
+														<div class="flex flex-wrap gap-2">
 															<button
-																type="submit"
-																disabled={submitting}
-																class="min-h-11 cursor-pointer rounded-xl bg-red-800 px-3 font-bold text-white focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+																type="button"
+																onclick={() => startEdit(zone)}
+																class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 font-bold text-brand transition hover:bg-white focus:ring-4 focus:ring-focus/30 focus:outline-none"
 															>
-																{submitting ? 'Archivando…' : 'Confirmar archivo'}
+																<Pencil aria-hidden="true" size={17} strokeWidth={2} />
+																Editar
 															</button>
 															<button
 																type="button"
-																onclick={() => (zoneToArchiveId = null)}
+																onclick={() => (zoneToArchiveId = zone.id)}
 																disabled={submitting}
-																class="min-h-11 cursor-pointer rounded-xl px-3 font-bold text-red-950 focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+																class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 font-bold text-red-800 transition hover:bg-red-50 focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 															>
-																Cancelar
+																<Archive aria-hidden="true" size={17} strokeWidth={2} />
+																Archivar
 															</button>
 														</div>
-													</form>
-												{:else}
-													<button
-														type="button"
-														onclick={() => (zoneToArchiveId = zone.id)}
-														disabled={submitting || editorMode !== 'NONE'}
-														class="min-h-11 cursor-pointer rounded-xl px-3 font-bold text-red-800 focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-													>
-														Archivar
-													</button>
-												{/if}
-											</div>
-										</li>
-									{/each}
-								</ul>
-							{/if}
-
-							{#if editorMode === 'NONE' && data.safeZones.length > 0}
-								<button
-									type="button"
-									onclick={startCreate}
-									class="mt-4 min-h-12 w-full cursor-pointer rounded-xl border border-brand/25 bg-white px-4 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
-								>
-									Agregar otra geocerca
-								</button>
-							{/if}
+													{/if}
+												</div>
+											</li>
+										{/each}
+									</ul>
+								{/if}
+							</div>
 						</section>
-					</aside>
-				</div>
-
-				{#if selectedZone && editorMode === 'NONE'}
-					<p class="mt-5 text-sm leading-6 text-muted">
-						Seleccionada: <strong class="text-ink">{selectedZone.name}</strong>. Las zonas inactivas
-						se ocultan del mapa salvo cuando se seleccionan en la lista.
-					</p>
-				{/if}
-			{/if}
-		</section>
+					{/if}
+				</aside>
+			</div>
+		{/if}
 	</div>
 </main>

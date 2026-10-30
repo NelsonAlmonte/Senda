@@ -1,7 +1,10 @@
 <script lang="ts">
+	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import Eye from '@lucide/svelte/icons/eye';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
@@ -25,18 +28,22 @@
 		<h2 class="mb-8 text-2xl font-bold text-ink">Personas autorizadas</h2>
 
 		{#if form?.error}
-			<div
-				class="mb-8 rounded-2xl border border-red-700/25 bg-red-50 p-4 text-sm font-semibold text-red-950"
-				role="alert"
-			>
-				{form.error}
+			<div class="mb-8 max-w-3xl">
+				<Alert
+					icon={CircleAlert}
+					title="No pudimos completar la acción"
+					subtitle={form.error}
+					color="danger"
+				/>
 			</div>
 		{:else if form?.successMessage}
-			<div
-				class="mb-8 rounded-2xl border border-brand/20 bg-surface-muted p-4 text-sm font-semibold text-ink"
-				role="status"
-			>
-				{form.successMessage}
+			<div class="mb-8 max-w-3xl">
+				<Alert
+					icon={CircleCheck}
+					title="Acceso actualizado"
+					subtitle={form.successMessage}
+					color="positive"
+				/>
 			</div>
 		{/if}
 

@@ -1,14 +1,8 @@
 <script lang="ts">
-	import type { Component } from 'svelte';
-
-	type IconComponent = Component<{
-		'aria-hidden'?: boolean | 'true' | 'false';
-		size?: number;
-		strokeWidth?: number;
-	}>;
+	import type { UiIcon } from '#lib/types/ui.js';
 
 	interface Props {
-		icon: IconComponent;
+		icon: UiIcon;
 		title: string;
 		subtitle: string;
 	}

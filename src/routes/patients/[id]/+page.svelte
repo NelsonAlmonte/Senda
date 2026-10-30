@@ -1,23 +1,29 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
-	import Initials from '#lib/components/ui/Initials.svelte';
-	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import MapPinned from '@lucide/svelte/icons/map-pinned';
-	import PencilLine from '@lucide/svelte/icons/pencil-line';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Smartphone from '@lucide/svelte/icons/smartphone';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import UsersRound from '@lucide/svelte/icons/users-round';
+	import InfoItem from '#lib/components/ui/InfoItem.svelte';
+	import {
+		ArrowUpRight,
+		CircleAlert,
+		CircleCheck,
+		KeyRound,
+		MapPinned,
+		PencilLine,
+		ShieldCheck,
+		Smartphone,
+		UserRound,
+		UsersRound,
+		HeartHandshake,
+		Map
+	} from '@lucide/svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 	let submitting = $state(false);
 	let updateResult = $derived(form?.action === 'update' ? form : null);
 	let errors = $derived((updateResult?.errors ?? {}) as Record<string, string>);
-	let patientName = $derived(`${data.patient.firstName} ${data.patient.lastName}`.trim());
 
 	const enhanceUpdate: SubmitFunction = () => {
 		submitting = true;
@@ -43,11 +49,13 @@
 <main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
 	<div class="w-full">
 		{#if updateResult?.successMessage}
-			<div
-				class="mt-6 rounded-2xl border border-brand/20 bg-surface-muted p-4 text-sm font-semibold text-ink"
-				role="status"
-			>
-				{updateResult.successMessage}
+			<div class="mb-8 max-w-3xl">
+				<Alert
+					icon={CircleCheck}
+					title="Datos actualizados"
+					subtitle={updateResult.successMessage}
+					color="positive"
+				/>
 			</div>
 		{/if}
 
@@ -68,11 +76,14 @@
 							<div
 								data-patient-form-error
 								tabindex="-1"
-								class="mt-6 rounded-2xl border border-red-700/25 bg-red-50 p-4 text-sm leading-6 text-red-950 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
-								role="alert"
+								class="mt-6 rounded-2xl focus:ring-4 focus:ring-red-700/20 focus:outline-none"
 							>
-								<p class="font-bold">Revisa los datos del paciente.</p>
-								{#if errors.form}<p class="mt-1">{errors.form}</p>{/if}
+								<Alert
+									icon={CircleAlert}
+									title="Revisa los datos del paciente"
+									subtitle={errors.form ?? 'Corrige los campos indicados e inténtalo nuevamente.'}
+									color="danger"
+								/>
 							</div>
 						{/if}
 
@@ -133,20 +144,20 @@
 						</div>
 					{:else}
 						<dl class="mt-8 grid gap-4 sm:grid-cols-2">
-							<div class="rounded-2xl bg-canvas p-4">
+							<div class="rounded-2xl bg-surface-muted p-4">
 								<dt class="text-sm font-semibold text-muted">Nombre</dt>
-								<dd class="mt-1 font-bold text-ink">{data.patient.firstName}</dd>
+								<dd class=" font-bold text-ink">{data.patient.firstName}</dd>
 							</div>
-							<div class="rounded-2xl bg-canvas p-4">
+							<div class="rounded-2xl bg-surface-muted p-4">
 								<dt class="text-sm font-semibold text-muted">Apellido</dt>
-								<dd class="mt-1 font-bold text-ink">{data.patient.lastName}</dd>
+								<dd class=" font-bold text-ink">{data.patient.lastName}</dd>
 							</div>
 						</dl>
 					{/if}
 				</div>
 
 				{#if data.isAdmin}
-					<div class="border-t border-ink/10 p-4">
+					<div class="border-t border-ink/10 px-6 py-4">
 						<button
 							type="submit"
 							form="patient-data-form"
@@ -161,56 +172,39 @@
 
 			<aside class="rounded-2xl bg-white p-6 shadow-sm xl:col-span-5">
 				<div class="flex items-center gap-4">
-					<Initials text={patientName} />
-					<div class="min-w-0">
-						<h3 class="text-xl font-bold text-ink">Resumen del paciente</h3>
-						<p class="mt-1 leading-6 text-muted">Contexto administrativo y elementos vinculados.</p>
-					</div>
+					<Heading
+						icon={HeartHandshake}
+						title="Resumen del paciente"
+						subtitle="Contexto administrativo y elementos vinculados."
+					/>
 				</div>
 
-				<dl class="mt-8 grid gap-4 sm:grid-cols-2">
-					<div class="flex items-start gap-3 rounded-2xl bg-canvas p-4 sm:col-span-2">
-						<div
-							class="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"
-						>
-							<UsersRound aria-hidden="true" size={20} strokeWidth={2} />
-						</div>
-						<div class="min-w-0">
-							<dt class="text-sm font-semibold text-muted">Grupo</dt>
-							<dd class="mt-1 text-sm font-bold wrap-break-word text-ink">
-								{data.patient.group?.name ?? 'Sin grupo visible'}
-							</dd>
-						</div>
+				<div class="mt-8 grid gap-4 sm:grid-cols-2">
+					<div class="sm:col-span-2">
+						<InfoItem
+							icon={UsersRound}
+							title="Grupo"
+							info={data.patient.group?.name ?? 'Sin grupo visible'}
+							tone="positive"
+						/>
 					</div>
 
-					<div class="flex items-start gap-3 rounded-2xl bg-canvas p-4">
-						<div
-							class="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"
-						>
-							<Smartphone aria-hidden="true" size={20} strokeWidth={2} />
-						</div>
-						<div class="min-w-0">
-							<dt class="text-sm font-semibold text-muted">Dispositivo</dt>
-							<dd class="mt-1 text-sm font-bold wrap-break-word text-ink">
-								{data.assignment ? data.assignment.device.serialNumber : 'Sin configurar'}
-							</dd>
-						</div>
-					</div>
+					<InfoItem
+						icon={Smartphone}
+						title="Dispositivo"
+						info={data.assignment ? data.assignment.device.serialNumber : 'Sin configurar'}
+						tone={data.assignment ? 'positive' : 'neutral'}
+					/>
 
 					{#if data.isAdmin}
-						<div class="flex items-start gap-3 rounded-2xl bg-canvas p-4">
-							<div
-								class="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"
-							>
-								<KeyRound aria-hidden="true" size={20} strokeWidth={2} />
-							</div>
-							<div>
-								<dt class="text-sm font-semibold text-muted">Accesos activos</dt>
-								<dd class="mt-1 text-sm font-bold text-ink">{data.activeAccessCount}</dd>
-							</div>
-						</div>
+						<InfoItem
+							icon={KeyRound}
+							title="Accesos activos"
+							info={String(data.activeAccessCount)}
+							tone={data.activeAccessCount > 0 ? 'positive' : 'neutral'}
+						/>
 					{/if}
-				</dl>
+				</div>
 			</aside>
 		</div>
 
@@ -226,7 +220,7 @@
 					<Heading
 						icon={MapPinned}
 						title="Monitoreo"
-						subtitle="Consulta el recorrido y configura las zonas permitidas."
+						subtitle="Consulta la ubicación y configura las zonas permitidas."
 					/>
 
 					<nav
@@ -236,18 +230,16 @@
 						{#if data.assignment}
 							<a
 								href={resolve('/patients/[id]/map', { id: data.patient.id })}
-								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-canvas p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 							>
 								<div
 									class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
 								>
-									<MapPinned aria-hidden="true" size={20} strokeWidth={2} />
+									<Map aria-hidden="true" size={20} strokeWidth={2} />
 								</div>
 								<div class="min-w-0 flex-1">
-									<h4 class="font-bold text-ink">Mapa e historial</h4>
-									<p class="mt-1 text-sm leading-5 text-muted">
-										Ubicación en mapa y recorrido reciente.
-									</p>
+									<h4 class="font-bold text-ink">Mapa y ubicación</h4>
+									<p class=" text-sm leading-5 text-muted">Última ubicación y geocercas activas.</p>
 								</div>
 								<ArrowUpRight
 									aria-hidden="true"
@@ -260,7 +252,7 @@
 
 						<a
 							href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
-							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-canvas p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 						>
 							<div
 								class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
@@ -269,7 +261,7 @@
 							</div>
 							<div class="min-w-0 flex-1">
 								<h4 class="font-bold text-ink">Geocercas</h4>
-								<p class="mt-1 text-sm leading-5 text-muted">Zonas circulares permitidas.</p>
+								<p class=" text-sm leading-5 text-muted">Zonas circulares permitidas.</p>
 							</div>
 							<ArrowUpRight
 								aria-hidden="true"
@@ -292,7 +284,7 @@
 						<nav class="mt-6 grid gap-3" aria-label="Operaciones administrativas">
 							<a
 								href={resolve('/patients/[id]/access', { id: data.patient.id })}
-								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-canvas p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 							>
 								<div
 									class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
@@ -301,7 +293,7 @@
 								</div>
 								<div class="min-w-0 flex-1">
 									<h4 class="font-bold text-ink">Personas con acceso</h4>
-									<p class="mt-1 text-sm leading-5 text-muted">
+									<p class=" text-sm leading-5 text-muted">
 										{data.activeAccessCount}
 										{data.activeAccessCount === 1 ? 'acceso activo' : 'accesos activos'}
 									</p>
@@ -316,7 +308,7 @@
 
 							<a
 								href={resolve('/patients/[id]/device', { id: data.patient.id })}
-								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-canvas p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 							>
 								<div
 									class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
@@ -325,7 +317,7 @@
 								</div>
 								<div class="min-w-0 flex-1">
 									<h4 class="font-bold text-ink">Dispositivo</h4>
-									<p class="mt-1 text-sm leading-5 text-muted">
+									<p class=" text-sm leading-5 text-muted">
 										{data.assignment
 											? 'Consulta el dispositivo asignado.'
 											: 'Configura un dispositivo.'}

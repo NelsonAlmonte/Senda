@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
+	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UsersRound from '@lucide/svelte/icons/users-round';
@@ -54,35 +56,18 @@
 					/>
 
 					<div class="mt-6 grid gap-3 sm:grid-cols-2" role="status">
-						<div class="flex items-start gap-3 rounded-2xl bg-surface-muted p-4">
-							<CircleCheck
-								class="mt-1 shrink-0 text-brand"
-								aria-hidden="true"
-								size={20}
-								strokeWidth={2}
-							/>
-							<div>
-								<p class="font-bold text-ink">Asignación activa</p>
-								<p class="mt-1 text-sm leading-6 text-muted">Puede recibir ubicaciones.</p>
-							</div>
-						</div>
-						<div class="flex items-start gap-3 rounded-2xl bg-surface-muted p-4">
-							<CalendarDays
-								class="mt-1 shrink-0 text-brand"
-								aria-hidden="true"
-								size={20}
-								strokeWidth={2}
-							/>
-							<div>
-								<p class="font-bold text-ink">Asignado desde</p>
-								<time
-									datetime={data.assignment.assignedAt}
-									class="mt-1 block text-sm leading-6 text-muted"
-								>
-									{dateFormatter.format(new Date(data.assignment.assignedAt))}
-								</time>
-							</div>
-						</div>
+						<InfoItem
+							icon={UsersRound}
+							title="Asignación activa"
+							info="Puede recibir ubicaciones."
+							tone="positive"
+						/>
+						<InfoItem
+							icon={CalendarDays}
+							title="Asignado desde"
+							info={dateFormatter.format(new Date(data.assignment.assignedAt))}
+							tone="positive"
+						/>
 					</div>
 				</div>
 
@@ -124,11 +109,14 @@
 							<div
 								data-form-error
 								tabindex="-1"
-								class="mt-6 rounded-2xl border border-red-700/25 bg-red-50 p-4 text-sm leading-6 text-red-950 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
-								role="alert"
+								class="mt-6 rounded-2xl focus:ring-4 focus:ring-red-700/20 focus:outline-none"
 							>
-								<p class="font-bold">Revisa el serial del dispositivo.</p>
-								{#if errors.form}<p class="mt-1">{errors.form}</p>{/if}
+								<Alert
+									icon={CircleAlert}
+									title="Revisa el serial del dispositivo"
+									subtitle={errors.form ?? 'Corrige el campo indicado e inténtalo nuevamente.'}
+									color="danger"
+								/>
 							</div>
 						{/if}
 

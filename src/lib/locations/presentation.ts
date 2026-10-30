@@ -68,8 +68,7 @@ export function presentGeofenceRelation(
 		case 'OUTSIDE':
 			return {
 				title: 'Fuera de las zonas permitidas',
-				description:
-					'Esta lectura aislada quedó fuera de todas las geocercas activas. Todavía no constituye una alerta confirmada.',
+				description: 'La lectura se clasificó fuera de todas las geocercas activas.',
 				tone: 'warning'
 			};
 		case 'UNCERTAIN':

@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import Alert from '#lib/components/ui/Alert.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BellOff from '@lucide/svelte/icons/bell-off';
 	import BellRing from '@lucide/svelte/icons/bell-ring';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
@@ -26,81 +29,89 @@
 <svelte:head><title>Pacientes | Senda</title></svelte:head>
 
 <main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
-	<div class="w-full max-w-6xl">
-		<nav class="mb-8 flex flex-wrap gap-3" aria-label="Acciones de pacientes">
-			<a
-				href={resolve('/groups?mode=patient')}
-				class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-ink px-5 font-bold text-white transition hover:bg-ink/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-			>
-				<UserPlus aria-hidden="true" size={18} strokeWidth={2} />
-				Agregar paciente
-			</a>
-			<a
-				href={resolve('/groups?mode=new')}
-				class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
-			>
-				<UsersRound aria-hidden="true" size={18} strokeWidth={2} />
-				Crear grupo
-			</a>
-			<a
-				href={resolve('/access-code')}
-				class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 font-bold text-brand transition hover:bg-white/60 focus:ring-4 focus:ring-focus/30 focus:outline-none"
-			>
-				<KeyRound aria-hidden="true" size={18} strokeWidth={2} />
-				Ingresar código
-			</a>
-		</nav>
+	<div class="w-full">
+		<div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+			<h2 id="personas-cuidado" class="text-2xl font-bold text-ink">Personas a tu cuidado</h2>
+
+			<nav class="flex flex-wrap gap-3 lg:justify-end" aria-label="Acciones de pacientes">
+				<a
+					href={resolve('/groups?mode=patient')}
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+				>
+					<UserPlus aria-hidden="true" size={18} strokeWidth={2} />
+					Agregar paciente
+				</a>
+				<a
+					href={resolve('/groups?mode=new')}
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+				>
+					<UsersRound aria-hidden="true" size={18} strokeWidth={2} />
+					Crear grupo
+				</a>
+				<a
+					href={resolve('/access-code')}
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 font-bold text-brand transition hover:bg-white/60 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+				>
+					<KeyRound aria-hidden="true" size={18} strokeWidth={2} />
+					Ingresar código
+				</a>
+			</nav>
+		</div>
 
 		{#if data.patientCreated}
-			<div
-				class="mt-6 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
-				role="status"
-			>
-				Paciente registrado correctamente. Ya tienes acceso de administrador.
+			<div class="mb-8 max-w-2xl">
+				<Alert
+					icon={CircleCheck}
+					title="Paciente registrado"
+					subtitle="Ya tienes acceso de administrador."
+					color="positive"
+				/>
 			</div>
 		{/if}
 
 		{#if data.deviceConfigured}
-			<div
-				class="mt-6 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
-				role="status"
-			>
-				Dispositivo configurado correctamente.
+			<div class="mb-8 max-w-2xl">
+				<Alert
+					icon={CircleCheck}
+					title="Dispositivo configurado"
+					subtitle="El dispositivo quedó asignado al paciente."
+					color="positive"
+				/>
 			</div>
 		{/if}
 
 		{#if data.accessAccepted}
-			<div
-				class="mt-6 max-w-2xl rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
-				role="status"
-			>
-				Código aceptado. Ya puedes monitorear al paciente autorizado.
+			<div class="mb-8 max-w-2xl">
+				<Alert
+					icon={CircleCheck}
+					title="Código aceptado"
+					subtitle="Ya puedes monitorear al paciente autorizado."
+					color="positive"
+				/>
 			</div>
 		{/if}
 
 		{#if !data.patientsAvailable}
-			<div
-				class="mt-6 rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
-				role="status"
-			>
-				No pudimos consultar tus pacientes. Inténtalo nuevamente en unos minutos.
+			<div class="max-w-2xl">
+				<Alert
+					icon={CircleAlert}
+					title="No pudimos consultar tus pacientes"
+					subtitle="Inténtalo nuevamente en unos minutos."
+					color="warning"
+				/>
 			</div>
 		{:else if !data.devicesAvailable}
-			<div
-				class="mt-6 rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
-				role="status"
-			>
-				No pudimos consultar el estado de los dispositivos. Inténtalo nuevamente en unos minutos.
+			<div class="max-w-2xl">
+				<Alert
+					icon={CircleAlert}
+					title="Estado de dispositivos no disponible"
+					subtitle="Inténtalo nuevamente en unos minutos."
+					color="warning"
+				/>
 			</div>
 		{:else if patients.length > 0}
-			<section class="mt-6" aria-labelledby="personas-cuidado">
-				<div class="max-w-2xl">
-					<h2 id="personas-cuidado" class="mb-8 text-2xl font-bold text-ink">
-						Personas a tu cuidado
-					</h2>
-				</div>
-
-				<ul class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+			<section aria-labelledby="personas-cuidado">
+				<ul class="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
 					{#each patients as patient (patient.id)}
 						<li class="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
 							<div class="flex-1 p-6">
@@ -164,7 +175,7 @@
 							<div class="border-t border-ink/10 p-4">
 								<a
 									href={resolve('/patients/[id]', { id: patient.id })}
-									class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 font-bold text-white transition hover:bg-ink/90 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+									class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/30 focus:outline-none"
 								>
 									{patient.accessRole === 'ADMIN' ? 'Administrar paciente' : 'Ver paciente'}
 									<ArrowUpRight aria-hidden="true" size={18} strokeWidth={2} />
@@ -201,7 +212,7 @@
 				</ul>
 			</section>
 		{:else}
-			<div class="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+			<div class="rounded-2xl bg-white p-6 shadow-sm">
 				<div
 					class="flex size-12 items-center justify-center rounded-full bg-surface-muted text-ink"
 				>

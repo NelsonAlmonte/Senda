@@ -1,8 +1,20 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { BellRing, MapPinPlus, MapPinned, Route, ShieldCheck } from '@lucide/svelte';
+	import {
+		BellRing,
+		CircleAlert,
+		CircleCheckBig,
+		Clock3,
+		MapPin,
+		MapPinPlus,
+		MapPinned,
+		ShieldCheck,
+		Siren
+	} from '@lucide/svelte';
+	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
+	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import PatientLocationRealtime, {
 		type AlertEpisodeRealtimeRow,
 		type LocationRealtimeRow
@@ -17,12 +29,14 @@
 		type MapManualLocationPoint,
 		type PatientLocationMapController
 	} from '#lib/maps/PatientLocationMap.svelte';
+	import type { UiTone } from '#lib/types/ui.js';
 	import type { PageProps } from './$types';
 
 	type LatestLocation = NonNullable<PageProps['data']['latestLocation']>;
 	type HistoryLocation = PageProps['data']['locationHistory'][number];
 	type AlertEpisode = PageProps['data']['alertEpisodes'][number];
 	type ManualLocationFeedback = { kind: 'success' | 'error'; message: string };
+	type StatusPresentation = { title: string; info: string; tone: UiTone };
 
 	const defaultMapCenter = { latitude: 18.4861, longitude: -69.9312 };
 
@@ -46,6 +60,15 @@
 					latestLocation.effectiveToleranceM
 				)
 			: null
+	);
+	let alertStatus = $derived(
+		presentAlertStatus(data.alertEpisodesAvailable, activeAlertEpisode, latestLocation)
+	);
+	let freshnessStatus = $derived(
+		presentFreshnessStatus(latestLocation, data.manualLocationEnabled)
+	);
+	let readingStatus = $derived(
+		presentReadingStatus(latestLocation, geofencePresentation, activeAlertEpisode !== null)
 	);
 	let mapController = $state<PatientLocationMapController | null>(null);
 	let manualLocationMode = $state(false);
@@ -144,6 +167,127 @@
 			patientName,
 			historySegments: buildHistorySegments(nextHistory)
 		});
+	}
+
+	function presentEpisodeInfo(episode: AlertEpisode): string {
+		const confirmed = `Confirmada el ${presentDateTime(episode.confirmedAt)}.`;
+		return episode.resolvedAt
+			? `${confirmed} Resuelta el ${presentDateTime(episode.resolvedAt)}.`
+			: confirmed;
+	}
+
+	function presentAlertStatus(
+		available: boolean,
+		activeEpisode: AlertEpisode | null,
+		location: LatestLocation | null
+	): StatusPresentation {
+		if (!available) {
+			return {
+				title: 'Estado de alertas no disponible',
+				info: 'No pudimos verificar si existe una salida activa en este momento.',
+				tone: 'warning'
+			};
+		}
+
+		if (activeEpisode) {
+			let context = '';
+			switch (location?.geofenceRelation) {
+				case 'OUTSIDE':
+					context = ' La última lectura continúa fuera de las zonas permitidas.';
+					break;
+				case 'INSIDE':
+					context =
+						' Se recibió una lectura dentro de una zona; hace falta otra lectura confiable consecutiva para resolver la salida.';
+					break;
+				case 'UNCERTAIN':
+					context = ' La última lectura no permite confirmar el reingreso.';
+					break;
+				case 'NO_ACTIVE_ZONE':
+					context = ' La última lectura no pudo compararse con una geocerca activa.';
+					break;
+				case 'NOT_EVALUATED':
+					context = ' La última lectura no tiene una evaluación de geocerca disponible.';
+					break;
+			}
+
+			return {
+				title: 'Salida confirmada activa',
+				info: `Confirmada el ${presentDateTime(activeEpisode.confirmedAt)}.${context}`,
+				tone: 'danger'
+			};
+		}
+
+		if (location?.geofenceRelation === 'OUTSIDE') {
+			return {
+				title: 'Salida todavía no confirmada',
+				info: 'La última lectura quedó fuera de las zonas permitidas, pero no existe un episodio confirmado activo.',
+				tone: 'warning'
+			};
+		}
+
+		if (location?.geofenceRelation === 'UNCERTAIN') {
+			return {
+				title: 'Ubicación por confirmar',
+				info: 'La última lectura no permite determinar si el paciente está dentro o fuera.',
+				tone: 'warning'
+			};
+		}
+
+		return {
+			title: 'Sin salida confirmada',
+			info: 'No existe un episodio de salida activo.',
+			tone: 'positive'
+		};
+	}
+
+	function presentFreshnessStatus(
+		location: LatestLocation | null,
+		manualLocationEnabled: boolean
+	): StatusPresentation {
+		if (!location) {
+			return {
+				title: 'Última actualización',
+				info: manualLocationEnabled
+					? 'Aún no hay ubicaciones. Puedes registrar la primera desde el mapa.'
+					: 'Aún no hay ubicaciones. El mapa se actualizará al recibir la primera lectura.',
+				tone: 'neutral'
+			};
+		}
+
+		if (location.freshness === 'STALE') {
+			return {
+				title: 'Ubicación desactualizada',
+				info: `La última lectura fue ${location.ageLabel}. No representa una posición en vivo.`,
+				tone: 'warning'
+			};
+		}
+
+		return {
+			title: 'Última actualización',
+			info: `Lectura recibida ${location.ageLabel}.`,
+			tone: 'neutral'
+		};
+	}
+
+	function presentReadingStatus(
+		location: LatestLocation | null,
+		presentation: typeof geofencePresentation,
+		hasActiveEpisode: boolean
+	): StatusPresentation {
+		if (!location || !presentation) {
+			return {
+				title: 'Última lectura',
+				info: 'Pendiente de una ubicación para evaluar las zonas permitidas.',
+				tone: 'neutral'
+			};
+		}
+
+		return {
+			title: 'Última lectura',
+			info: presentation.title,
+			tone:
+				location.geofenceRelation === 'OUTSIDE' && hasActiveEpisode ? 'danger' : presentation.tone
+		};
 	}
 
 	function handleRealtimeAlertEpisode(row: AlertEpisodeRealtimeRow) {
@@ -260,15 +404,15 @@
 	<title>Mapa de {patientName} | Senda</title>
 	<meta
 		name="description"
-		content={`Consulta la última ubicación y el recorrido reciente de ${patientName} en Senda.`}
+		content={`Consulta la última ubicación y las geocercas activas de ${patientName} en Senda.`}
 	/>
 </svelte:head>
 
-<main id="contenido-principal" class="px-5 py-6 sm:px-8 lg:px-0">
+<main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
 	<div class="w-full">
 		<div class="max-w-3xl">
-			<h2 id="patient-data-title" class="mb-8 text-2xl font-bold text-ink">
-				Recorrido del paciente
+			<h2 id="patient-map-title" class="mb-8 text-2xl font-bold text-ink">
+				Ubicación del paciente
 			</h2>
 		</div>
 		<section>
@@ -299,11 +443,13 @@
 					{/if}
 				</div>
 			{:else if !data.locationsAvailable}
-				<div class="rounded-2xl bg-white p-6 text-amber-950 shadow-sm" role="alert">
-					<h2 class="text-xl font-bold">No pudimos consultar la ubicación</h2>
-					<p class="mt-2 max-w-2xl leading-7">
-						El paciente y su dispositivo siguen disponibles. Inténtalo nuevamente en unos minutos.
-					</p>
+				<div class="max-w-3xl rounded-2xl bg-white p-6 shadow-sm">
+					<Alert
+						icon={CircleAlert}
+						title="No pudimos consultar la ubicación"
+						subtitle="El paciente y su dispositivo siguen disponibles. Inténtalo nuevamente en unos minutos."
+						color="warning"
+					/>
 					<a
 						href={resolve('/patients/[id]/map', { id: data.patient.id })}
 						class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white focus:ring-4 focus:ring-focus/35 focus:outline-none"
@@ -341,76 +487,42 @@
 							<Heading
 								icon={MapPinned}
 								title="Estado de ubicación"
-								subtitle="Resumen de la última lectura y su relación con las zonas permitidas."
+								subtitle="Estado de la salida, vigencia y relación de la última lectura con las zonas permitidas."
 							/>
-							<div class="mt-6 grid gap-4 md:grid-cols-3">
-								<div class="rounded-2xl bg-surface-muted p-4">
-									<p class="text-sm font-semibold text-muted">Última ubicación</p>
-									{#if !latestLocation}
-										<p class="mt-1 font-bold text-ink">Aún no disponible</p>
-										<p class="mt-1 text-sm leading-6 text-muted">
-											{data.manualLocationEnabled
-												? 'Puedes registrar la primera ubicación desde el mapa.'
-												: 'El mapa se actualizará al recibir la primera lectura.'}
-										</p>
-									{:else if latestLocation.freshness === 'FRESH'}
-										<p class="mt-1 font-bold text-ink">Ubicación reciente</p>
-										<p class="mt-1 text-sm leading-6 text-muted">
-											Última lectura {latestLocation.ageLabel}.
-										</p>
-									{:else}
-										<p class="mt-1 font-bold text-amber-950">Ubicación desactualizada</p>
-										<p class="mt-1 text-sm leading-6 text-muted">
-											La última lectura fue {latestLocation.ageLabel}. No representa una posición en
-											vivo.
-										</p>
-									{/if}
+							<div class="mt-6 space-y-4">
+								<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
+									<InfoItem
+										icon={activeAlertEpisode
+											? Siren
+											: alertStatus.tone === 'warning'
+												? CircleAlert
+												: BellRing}
+										title={alertStatus.title}
+										info={alertStatus.info}
+										tone={alertStatus.tone}
+									/>
 								</div>
 
-								<div
-									class={[
-										'rounded-2xl p-4',
-										!data.alertEpisodesAvailable || activeAlertEpisode
-											? 'bg-amber-50'
-											: 'bg-surface-muted'
-									]}
-									role={!data.alertEpisodesAvailable ? 'alert' : 'status'}
-									aria-live="polite"
-								>
-									<p class="text-sm font-semibold text-muted">Episodio de salida</p>
-									{#if !data.alertEpisodesAvailable}
-										<p class="mt-1 font-bold text-amber-950">Estado no disponible</p>
-										<p class="mt-1 text-sm leading-6 text-muted">
-											No pudimos verificar los episodios en este momento.
-										</p>
-									{:else if activeAlertEpisode}
-										<p class="mt-1 font-bold text-amber-950">Salida confirmada activa</p>
-										<p class="mt-1 text-sm leading-6 text-muted">
-											Confirmada el {presentDateTime(activeAlertEpisode.confirmedAt)}.
-										</p>
-									{:else}
-										<p class="mt-1 font-bold text-ink">Sin episodio activo</p>
-										<p class="mt-1 text-sm leading-6 text-muted">
-											No existe una salida confirmada activa.
-										</p>
-									{/if}
-								</div>
-
-								<div class="rounded-2xl bg-surface-muted p-4" role="status" aria-live="polite">
-									<p class="text-sm font-semibold text-muted">Relación con geocercas</p>
-									{#if latestLocation && geofencePresentation}
-										<p class="mt-1 font-bold text-ink">{geofencePresentation.title}</p>
-										<p class="mt-1 text-sm leading-6 text-muted">
-											{geofencePresentation.description}
-										</p>
-									{:else}
-										<p class="mt-1 font-bold text-ink">Pendiente de una ubicación</p>
-										<p class="mt-1 text-sm leading-6 text-muted">
-											Se evaluará cuando exista una lectura disponible.
-										</p>
-									{/if}
+								<div class="grid gap-4 sm:grid-cols-2">
+									<InfoItem
+										icon={Clock3}
+										title={freshnessStatus.title}
+										info={freshnessStatus.info}
+										tone={freshnessStatus.tone}
+									/>
+									<InfoItem
+										icon={MapPin}
+										title={readingStatus.title}
+										info={readingStatus.info}
+										tone={readingStatus.tone}
+									/>
 								</div>
 							</div>
+							{#if latestLocation?.accuracyM !== null && latestLocation?.accuracyM !== undefined && latestLocation.accuracyM > 0}
+								<p class="mt-6 border-t border-ink/10 pt-4 text-sm leading-6 text-muted">
+									El círculo azul representa la precisión informada. No es una zona permitida.
+								</p>
+							{/if}
 						</section>
 
 						<section class="rounded-2xl bg-white p-6 shadow-sm">
@@ -421,9 +533,12 @@
 							/>
 							<div class="mt-6">
 								{#if !data.safeZonesAvailable}
-									<p class="text-sm leading-6 text-amber-900" role="alert">
-										No pudimos consultar las geocercas. La ubicación sigue disponible.
-									</p>
+									<Alert
+										icon={CircleAlert}
+										title="Geocercas no disponibles"
+										subtitle="La ubicación sigue disponible. Inténtalo nuevamente en unos minutos."
+										color="warning"
+									/>
 								{:else if data.safeZones.length === 0}
 									<p class="text-sm leading-6 text-muted">
 										No hay zonas activas para mostrar. Esto no significa que el paciente esté en una
@@ -444,7 +559,7 @@
 							<div class="mt-6 border-t border-ink/10 pt-4">
 								<a
 									href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
-									class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+									class="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 								>
 									Configurar geocercas
 								</a>
@@ -465,7 +580,7 @@
 											type="button"
 											onclick={activateManualLocationMode}
 											disabled={!mapController}
-											class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+											class="min-h-12 cursor-pointer rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 										>
 											{mapController ? 'Elegir ubicación en el mapa' : 'Esperando el mapa…'}
 										</button>
@@ -484,12 +599,13 @@
 										<input type="hidden" name="longitude" value={longitudeInput ?? ''} />
 
 										{#if selectedManualLocationPoint}
-											<p
-												class="mt-3 rounded-2xl bg-surface-muted p-4 text-sm font-semibold text-ink"
-												role="status"
-											>
-												Ubicación seleccionada. Puedes guardarla o elegir otro punto en el mapa.
-											</p>
+											<div class="mt-3">
+												<Alert
+													icon={MapPin}
+													title="Ubicación seleccionada"
+													subtitle="Puedes guardarla o elegir otro punto en el mapa."
+												/>
+											</div>
 										{/if}
 
 										<div class="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -513,17 +629,17 @@
 								{/if}
 
 								{#if manualLocationFeedback}
-									<div
-										class={[
-											'mt-5 rounded-2xl p-4 text-sm leading-6 font-semibold',
-											manualLocationFeedback.kind === 'success'
-												? 'bg-surface-muted text-ink'
-												: 'bg-red-50 text-red-950'
-										]}
-										role={manualLocationFeedback.kind === 'error' ? 'alert' : 'status'}
-										aria-live="polite"
-									>
-										{manualLocationFeedback.message}
+									<div class="mt-5">
+										<Alert
+											icon={manualLocationFeedback.kind === 'success'
+												? CircleCheckBig
+												: CircleAlert}
+											title={manualLocationFeedback.kind === 'success'
+												? 'Ubicación guardada'
+												: 'No pudimos guardar la ubicación'}
+											subtitle={manualLocationFeedback.message}
+											color={manualLocationFeedback.kind === 'success' ? 'positive' : 'danger'}
+										/>
 									</div>
 								{/if}
 							</section>
@@ -538,9 +654,14 @@
 								subtitle="Las cinco salidas confirmadas más recientes."
 							/>
 							{#if !data.alertEpisodesAvailable}
-								<p class="mt-6 text-sm leading-6 text-amber-900" role="alert">
-									El historial no está disponible en este momento.
-								</p>
+								<div class="mt-6">
+									<Alert
+										icon={CircleAlert}
+										title="Historial no disponible"
+										subtitle="Inténtalo nuevamente en unos minutos."
+										color="warning"
+									/>
+								</div>
 							{:else if alertEpisodes.length === 0}
 								<p class="mt-6 text-sm leading-6 text-muted">
 									Todavía no se ha confirmado ninguna salida de las zonas permitidas.
@@ -548,16 +669,13 @@
 							{:else}
 								<ul class="mt-6 space-y-3">
 									{#each alertEpisodes as episode (episode.id)}
-										<li class="rounded-2xl bg-surface-muted p-4 text-sm">
-											<p class="font-bold text-ink">
-												{episode.status === 'OPEN' ? 'Salida activa' : 'Salida resuelta'}
-											</p>
-											<p class="mt-1 leading-6 text-muted">
-												Confirmada el {presentDateTime(episode.confirmedAt)}.
-												{#if episode.resolvedAt}
-													Resuelta el {presentDateTime(episode.resolvedAt)}.
-												{/if}
-											</p>
+										<li>
+											<InfoItem
+												icon={episode.status === 'OPEN' ? Siren : CircleCheckBig}
+												title={episode.status === 'OPEN' ? 'Salida activa' : 'Salida resuelta'}
+												info={presentEpisodeInfo(episode)}
+												tone={episode.status === 'OPEN' ? 'danger' : 'positive'}
+											/>
 										</li>
 									{/each}
 								</ul>
@@ -567,65 +685,12 @@
 									type="button"
 									disabled
 									title="Historial completo pendiente de implementación"
-									class="min-h-12 w-full cursor-not-allowed rounded-xl bg-surface-muted px-5 font-bold text-muted opacity-70"
+									class="min-h-12 w-full cursor-not-allowed rounded-full bg-surface-muted px-5 font-bold text-muted opacity-70"
 								>
 									Ver todos los episodios
 								</button>
 								<p class="mt-2 text-center text-xs text-muted">Historial completo próximamente.</p>
 							</div>
-						</section>
-
-						<section class="rounded-2xl bg-white p-6 shadow-sm">
-							<Heading
-								icon={Route}
-								title="Recorrido reciente"
-								subtitle="Resumen del trayecto representado sobre el mapa."
-							/>
-							{#if !data.historyAvailable}
-								<p class="mt-6 text-sm leading-6 text-amber-900" role="alert">
-									No pudimos consultar el historial. La última ubicación sigue disponible.
-								</p>
-							{:else if locationHistory.length === 0}
-								<p class="mt-6 text-sm leading-6 text-muted">Aún no hay lecturas para trazar.</p>
-							{:else}
-								<p class="mt-6 text-sm leading-6 text-muted">
-									{locationHistory.length}
-									{locationHistory.length === 1 ? 'lectura mostrada' : 'lecturas mostradas'}.
-								</p>
-								<dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-1">
-									<div class="rounded-2xl bg-surface-muted p-4">
-										<dt class="font-semibold text-muted">Desde</dt>
-										<dd class="mt-1 text-ink">
-											<time datetime={locationHistory[0].recordedAt}
-												>{locationHistory[0].recordedAtLabel}</time
-											>
-										</dd>
-									</div>
-									<div class="rounded-2xl bg-surface-muted p-4">
-										<dt class="font-semibold text-muted">Hasta</dt>
-										<dd class="mt-1 text-ink">
-											<time datetime={locationHistory.at(-1)?.recordedAt}
-												>{locationHistory.at(-1)?.recordedAtLabel}</time
-											>
-										</dd>
-									</div>
-								</dl>
-								{#if locationHistory.length === 1}
-									<p class="mt-4 text-sm leading-6 text-muted">
-										Se necesita otra lectura para dibujar el recorrido.
-									</p>
-								{:else}
-									<p class="mt-4 text-sm leading-6 text-muted">
-										La línea une lecturas consecutivas de una misma asignación; no representa una
-										conexión continua.
-									</p>
-								{/if}
-							{/if}
-							{#if latestLocation?.accuracyM !== null && latestLocation?.accuracyM !== undefined && latestLocation.accuracyM > 0}
-								<p class="mt-6 border-t border-ink/10 pt-4 text-sm leading-6 text-muted">
-									El círculo azul representa la precisión informada. No es una zona permitida.
-								</p>
-							{/if}
 						</section>
 					</aside>
 				</div>

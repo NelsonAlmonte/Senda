@@ -10,10 +10,12 @@ function parseCoordinate(value: FormDataEntryValue | null): number | null {
 	return Number.isFinite(coordinate) ? coordinate : null;
 }
 
-export const load: PageServerLoad = async ({ locals, params, url }) => {
+export const load: PageServerLoad = async ({ depends, locals, params, url }) => {
 	if (!locals.user || !locals.supabase) {
 		redirect(303, `/auth/login?next=${encodeURIComponent(url.pathname)}`);
 	}
+
+	depends('senda:patient-alerts');
 
 	const { data: access, error: accessError } = await locals.supabase
 		.from('patient_access')
@@ -103,7 +105,6 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		ageLabel: string;
 		recordedAtLabel: string;
 	} | null = null;
-	let historyAvailable = true;
 	let locationHistory: Array<{
 		id: number;
 		deviceAssignmentId: string;
@@ -123,7 +124,6 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 			.order('id', { ascending: false })
 			.limit(200);
 
-		historyAvailable = !historyResult.error;
 		if (historyResult.data) {
 			locationHistory = historyResult.data
 				.map((location) => ({
@@ -194,7 +194,6 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		alertEpisodes,
 		alertEpisodesAvailable: !alertEpisodesResult.error,
 		locationHistory,
-		historyAvailable,
 		manualLocationEnabled:
 			SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR &&
 			access.access_role === 'ADMIN' &&

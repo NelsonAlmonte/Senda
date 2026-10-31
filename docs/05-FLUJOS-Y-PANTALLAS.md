@@ -16,6 +16,7 @@
 /groups/:id
 /patients/:id
 /patients/:id/map
+/patients/:id/episodes
 /patients/:id/history
 /patients/:id/safe-zones
 /patients/:id/access
@@ -25,7 +26,7 @@
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
 
-**Estado reorganizado (2026-10-28):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` queda como bienvenida mínima; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada. Esta reorganización está implementada localmente y pendiente de validación manual responsive y de datos reales.
+**Estado reorganizado (2026-10-28; historial individual añadido el 2026-10-30):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` queda como bienvenida mínima; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada y `/patients/:id/episodes` ofrece el historial paginado del paciente concreto. Esta reorganización está implementada localmente y pendiente de validación manual responsive y de datos reales.
 
 ## Flujo A — Registro e inicio de sesión
 
@@ -145,6 +146,7 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 | `/patients/:id` | Ficha mínima, últimos indicadores y accesos a módulos |
 | `/patients/:id/device` | Estado de asignación y formulario de serial simulado; solo para `ADMIN` |
 | `/patients/:id/map` | Posición, timestamp, radio/zonas, episodio actual e historial breve, modo simulación controlado |
+| `/patients/:id/episodes` | Alerta activa separada e historial autorizado del paciente, con episodios finalizados paginados de doce en doce |
 | `/patients/:id/history` | Recorrido consultable en intervalo, origen de datos |
 | `/patients/:id/safe-zones` | Geocercas circulares y edición por ADMIN/MONITOR |
 | `/patients/:id/access` | Personas autorizadas; invitar/revocar solo ADMIN |

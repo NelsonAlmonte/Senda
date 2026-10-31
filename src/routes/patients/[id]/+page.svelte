@@ -6,6 +6,7 @@
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import {
 		ArrowUpRight,
+		BellRing,
 		CircleAlert,
 		CircleCheck,
 		KeyRound,
@@ -220,7 +221,7 @@
 					<Heading
 						icon={MapPinned}
 						title="Monitoreo"
-						subtitle="Consulta la ubicación y configura las zonas permitidas."
+						subtitle="Consulta la ubicación, las zonas permitidas y los episodios."
 					/>
 
 					<nav
@@ -262,6 +263,27 @@
 							<div class="min-w-0 flex-1">
 								<h4 class="font-bold text-ink">Geocercas</h4>
 								<p class=" text-sm leading-5 text-muted">Zonas circulares permitidas.</p>
+							</div>
+							<ArrowUpRight
+								aria-hidden="true"
+								class="shrink-0 text-brand transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+								size={19}
+								strokeWidth={2}
+							/>
+						</a>
+
+						<a
+							href={resolve('/patients/[id]/episodes', { id: data.patient.id })}
+							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+						>
+							<div
+								class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
+							>
+								<BellRing aria-hidden="true" size={20} strokeWidth={2} />
+							</div>
+							<div class="min-w-0 flex-1">
+								<h4 class="font-bold text-ink">Historial de episodios</h4>
+								<p class="text-sm leading-5 text-muted">Salidas confirmadas y resueltas.</p>
 							</div>
 							<ArrowUpRight
 								aria-hidden="true"

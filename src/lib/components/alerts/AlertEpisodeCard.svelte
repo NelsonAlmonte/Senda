@@ -18,6 +18,9 @@
 	let { status, confirmedAt, resolvedAt = null, patientName, actions }: Props = $props();
 
 	let isOpen = $derived(status === 'OPEN');
+	let statusDescription = $derived(
+		isOpen ? 'Posible abandono de una zona segura.' : 'Se confirmó el regreso a una zona permitida.'
+	);
 	let resolvedEpisodeInfo = $derived.by(() => {
 		const confirmed = `Confirmada el ${presentDateTime(confirmedAt)}.`;
 		return resolvedAt ? `${confirmed} Resuelta el ${presentDateTime(resolvedAt)}.` : confirmed;
@@ -54,6 +57,9 @@
 					<h3 class="text-xl font-bold text-ink">
 						{isOpen ? 'Alerta activa' : 'Episodio finalizado'}
 					</h3>
+					<p class={['mt-1 text-sm leading-6', isOpen ? 'text-red-950' : 'text-muted']}>
+						{statusDescription}
+					</p>
 				{/if}
 			</div>
 		</div>

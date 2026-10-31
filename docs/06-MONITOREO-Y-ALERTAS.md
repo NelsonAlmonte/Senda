@@ -79,6 +79,7 @@ El prototipo no cambia el episodio según minutos transcurridos ni distancia adi
 
 - Registrar el episodio dentro de la aplicación al confirmarse la salida.
 - Mostrar el episodio `OPEN` en `/alerts` para cada usuario autorizado y actualizar su apertura o resolución por Realtime.
+- Consultar todos los episodios de un paciente autorizado en `/patients/:id/episodes`, manteniendo el episodio `OPEN` separado y paginando los `RESOLVED` de doce en doce, sin confundir el mapa actual con el recorrido histórico de un episodio.
 - Enviar como máximo una notificación Web Push al abrir el episodio; el MVP no envía otra al resolverlo.
 - No repetir Web Push con cada nueva ubicación mientras el episodio siga `OPEN`.
 - No incluir datos personales innecesarios en el cuerpo del push.

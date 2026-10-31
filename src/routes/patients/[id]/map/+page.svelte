@@ -681,15 +681,12 @@
 								</ul>
 							{/if}
 							<div class="mt-6 border-t border-ink/10 pt-4">
-								<button
-									type="button"
-									disabled
-									title="Historial completo pendiente de implementación"
-									class="min-h-12 w-full cursor-not-allowed rounded-full bg-surface-muted px-5 font-bold text-muted opacity-70"
+								<a
+									href={resolve('/patients/[id]/episodes', { id: data.patient.id })}
+									class="inline-flex min-h-12 w-full items-center justify-center rounded-full px-5 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
 								>
 									Ver todos los episodios
-								</button>
-								<p class="mt-2 text-center text-xs text-muted">Historial completo próximamente.</p>
+								</a>
 							</div>
 						</section>
 					</aside>

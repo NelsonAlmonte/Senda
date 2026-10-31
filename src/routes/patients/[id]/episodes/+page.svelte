@@ -77,9 +77,7 @@
 		</section>
 
 		<section aria-labelledby="episode-history-title" class="mt-12">
-			<div>
-				<h2 id="episode-history-title" class="text-2xl font-bold text-ink">Historial</h2>
-			</div>
+			<h2 id="episode-history-title" class="text-2xl font-bold text-ink">Historial</h2>
 
 			{#if !data.historyAvailable}
 				<div class="mt-6 max-w-2xl">

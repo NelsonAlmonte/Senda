@@ -13,7 +13,6 @@
 	type HeaderConfig = { title: string; back?: BackTarget };
 
 	let { hasActiveAlert }: Props = $props();
-	let pathname = $derived(page.url.pathname);
 	let header = $derived.by(() => getHeaderConfig(page.route.id, page.data));
 
 	function getPatientData(data: App.PageData) {
@@ -155,10 +154,7 @@
 				href={resolve('/alerts')}
 				aria-label={hasActiveAlert ? 'Alertas: hay una alerta activa' : 'Ver alertas'}
 				class={[
-					'relative grid size-12 place-items-center rounded-full transition-colors focus:ring-4 focus:ring-focus/30 focus:outline-none',
-					pathname.startsWith(resolve('/alerts'))
-						? 'bg-ink text-white'
-						: 'text-ink hover:bg-surface-muted'
+					'relative grid size-12 place-items-center rounded-full text-ink transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none'
 				]}
 			>
 				<Bell size={23} strokeWidth={2} aria-hidden="true" />
@@ -174,10 +170,7 @@
 				href={resolve('/settings')}
 				aria-label="Abrir mi perfil"
 				class={[
-					'grid size-12 place-items-center rounded-full transition-colors focus:ring-4 focus:ring-focus/30 focus:outline-none',
-					pathname.startsWith(resolve('/settings'))
-						? 'bg-ink text-white'
-						: 'text-ink hover:bg-surface-muted'
+					'grid size-12 place-items-center rounded-full text-ink transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none'
 				]}
 			>
 				<CircleUserRound size={24} strokeWidth={2} aria-hidden="true" />

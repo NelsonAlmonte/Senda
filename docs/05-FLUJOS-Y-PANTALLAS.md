@@ -26,7 +26,7 @@
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
 
-**Estado reorganizado (2026-10-28; historial individual añadido el 2026-10-30):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` permite revisar el paciente y aceptar el acceso `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` queda como bienvenida mínima; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada y `/patients/:id/episodes` ofrece el historial paginado del paciente concreto. Esta reorganización está implementada localmente y pendiente de validación manual responsive y de datos reales.
+**Estado reorganizado (2026-10-28; ajustado hasta el 2026-10-31):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` separa la entrada del código de la confirmación mínima del paciente y del alcance `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` queda como bienvenida mínima; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada y `/patients/:id/episodes` ofrece el historial paginado del paciente concreto. Esta reorganización está implementada localmente y pendiente de validación manual responsive y de datos reales.
 
 ## Flujo A — Registro e inicio de sesión
 
@@ -137,7 +137,7 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 | Ruta | Contenido imprescindible |
 |---|---|
 | `/onboarding` | Elección inicial entre registrar dispositivo o monitorear con un código; ambas acciones siguen disponibles después |
-| `/access-code` | Entrada, vista previa mínima y aceptación de un código de acceso `MONITOR` |
+| `/access-code` | Entrada con ayuda y errores accesibles, vista previa mínima y aceptación explícita de un código `MONITOR` de un solo uso |
 | `/dashboard` | Bienvenida mínima con el nombre del usuario |
 | `/patients` | Pacientes autorizados, estado de dispositivo/ubicación, acciones de alta y navegación a sus operaciones |
 | `/alerts` | Episodios autorizados globales: alertas `OPEN` primero e historial `RESOLVED` después |
@@ -151,13 +151,13 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 | `/patients/:id/safe-zones` | Geocercas circulares y edición por ADMIN/MONITOR |
 | `/patients/:id/access` | Personas autorizadas; invitar/revocar solo ADMIN |
 | `/invitations` | Invitaciones propias PENDING y acciones de aceptar/declinar |
-| `/settings` | Perfil, activación de Web Push y cierre de sesión en móvil; en escritorio, la sesión se cierra desde el pie del sidebar |
+| `/settings` | Perfil, activación de Web Push y cierre de sesión; en escritorio, la misma acción también permanece en el pie del sidebar |
 
 En `/settings`, Web Push distingue **activadas**, **desactivadas**, **bloqueadas**, **no compatibles**, **configuración pendiente** y **error de comprobación**. El permiso del navegador por sí solo no significa que el dispositivo esté activo: también deben existir una suscripción de `PushManager` y su fila propia en `push_subscriptions`. La activación y desactivación se realizan por dispositivo.
 
 Antes de solicitar el permiso del sistema, la PWA valida la sesión remota de Supabase. Al regresar del diálogo del sistema la comprueba nuevamente antes de crear o reutilizar la suscripción del navegador. Si la sesión dejó de ser válida, redirige al inicio de sesión conservando `/settings` como destino y no deja una suscripción incompleta. Este ajuste responde al caso observado en Chrome para Android donde el permiso se concedía, pero Supabase devolvía `session_not_found` al intentar persistirlo.
 
-El estado y los controles de Web Push se consultan desde `/settings`; la navegación persistente y el acceso directo del header mantienen **Perfil** accesible sin añadir recordatorios al inicio. Navegadores no compatibles y errores técnicos no se presentan como si el usuario hubiera decidido desactivar las notificaciones. En escritorio, **Cerrar sesión** se separa de los módulos y queda al fondo del sidebar; en móvil permanece dentro de Perfil porque el sidebar no existe en ese ancho.
+El estado y los controles de Web Push se consultan desde `/settings`; la navegación persistente y el acceso directo del header mantienen **Perfil** accesible sin añadir recordatorios al inicio. Navegadores no compatibles y errores técnicos no se presentan como si el usuario hubiera decidido desactivar las notificaciones. En escritorio, **Cerrar sesión** se separa de los módulos y queda al fondo del sidebar; Perfil también presenta esa acción como su última sección en todos los anchos para que la gestión de la cuenta sea autosuficiente.
 
 El header autenticado incluye el título contextual de la ruta, una campana que conduce a `/alerts` y un acceso a `/settings`. En rutas anidadas de paciente, el título incorpora su nombre y una flecha accesible regresa a la pantalla padre; por ello las páginas no repiten encabezados de ubicación dentro del contenido. En rutas principales el título recibe un margen inicial pequeño; en subrutas ese margen desaparece y se muestra la flecha. La carga SSR consulta únicamente si existe al menos un episodio `OPEN` visible por RLS y muestra un punto rojo en la campana cuando corresponde; el nombre accesible del control expresa también ese estado, por lo que no depende solo del color. Una suscripción Realtime global invalida esa consulta ante aperturas o resoluciones. El sidebar mantiene la columna general en escritorio, el header añade padding interno para separar sus controles de los bordes y la barra inferior móvil flota con márgenes y radio equivalentes.
 

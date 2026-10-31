@@ -74,7 +74,7 @@ La ingestión puede ser una RPC protegida para simuladores autenticados en entor
 ## Eventos asíncronos
 
 - Web Push sale del backend únicamente al insertarse un episodio `OPEN`: un trigger encola mediante `pg_net` una llamada asíncrona a `send-geofence-alert`, sin repetirla por cada ubicación ni al resolver el episodio.
-- La Edge Function autentica el webhook con un secreto compartido, consulta con credenciales exclusivas de servidor los usuarios con `patient_access` activo y entrega a todas sus suscripciones. El payload no incluye nombre, ubicación ni datos clínicos y abre `/dashboard`.
+- La Edge Function autentica el webhook con un secreto compartido, consulta con credenciales exclusivas de servidor los usuarios con `patient_access` activo y entrega a todas sus suscripciones. El payload no incluye nombre, ubicación ni datos clínicos y abre `/alerts`.
 - Si el envío push falla, **la ubicación y la alerta permanecen guardadas**. El MVP no añade `notification_outbox` ni reintentos persistentes; elimina endpoints que el proveedor reporte definitivamente como `404/410` y conserva los fallos temporales para alertas futuras.
 - Supabase Cron puede verificar ubicaciones sin actualización cada minuto (parámetro ajustable); no usar temporizadores del navegador como fuente única para alertas de pérdida de señal.
 

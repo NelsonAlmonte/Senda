@@ -78,7 +78,7 @@ El prototipo no cambia el episodio según minutos transcurridos ni distancia adi
 ## Envío de notificaciones
 
 - Registrar el episodio dentro de la aplicación al confirmarse la salida.
-- Mostrar el episodio `OPEN` en el dashboard de cada usuario autorizado y actualizar su apertura o resolución por Realtime.
+- Mostrar el episodio `OPEN` en `/alerts` para cada usuario autorizado y actualizar su apertura o resolución por Realtime.
 - Enviar como máximo una notificación Web Push al abrir el episodio; el MVP no envía otra al resolverlo.
 - No repetir Web Push con cada nueva ubicación mientras el episodio siga `OPEN`.
 - No incluir datos personales innecesarios en el cuerpo del push.

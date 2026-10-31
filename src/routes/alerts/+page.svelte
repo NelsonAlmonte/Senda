@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { CircleAlert, CircleCheckBig, Clock3, MapPinned, UserRound } from '@lucide/svelte';
 	import AlertEpisodesRealtime, {
 		type AlertEpisodeRealtimeRow,
 		type AlertEpisodeRealtimeState
 	} from '#lib/alerts/AlertEpisodesRealtime.svelte';
-	import { presentDateTime } from '#lib/locations/presentation.js';
+	import AlertEpisodeCard from '#lib/components/alerts/AlertEpisodeCard.svelte';
+	import Alert from '#lib/components/ui/Alert.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -30,7 +32,7 @@
 <svelte:head><title>Alertas | Senda</title></svelte:head>
 
 <main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
-	<div class="w-full max-w-5xl">
+	<div class="w-full">
 		{#if data.episodesAvailable}
 			<AlertEpisodesRealtime
 				onAlertEpisode={handleAlertEpisode}
@@ -42,88 +44,118 @@
 		{/if}
 
 		{#if !data.episodesAvailable}
-			<div
-				class="mt-6 rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
-				role="status"
-			>
-				No pudimos consultar las alertas. Inténtalo nuevamente en unos minutos.
+			<div class="mb-8 max-w-2xl">
+				<Alert
+					icon={CircleAlert}
+					title="No pudimos consultar las alertas"
+					subtitle="Inténtalo nuevamente en unos minutos."
+					color="warning"
+				/>
 			</div>
 		{:else if realtimeState === 'ERROR'}
-			<div
-				class="mt-6 rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
-				role="status"
-			>
-				La actualización automática no está disponible. Recarga para obtener el estado más reciente.
+			<div class="mb-8 max-w-2xl">
+				<Alert
+					icon={CircleAlert}
+					title="Actualización automática no disponible"
+					subtitle="Recarga la página para obtener el estado más reciente."
+					color="warning"
+				/>
 			</div>
 		{/if}
 
-		{#if activeEpisodes.length > 0}
-			<section aria-labelledby="active-alerts-title">
+		<section aria-labelledby="active-alerts-title">
+			<div>
 				<h2 id="active-alerts-title" class="text-2xl font-bold text-ink">Alertas activas</h2>
-				<ul class="mt-4 grid gap-4">
-					{#each activeEpisodes as episode (episode.id)}
-						<li class="rounded-3xl border border-amber-700/30 bg-amber-50 p-5 sm:p-6">
-							<p class="text-sm font-bold tracking-widest text-amber-950 uppercase">
-								Salida confirmada activa
-							</p>
-							<h3 class="mt-2 text-xl font-bold text-amber-950">{episode.patientName}</h3>
-							<p class="mt-2 leading-7 text-amber-950">
-								Confirmada el <time datetime={episode.confirmedAt}
-									>{presentDateTime(episode.confirmedAt)}</time
-								>.
-							</p>
-							<div class="mt-4 flex flex-wrap gap-3">
-								<a
-									href={resolve('/patients/[id]/map', { id: episode.patientId })}
-									class="inline-flex min-h-12 items-center rounded-xl bg-amber-950 px-4 font-bold text-white focus:ring-4 focus:ring-amber-900/30 focus:outline-none"
-								>
-									Ver ubicación y detalles
-								</a>
-								<a
-									href={resolve('/patients/[id]', { id: episode.patientId })}
-									class="inline-flex min-h-12 items-center rounded-xl px-3 font-bold text-amber-950 underline decoration-2 underline-offset-4 focus:ring-4 focus:ring-amber-900/30 focus:outline-none"
-								>
-									Ver paciente
-								</a>
-							</div>
-						</li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
+			</div>
 
-		<section class="mt-8" aria-labelledby="alert-history-title">
-			<h2 id="alert-history-title" class="text-2xl font-bold text-ink">Historial</h2>
-			{#if resolvedEpisodes.length > 0}
-				<ul class="mt-4 grid gap-3">
-					{#each resolvedEpisodes as episode (episode.id)}
-						<li class="rounded-2xl border border-white/80 bg-white p-5">
-							<div class="flex flex-wrap items-start justify-between gap-3">
-								<div>
-									<h3 class="text-lg font-bold text-ink">{episode.patientName}</h3>
-									<p class="mt-1 text-sm leading-6 text-muted">Episodio resuelto</p>
-								</div>
-								<time class="text-sm text-muted" datetime={episode.confirmedAt}>
-									{presentDateTime(episode.confirmedAt)}
-								</time>
-							</div>
-							<a
-								href={resolve('/patients/[id]/map', { id: episode.patientId })}
-								class="mt-3 inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+			{#if activeEpisodes.length > 0}
+				<ul class="mt-6 grid gap-5 xl:grid-cols-2">
+					{#each activeEpisodes as episode (episode.id)}
+						<li class="h-full">
+							<AlertEpisodeCard
+								status={episode.status}
+								confirmedAt={episode.confirmedAt}
+								resolvedAt={episode.resolvedAt}
+								patientName={episode.patientName}
 							>
-								Ver detalles
-							</a>
+								{#snippet actions()}
+									<div class="flex flex-col gap-2 sm:flex-row">
+										<a
+											href={resolve('/patients/[id]/map', { id: episode.patientId })}
+											class="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+										>
+											<MapPinned aria-hidden="true" size={18} strokeWidth={2} />
+											Revisar ubicación
+										</a>
+										<a
+											href={resolve('/patients/[id]', { id: episode.patientId })}
+											class="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+										>
+											<UserRound aria-hidden="true" size={18} strokeWidth={2} />
+											Ver paciente
+										</a>
+									</div>
+								{/snippet}
+							</AlertEpisodeCard>
 						</li>
 					{/each}
 				</ul>
-			{:else}
-				<div class="mt-4 rounded-3xl border border-white/80 bg-white p-6">
-					<p class="font-bold text-ink">
-						{activeEpisodes.length > 0 ? 'Todavía no hay alertas resueltas' : 'No hay alertas'}
-					</p>
-					<p class="mt-2 leading-7 text-muted">
-						Los episodios aparecerán aquí cuando el sistema confirme una salida.
-					</p>
+			{:else if data.episodesAvailable}
+				<div class="mt-6 max-w-2xl rounded-2xl bg-white p-6 shadow-sm">
+					<div class="flex items-start gap-4">
+						<div
+							class="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-muted text-brand"
+						>
+							<CircleCheckBig aria-hidden="true" size={22} strokeWidth={2} />
+						</div>
+						<div class="min-w-0">
+							<h3 class="text-xl font-bold text-ink">No hay alertas activas</h3>
+							<p class="mt-2 leading-7 text-muted">
+								No existen episodios abiertos en este momento.
+							</p>
+						</div>
+					</div>
+				</div>
+			{/if}
+		</section>
+
+		<section class="mt-12" aria-labelledby="alert-history-title">
+			<div>
+				<h2 id="alert-history-title" class="text-2xl font-bold text-ink">Historial</h2>
+			</div>
+
+			{#if resolvedEpisodes.length > 0}
+				<ul class="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+					{#each resolvedEpisodes as episode (episode.id)}
+						<li class="h-full">
+							<AlertEpisodeCard
+								status={episode.status}
+								confirmedAt={episode.confirmedAt}
+								resolvedAt={episode.resolvedAt}
+								patientName={episode.patientName}
+							>
+								{#snippet actions()}
+									<a
+										href={resolve('/patients/[id]/map', { id: episode.patientId })}
+										class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+									>
+										<MapPinned aria-hidden="true" size={18} strokeWidth={2} />
+										Ver mapa del paciente
+									</a>
+								{/snippet}
+							</AlertEpisodeCard>
+						</li>
+					{/each}
+				</ul>
+			{:else if data.episodesAvailable}
+				<div class="mt-6 max-w-2xl">
+					<Alert
+						icon={Clock3}
+						title={activeEpisodes.length > 0
+							? 'Todavía no hay alertas resueltas'
+							: 'Aún no hay historial'}
+						subtitle="Los episodios aparecerán aquí cuando el sistema confirme una salida y su posterior reingreso."
+					/>
 				</div>
 			{/if}
 		</section>

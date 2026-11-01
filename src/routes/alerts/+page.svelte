@@ -2,12 +2,10 @@
 	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { CircleAlert, CircleCheckBig, Clock3, MapPinned, UserRound } from '@lucide/svelte';
-	import AlertEpisodesRealtime, {
-		type AlertEpisodeRealtimeRow,
-		type AlertEpisodeRealtimeState
-	} from '#lib/alerts/AlertEpisodesRealtime.svelte';
 	import AlertEpisodeCard from '#lib/components/alerts/AlertEpisodeCard.svelte';
+	import AlertEpisodesRealtime from '#lib/components/alerts/AlertEpisodesRealtime.svelte';
 	import Alert from '#lib/components/ui/Alert.svelte';
+	import type { AlertEpisodeRealtimeRow, AlertEpisodeRealtimeState } from '#lib/types/alerts.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

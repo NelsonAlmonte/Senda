@@ -1,5 +1,6 @@
 import { SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR } from '$app/env/private';
-import { presentLocationTime, type LocationGeofenceRelation } from '#lib/locations/presentation.js';
+import type { LocationGeofenceRelation } from '#lib/types/locations.js';
+import { presentLocationTime } from '#lib/utils/location-presentation.js';
 import { error as httpError, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 

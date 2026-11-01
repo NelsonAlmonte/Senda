@@ -1,20 +1,14 @@
+import type {
+	GeofenceRelationPresentation,
+	LocationGeofenceRelation
+} from '#lib/types/locations.js';
+
 const staleAfterMilliseconds = 3 * 60 * 1000;
 const locationDateFormatter = new Intl.DateTimeFormat('es-DO', {
 	dateStyle: 'medium',
 	timeStyle: 'short',
 	timeZone: 'America/Santo_Domingo'
 });
-
-export type LocationGeofenceRelation =
-	'NOT_EVALUATED' | 'NO_ACTIVE_ZONE' | 'INSIDE' | 'OUTSIDE' | 'UNCERTAIN';
-
-export type GeofenceAlertEpisodeStatus = 'OPEN' | 'RESOLVED';
-
-type GeofenceRelationPresentation = {
-	title: string;
-	description: string;
-	tone: 'positive' | 'warning' | 'neutral';
-};
 
 function formatLocationAge(recordedAt: string, now: number): string {
 	const ageMilliseconds = Math.max(0, now - Date.parse(recordedAt));

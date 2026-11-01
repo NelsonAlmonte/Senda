@@ -1,13 +1,17 @@
 <script lang="ts">
 	import { dev } from '$app/env';
-	import AppHeader from '#lib/navigation/AppHeader.svelte';
-	import AppNavigation from '#lib/navigation/AppNavigation.svelte';
-	import PwaInstallPrompt from '#lib/pwa/PwaInstallPrompt.svelte';
+	import { page } from '$app/state';
+	import AppHeader from '#lib/components/navigation/AppHeader.svelte';
+	import AppNavigation from '#lib/components/navigation/AppNavigation.svelte';
+	import PwaInstallPrompt from '#lib/components/pwa/PwaInstallPrompt.svelte';
 	import { onMount } from 'svelte';
 	import './layout.css';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
+	let focusedOnboarding = $derived(
+		Boolean(data.user) && Boolean(page.route.id?.startsWith('/onboarding'))
+	);
 
 	onMount(() => {
 		if ('serviceWorker' in navigator) {
@@ -33,7 +37,7 @@
 	Saltar al contenido
 </a>
 
-{#if data.user}
+{#if data.user && !focusedOnboarding}
 	<AppNavigation />
 	<div class="min-h-dvh pt-2 pb-28 sm:pt-4 lg:pr-12 lg:pb-4 lg:pl-80">
 		<AppHeader hasActiveAlert={data.hasActiveAlert} />
@@ -43,4 +47,6 @@
 	{@render children()}
 {/if}
 
-<PwaInstallPrompt authenticated={Boolean(data.user)} />
+{#if !focusedOnboarding}
+	<PwaInstallPrompt authenticated={Boolean(data.user)} />
+{/if}

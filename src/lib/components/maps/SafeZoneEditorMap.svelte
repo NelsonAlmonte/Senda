@@ -1,32 +1,13 @@
-<script module lang="ts">
-	export type SafeZoneMapItem = {
-		id: string;
-		name: string;
-		centerLatitude: number;
-		centerLongitude: number;
-		radiusM: number;
-		isActive: boolean;
-	};
-
-	export type SafeZoneDraft = {
-		centerLatitude: number;
-		centerLongitude: number;
-		radiusM: number;
-	};
-
-	export type SafeZoneEditorMapController = {
-		setZones: (zones: SafeZoneMapItem[], selectedZoneId: string | null) => void;
-		setDraft: (draft: SafeZoneDraft | null) => void;
-		setSelectionMode: (enabled: boolean) => void;
-		fitDraft: () => void;
-	};
-</script>
-
 <script lang="ts">
+	import type {
+		SafeZoneDraft,
+		SafeZoneEditorMapController,
+		SafeZoneMapItem
+	} from '#lib/types/maps.js';
+	import { loadMapsLibrary } from '#lib/utils/google-maps.js';
 	import { untrack } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { loadMapsLibrary } from './loader';
 
 	type Props = {
 		latitude: number;

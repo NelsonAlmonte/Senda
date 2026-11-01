@@ -14,8 +14,8 @@
 	import Heading from '#lib/components/ui/Heading.svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
-	import { presentDateTime } from '#lib/locations/presentation.js';
-	import PushNotificationSettings from '#lib/push/PushNotificationSettings.svelte';
+	import PushNotificationSettings from '#lib/components/push/PushNotificationSettings.svelte';
+	import { presentDateTime } from '#lib/utils/location-presentation.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();

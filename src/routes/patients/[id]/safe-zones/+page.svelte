@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import SafeZoneEditorMap from '#lib/components/maps/SafeZoneEditorMap.svelte';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
-	import SafeZoneEditorMap, {
-		type SafeZoneDraft,
-		type SafeZoneEditorMapController,
-		type SafeZoneMapItem
-	} from '#lib/maps/SafeZoneEditorMap.svelte';
+	import type {
+		SafeZoneDraft,
+		SafeZoneEditorMapController,
+		SafeZoneMapItem
+	} from '#lib/types/maps.js';
 	import Archive from '@lucide/svelte/icons/archive';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';

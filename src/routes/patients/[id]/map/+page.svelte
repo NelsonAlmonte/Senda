@@ -15,21 +15,23 @@
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
-	import PatientLocationRealtime, {
-		type AlertEpisodeRealtimeRow,
-		type LocationRealtimeRow
-	} from '#lib/locations/PatientLocationRealtime.svelte';
+	import PatientLocationRealtime from '#lib/components/locations/PatientLocationRealtime.svelte';
+	import PatientLocationMap from '#lib/components/maps/PatientLocationMap.svelte';
+	import type {
+		LocationAlertEpisodeRealtimeRow as AlertEpisodeRealtimeRow,
+		LocationRealtimeRow
+	} from '#lib/types/locations.js';
+	import type {
+		MapHistorySegment,
+		MapManualLocationPoint,
+		PatientLocationMapController
+	} from '#lib/types/maps.js';
+	import type { UiTone } from '#lib/types/ui.js';
 	import {
 		presentDateTime,
 		presentGeofenceRelation,
 		presentLocationTime
-	} from '#lib/locations/presentation.js';
-	import PatientLocationMap, {
-		type MapHistorySegment,
-		type MapManualLocationPoint,
-		type PatientLocationMapController
-	} from '#lib/maps/PatientLocationMap.svelte';
-	import type { UiTone } from '#lib/types/ui.js';
+	} from '#lib/utils/location-presentation.js';
 	import type { PageProps } from './$types';
 
 	type LatestLocation = NonNullable<PageProps['data']['latestLocation']>;

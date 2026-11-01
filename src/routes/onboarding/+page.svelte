@@ -1,51 +1,115 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import KeyRound from '@lucide/svelte/icons/key-round';
+	import Repeat2 from '@lucide/svelte/icons/repeat-2';
+	import Smartphone from '@lucide/svelte/icons/smartphone';
 </script>
 
 <svelte:head>
-	<title>¿Qué deseas hacer? | Senda</title>
-	<meta name="description" content="Elige cómo comenzar a usar Senda." />
+	<title>Bienvenido a Senda</title>
+	<meta name="description" content="Elige cómo deseas comenzar a cuidar y monitorear con Senda." />
 </svelte:head>
 
-<main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
-	<section class="w-full max-w-4xl py-4 sm:py-8">
-		<p class="max-w-2xl text-lg leading-8 text-muted">
-			No estás eligiendo un tipo permanente de cuenta. Podrás usar ambas opciones más adelante.
-		</p>
-
-		<div class="mt-8 grid gap-5 md:grid-cols-2">
-			<a
-				href={resolve('/groups')}
-				class="group rounded-3xl border border-white/80 bg-white p-6 transition hover:border-brand/30 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-			>
-				<p class="text-sm font-bold text-brand">Opción 1</p>
-				<h2 class="mt-2 text-2xl font-bold text-ink">Registrar dispositivo</h2>
-				<p class="mt-3 leading-7 text-muted">
-					Elige o crea una familia o centro, registra al paciente y asigna el serial simulado.
-				</p>
-				<span class="mt-6 inline-flex min-h-12 items-center font-bold text-brand">Continuar →</span>
-			</a>
-
-			<a
-				href={resolve('/access-code')}
-				class="group rounded-3xl border border-white/80 bg-white p-6 transition hover:border-brand/30 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-			>
-				<p class="text-sm font-bold text-brand">Opción 2</p>
-				<h2 class="mt-2 text-2xl font-bold text-ink">Monitorear dispositivo</h2>
-				<p class="mt-3 leading-7 text-muted">
-					Introduce el código que te compartió un familiar o administrador del paciente.
-				</p>
-				<span class="mt-6 inline-flex min-h-12 items-center font-bold text-brand"
-					>Introducir código →</span
+<main
+	id="contenido-principal"
+	class="grid min-h-dvh place-items-center px-5 py-10 sm:px-8 sm:py-14"
+>
+	<div class="w-full max-w-5xl">
+		<header class="mx-auto max-w-2xl text-center">
+			<div class="inline-flex items-center gap-3">
+				<span
+					class="grid size-11 place-items-center rounded-xl bg-ink text-lg font-bold text-white"
+					aria-hidden="true">S</span
 				>
-			</a>
-		</div>
+				<span class="text-2xl font-bold text-ink">Senda</span>
+			</div>
 
-		<a
-			href={resolve('/patients')}
-			class="mt-7 inline-flex min-h-12 items-center rounded-xl font-bold text-muted underline decoration-ink/20 underline-offset-4 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+			<p class="mt-8 text-sm font-bold tracking-wide text-brand uppercase">
+				Te damos la bienvenida
+			</p>
+			<h1 class="mt-3 text-3xl font-bold text-balance text-ink sm:text-4xl">
+				¿Cómo llegaste hasta aquí?
+			</h1>
+			<p class="mx-auto mt-5 max-w-xl text-lg leading-8 text-muted">
+				Elige la opción que mejor describe tu situación. Te guiaremos paso a paso y podrás usar la
+				otra opción más adelante.
+			</p>
+		</header>
+
+		<section class="mt-10 grid items-stretch gap-6 md:grid-cols-2" aria-label="Formas de comenzar">
+			<article class="flex flex-col overflow-hidden rounded-2xl bg-white text-left shadow-sm">
+				<div class="flex-1 p-6 sm:p-8">
+					<div
+						class="flex size-12 items-center justify-center rounded-full bg-surface-muted text-ink"
+					>
+						<Smartphone aria-hidden="true" size={23} strokeWidth={2} />
+					</div>
+
+					<p class="mt-6 text-sm font-bold text-brand">Si compraste Senda</p>
+					<h2 class="mt-2 text-2xl font-bold text-ink">Tengo un dispositivo Senda</h2>
+					<p class="mt-4 leading-7 text-muted">
+						Te ayudaremos a crear el espacio de cuidado, registrar a la persona que acompañarás y
+						configurar su dispositivo.
+					</p>
+
+					<div class="mt-6 rounded-2xl bg-canvas p-4">
+						<p class="leading-6 font-semibold text-ink">
+							Puedes dejar la configuración del dispositivo para más adelante.
+						</p>
+					</div>
+				</div>
+
+				<div class="border-t border-ink/10 p-4">
+					<a
+						href={resolve('/onboarding/groups')}
+						class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none sm:w-auto"
+					>
+						Configurar Senda
+						<ArrowRight aria-hidden="true" size={19} strokeWidth={2} />
+					</a>
+				</div>
+			</article>
+
+			<article class="flex flex-col overflow-hidden rounded-2xl bg-white text-left shadow-sm">
+				<div class="flex-1 p-6 sm:p-8">
+					<div
+						class="flex size-12 items-center justify-center rounded-full bg-surface-muted text-ink"
+					>
+						<KeyRound aria-hidden="true" size={23} strokeWidth={2} />
+					</div>
+
+					<p class="mt-6 text-sm font-bold text-brand">Si alguien te invitó</p>
+					<h2 class="mt-2 text-2xl font-bold text-ink">Recibí un código de acceso</h2>
+					<p class="mt-4 leading-7 text-muted">
+						Ingresa el código que te compartieron para comenzar a monitorear a una persona que ya
+						está registrada en Senda.
+					</p>
+
+					<div class="mt-6 rounded-2xl bg-canvas p-4">
+						<p class="leading-6 font-semibold text-ink">
+							El código te dará acceso únicamente a la persona indicada.
+						</p>
+					</div>
+				</div>
+
+				<div class="border-t border-ink/10 p-4">
+					<a
+						href={resolve('/onboarding/access-code')}
+						class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none sm:w-auto"
+					>
+						Ingresar código
+						<ArrowRight aria-hidden="true" size={19} strokeWidth={2} />
+					</a>
+				</div>
+			</article>
+		</section>
+
+		<div
+			class="mt-8 flex items-center justify-center gap-3 text-center text-sm leading-6 text-muted"
 		>
-			Ir a pacientes por ahora
-		</a>
-	</section>
+			<Repeat2 aria-hidden="true" class="shrink-0 text-brand" size={20} strokeWidth={2} />
+			<p>Esta elección no define tu cuenta. Ambas opciones seguirán disponibles más adelante.</p>
+		</div>
+	</div>
 </main>

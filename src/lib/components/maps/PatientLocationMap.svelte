@@ -1,44 +1,12 @@
-<script module lang="ts">
-	export type MapLocationUpdate = {
-		latitude: number;
-		longitude: number;
-		accuracyM: number | null;
-		patientName: string;
-		historySegments: MapHistorySegment[];
-		panToLocation?: boolean;
-	};
-
-	export type MapHistoryPoint = {
-		latitude: number;
-		longitude: number;
-	};
-
-	export type MapHistorySegment = MapHistoryPoint[];
-
-	export type MapSafeZone = {
-		id: string;
-		name: string;
-		centerLatitude: number;
-		centerLongitude: number;
-		radiusM: number;
-	};
-
-	export type MapLocationUpdater = (location: MapLocationUpdate) => void;
-
-	export type MapManualLocationPoint = {
-		latitude: number;
-		longitude: number;
-	};
-
-	export type PatientLocationMapController = {
-		updateLocation: MapLocationUpdater;
-		setManualLocationMode: (enabled: boolean) => void;
-		setManualLocationPoint: (point: MapManualLocationPoint | null) => void;
-	};
-</script>
-
 <script lang="ts">
-	import { loadMapDisplayLibraries } from './loader';
+	import type {
+		MapHistorySegment,
+		MapLocationUpdater,
+		MapManualLocationPoint,
+		MapSafeZone,
+		PatientLocationMapController
+	} from '#lib/types/maps.js';
+	import { loadMapDisplayLibraries } from '#lib/utils/google-maps.js';
 	import { untrack } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 

@@ -75,7 +75,7 @@
 					href={item.href}
 					aria-current={active ? 'page' : undefined}
 					class={[
-						'group flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-xs leading-4 font-medium transition-colors focus:ring-4 focus:ring-focus/30 focus:outline-none lg:min-h-12 lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:py-2 lg:text-base',
+						'group flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-xs leading-4 font-medium transition-colors focus:outline-none lg:min-h-12 lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:py-2 lg:text-base lg:focus:ring-4 lg:focus:ring-focus/30',
 						active
 							? 'text-brand lg:bg-white lg:text-ink'
 							: 'text-muted hover:bg-ink/5 hover:text-ink lg:text-white/65 lg:hover:bg-white/10 lg:hover:text-white'

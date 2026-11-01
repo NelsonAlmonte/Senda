@@ -1,4 +1,5 @@
 <script lang="ts">
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import type {
 		SafeZoneDraft,
 		SafeZoneEditorMapController,
@@ -277,8 +278,9 @@
 				<button
 					type="button"
 					onclick={() => (retryKey += 1)}
-					class="mt-4 min-h-12 cursor-pointer rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+					class="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 				>
+					<RefreshCw aria-hidden="true" size={19} strokeWidth={2} />
 					Reintentar
 				</button>
 			</div>

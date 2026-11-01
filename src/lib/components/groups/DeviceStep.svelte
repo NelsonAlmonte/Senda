@@ -3,7 +3,9 @@
 	import type { ResolvedPathname } from '$app/types';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheckBig from '@lucide/svelte/icons/circle-check-big';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
+	import UsersRound from '@lucide/svelte/icons/users-round';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
@@ -137,8 +139,9 @@
 		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 		<a
 			href={finishHref}
-			class="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+			class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 		>
+			<UsersRound aria-hidden="true" size={19} strokeWidth={2} />
 			Ir a pacientes
 		</a>
 	{:else}
@@ -146,15 +149,17 @@
 			type="submit"
 			form="device-form"
 			disabled={submitting}
-			class="min-h-12 cursor-pointer rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+			class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 		>
+			<Smartphone aria-hidden="true" size={19} strokeWidth={2} />
 			{submitting ? 'Configurando…' : 'Configurar dispositivo'}
 		</button>
 		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 		<a
 			href={deferHref}
-			class="inline-flex min-h-12 items-center justify-center rounded-full px-5 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/25 focus:outline-none"
+			class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/25 focus:outline-none"
 		>
+			<Clock3 aria-hidden="true" size={19} strokeWidth={2} />
 			Configurar después
 		</a>
 	{/if}

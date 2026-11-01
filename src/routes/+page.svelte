@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
+	import LogIn from '@lucide/svelte/icons/log-in';
+	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -66,15 +69,17 @@
 			{#if data.user}
 				<a
 					href={resolve('/dashboard')}
-					class="inline-flex min-h-12 shrink-0 items-center rounded-xl bg-white px-4 text-sm font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
+					<LayoutDashboard aria-hidden="true" size={18} strokeWidth={2} />
 					Ir al panel
 				</a>
 			{:else}
 				<a
 					href={resolve('/auth/login')}
-					class="inline-flex min-h-12 shrink-0 items-center rounded-xl bg-white px-4 text-sm font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
+					<LogIn aria-hidden="true" size={18} strokeWidth={2} />
 					Iniciar sesión
 				</a>
 			{/if}
@@ -101,14 +106,16 @@
 					<div class="mt-8 flex flex-wrap gap-3">
 						<a
 							href={resolve('/auth/register')}
-							class="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+							class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 						>
+							<UserPlus aria-hidden="true" size={19} strokeWidth={2} />
 							Crear cuenta
 						</a>
 						<a
 							href={resolve('/auth/login')}
-							class="inline-flex min-h-12 items-center justify-center rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink focus:ring-4 focus:ring-focus/30 focus:outline-none"
+							class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink focus:ring-4 focus:ring-focus/30 focus:outline-none"
 						>
+							<LogIn aria-hidden="true" size={19} strokeWidth={2} />
 							Ya tengo cuenta
 						</a>
 					</div>

@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import {
-		BellOff,
-		BellRing,
-		CircleAlert,
-		CircleCheckBig,
-		LoaderCircle,
-		ShieldAlert,
-		Wrench
-	} from '@lucide/svelte';
+	import BellOff from '@lucide/svelte/icons/bell-off';
+	import BellRing from '@lucide/svelte/icons/bell-ring';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheckBig from '@lucide/svelte/icons/circle-check-big';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
+	import Wrench from '@lucide/svelte/icons/wrench';
 	import { onMount } from 'svelte';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
@@ -178,8 +177,9 @@
 					type="button"
 					disabled={isBusy}
 					onclick={disable}
-					class="min-h-12 cursor-pointer rounded-full px-6 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-6 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 				>
+					<BellOff aria-hidden="true" size={19} strokeWidth={2} />
 					{action === 'DISABLE' ? 'Desactivando…' : 'Desactivar notificaciones'}
 				</button>
 			{:else if status.state === 'INACTIVE'}
@@ -187,8 +187,9 @@
 					type="button"
 					disabled={isBusy}
 					onclick={enable}
-					class="min-h-12 cursor-pointer rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 				>
+					<BellRing aria-hidden="true" size={19} strokeWidth={2} />
 					{action === 'ENABLE' ? 'Activando…' : 'Activar notificaciones'}
 				</button>
 			{:else}
@@ -196,8 +197,9 @@
 					type="button"
 					disabled={isBusy}
 					onclick={refreshStatus}
-					class="min-h-12 cursor-pointer rounded-full px-6 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-6 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 				>
+					<RefreshCw aria-hidden="true" size={19} strokeWidth={2} />
 					Comprobar nuevamente
 				</button>
 			{/if}

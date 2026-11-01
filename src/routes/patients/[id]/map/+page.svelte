@@ -1,17 +1,18 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import {
-		BellRing,
-		CircleAlert,
-		CircleCheckBig,
-		Clock3,
-		MapPin,
-		MapPinPlus,
-		MapPinned,
-		ShieldCheck,
-		Siren
-	} from '@lucide/svelte';
+	import BellRing from '@lucide/svelte/icons/bell-ring';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheckBig from '@lucide/svelte/icons/circle-check-big';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
+	import MapPin from '@lucide/svelte/icons/map-pin';
+	import MapPinPlus from '@lucide/svelte/icons/map-pin-plus';
+	import MapPinned from '@lucide/svelte/icons/map-pinned';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Save from '@lucide/svelte/icons/save';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Siren from '@lucide/svelte/icons/siren';
+	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
@@ -438,8 +439,9 @@
 					{#if data.patient.accessRole === 'ADMIN'}
 						<a
 							href={resolve('/patients/[id]/device', { id: data.patient.id })}
-							class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+							class="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 						>
+							<Smartphone aria-hidden="true" size={19} strokeWidth={2} />
 							Configurar dispositivo
 						</a>
 					{/if}
@@ -454,8 +456,9 @@
 					/>
 					<a
 						href={resolve('/patients/[id]/map', { id: data.patient.id })}
-						class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-bold text-white focus:ring-4 focus:ring-focus/35 focus:outline-none"
+						class="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white focus:ring-4 focus:ring-focus/35 focus:outline-none"
 					>
+						<RefreshCw aria-hidden="true" size={19} strokeWidth={2} />
 						Reintentar
 					</a>
 				</div>
@@ -561,8 +564,9 @@
 							<div class="mt-6 border-t border-ink/10 pt-4">
 								<a
 									href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
-									class="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+									class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 								>
+									<ShieldCheck aria-hidden="true" size={19} strokeWidth={2} />
 									Configurar geocercas
 								</a>
 							</div>
@@ -582,8 +586,9 @@
 											type="button"
 											onclick={activateManualLocationMode}
 											disabled={!mapController}
-											class="min-h-12 cursor-pointer rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+											class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 										>
+											<MapPinPlus aria-hidden="true" size={19} strokeWidth={2} />
 											{mapController ? 'Elegir ubicación en el mapa' : 'Esperando el mapa…'}
 										</button>
 									</div>
@@ -614,8 +619,9 @@
 											<button
 												type="submit"
 												disabled={manualLocationSubmitting || !selectedManualLocationPoint}
-												class="min-h-12 cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+												class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 											>
+												<Save aria-hidden="true" size={19} strokeWidth={2} />
 												{manualLocationSubmitting ? 'Guardando ubicación…' : 'Guardar ubicación'}
 											</button>
 											<button
@@ -685,8 +691,9 @@
 							<div class="mt-6 border-t border-ink/10 pt-4">
 								<a
 									href={resolve('/patients/[id]/episodes', { id: data.patient.id })}
-									class="inline-flex min-h-12 w-full items-center justify-center rounded-full px-5 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+									class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 								>
+									<BellRing aria-hidden="true" size={19} strokeWidth={2} />
 									Ver todos los episodios
 								</a>
 							</div>

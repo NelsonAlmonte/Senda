@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Download from '@lucide/svelte/icons/download';
 	import { onMount } from 'svelte';
 
 	type Props = { authenticated?: boolean };
@@ -142,8 +143,9 @@
 					type="button"
 					onclick={requestInstall}
 					disabled={installing}
-					class="min-h-12 cursor-pointer rounded-xl bg-brand px-4 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-wait disabled:opacity-60"
+					class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-wait disabled:opacity-60"
 				>
+					<Download aria-hidden="true" size={19} strokeWidth={2} />
 					{installing ? 'Abriendo…' : 'Instalar Senda'}
 				</button>
 				<button

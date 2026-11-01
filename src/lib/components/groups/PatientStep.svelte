@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Building2 from '@lucide/svelte/icons/building-2';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import House from '@lucide/svelte/icons/house';
 	import UserRound from '@lucide/svelte/icons/user-round';
+	import Save from '@lucide/svelte/icons/save';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import type { GroupMode, GroupType, SetupErrors } from '#lib/types/groups.js';
@@ -143,15 +145,17 @@
 		<button
 			type="button"
 			onclick={onback}
-			class="min-h-12 cursor-pointer rounded-full px-5 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/25 focus:outline-none"
+			class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/25 focus:outline-none"
 		>
+			<ArrowLeft aria-hidden="true" size={19} strokeWidth={2} />
 			Volver al grupo
 		</button>
 		<button
 			type="submit"
 			disabled={submitting}
-			class="min-h-12 cursor-pointer rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+			class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 		>
+			<Save aria-hidden="true" size={19} strokeWidth={2} />
 			{submitting ? 'Guardando…' : 'Guardar paciente'}
 		</button>
 	</div>

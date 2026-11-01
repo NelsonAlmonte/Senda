@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import {
-		CalendarDays,
-		CircleAlert,
-		CircleCheck,
-		LogOut,
-		Mail,
-		PencilLine,
-		UserRound
-	} from '@lucide/svelte';
+	import CalendarDays from '@lucide/svelte/icons/calendar-days';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import LogOut from '@lucide/svelte/icons/log-out';
+	import Mail from '@lucide/svelte/icons/mail';
+	import PencilLine from '@lucide/svelte/icons/pencil-line';
+	import Save from '@lucide/svelte/icons/save';
+	import UserRound from '@lucide/svelte/icons/user-round';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
@@ -129,8 +128,9 @@
 							type="submit"
 							form="profile-form"
 							disabled={submitting || !data.profile}
-							class="min-h-12 cursor-pointer rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+							class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 						>
+							<Save aria-hidden="true" size={19} strokeWidth={2} />
 							{submitting ? 'Guardando…' : 'Guardar cambios'}
 						</button>
 					</div>

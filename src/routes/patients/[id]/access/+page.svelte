@@ -108,8 +108,9 @@
 												<input type="hidden" name="accessId" value={access.id} />
 												<button
 													type="submit"
-													class="min-h-12 w-full cursor-pointer rounded-full bg-red-800 px-5 font-bold text-white transition-colors hover:bg-red-900 focus:ring-4 focus:ring-red-700/30 focus:outline-none"
+													class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-red-800 px-5 font-bold text-white transition-colors hover:bg-red-900 focus:ring-4 focus:ring-red-700/30 focus:outline-none"
 												>
+													<UserMinus aria-hidden="true" size={19} strokeWidth={2} />
 													Sí, revocar acceso
 												</button>
 											</form>
@@ -144,8 +145,9 @@
 				<form method="POST" action="?/createCode" class="mt-6">
 					<button
 						type="submit"
-						class="min-h-12 w-full cursor-pointer rounded-full bg-brand px-5 font-bold text-white transition-colors hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+						class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition-colors hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
 					>
+						<KeyRound aria-hidden="true" size={19} strokeWidth={2} />
 						{form?.accessCode ? 'Generar otro código' : 'Generar código de acceso'}
 					</button>
 				</form>

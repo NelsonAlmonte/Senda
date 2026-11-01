@@ -13,7 +13,6 @@
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
-	import UsersRound from '@lucide/svelte/icons/users-round';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -42,15 +41,8 @@
 					Agregar paciente
 				</a>
 				<a
-					href={resolve('/groups?mode=new')}
-					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
-				>
-					<UsersRound aria-hidden="true" size={18} strokeWidth={2} />
-					Crear grupo
-				</a>
-				<a
 					href={resolve('/access-code')}
-					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 font-bold text-brand transition hover:bg-white/60 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
 					<KeyRound aria-hidden="true" size={18} strokeWidth={2} />
 					Ingresar código

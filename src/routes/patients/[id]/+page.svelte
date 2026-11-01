@@ -4,21 +4,20 @@
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
-	import {
-		ArrowUpRight,
-		BellRing,
-		CircleAlert,
-		CircleCheck,
-		KeyRound,
-		MapPinned,
-		PencilLine,
-		ShieldCheck,
-		Smartphone,
-		UserRound,
-		UsersRound,
-		HeartHandshake,
-		Map
-	} from '@lucide/svelte';
+	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import BellRing from '@lucide/svelte/icons/bell-ring';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import HeartHandshake from '@lucide/svelte/icons/heart-handshake';
+	import KeyRound from '@lucide/svelte/icons/key-round';
+	import Map from '@lucide/svelte/icons/map';
+	import MapPinned from '@lucide/svelte/icons/map-pinned';
+	import PencilLine from '@lucide/svelte/icons/pencil-line';
+	import Save from '@lucide/svelte/icons/save';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Smartphone from '@lucide/svelte/icons/smartphone';
+	import UserRound from '@lucide/svelte/icons/user-round';
+	import UsersRound from '@lucide/svelte/icons/users-round';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -163,8 +162,9 @@
 							type="submit"
 							form="patient-data-form"
 							disabled={submitting}
-							class="min-h-12 cursor-pointer rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+							class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 						>
+							<Save aria-hidden="true" size={19} strokeWidth={2} />
 							{submitting ? 'Guardando…' : 'Guardar cambios'}
 						</button>
 					</div>

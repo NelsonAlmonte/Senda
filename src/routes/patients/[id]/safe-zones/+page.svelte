@@ -16,6 +16,7 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Plus from '@lucide/svelte/icons/plus';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Save from '@lucide/svelte/icons/save';
 	import type { PageProps } from './$types';
 
 	type EditorMode = 'NONE' | 'CREATE' | 'EDIT';
@@ -417,8 +418,9 @@
 									<button
 										type="submit"
 										disabled={submitting || !draft}
-										class="min-h-12 cursor-pointer rounded-full bg-brand px-4 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+										class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-4 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 									>
+										<Save aria-hidden="true" size={18} strokeWidth={2} />
 										{submitting ? 'Guardando…' : 'Guardar geocerca'}
 									</button>
 									<button
@@ -503,8 +505,9 @@
 																	<button
 																		type="submit"
 																		disabled={submitting}
-																		class="min-h-11 cursor-pointer rounded-full bg-red-800 px-4 font-bold text-white focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+																		class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-800 px-4 font-bold text-white focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 																	>
+																		<Archive aria-hidden="true" size={17} strokeWidth={2} />
 																		{submitting ? 'Archivando…' : 'Confirmar archivo'}
 																	</button>
 																	<button

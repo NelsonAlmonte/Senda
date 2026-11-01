@@ -4,6 +4,7 @@
 	import AppHeader from '#lib/components/navigation/AppHeader.svelte';
 	import AppNavigation from '#lib/components/navigation/AppNavigation.svelte';
 	import PwaInstallPrompt from '#lib/components/pwa/PwaInstallPrompt.svelte';
+	import PageLoad from '#lib/components/ui/PageLoad.svelte';
 	import { onMount } from 'svelte';
 	import './layout.css';
 	import type { LayoutProps } from './$types';
@@ -29,6 +30,8 @@
 	<link rel="icon" href="/pwa-source.svg" sizes="any" type="image/svg+xml" />
 	<link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
 </svelte:head>
+
+<PageLoad />
 
 <a
 	href="#contenido-principal"

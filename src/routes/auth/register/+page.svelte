@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -32,7 +34,8 @@
 			href={resolve('/')}
 			class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
 		>
-			<span aria-hidden="true">←</span><span class="ml-2">Volver a Senda</span>
+			<ArrowLeft aria-hidden="true" size={19} strokeWidth={2} />
+			<span class="ml-2">Volver a Senda</span>
 		</a>
 
 		<p class="mt-7 text-sm font-bold tracking-widest text-brand uppercase">Nueva cuenta</p>
@@ -171,9 +174,11 @@
 			<button
 				type="submit"
 				disabled={submitting || !data.supabaseConfigured}
-				class="min-h-12 w-full cursor-pointer rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-				>{submitting ? 'Creando cuenta…' : 'Crear cuenta'}</button
+				class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 			>
+				<UserPlus aria-hidden="true" size={19} strokeWidth={2} />
+				{submitting ? 'Creando cuenta…' : 'Crear cuenta'}
+			</button>
 		</form>
 
 		<p class="mt-7 text-center leading-7 text-muted">

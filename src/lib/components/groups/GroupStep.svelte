@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Building2 from '@lucide/svelte/icons/building-2';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import House from '@lucide/svelte/icons/house';
 	import UsersRound from '@lucide/svelte/icons/users-round';
@@ -203,8 +204,9 @@
 		type="button"
 		onclick={oncontinue}
 		disabled={!groupsAvailable}
-		class="min-h-12 w-full cursor-pointer rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+		class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 	>
 		Continuar con el paciente
+		<ArrowRight aria-hidden="true" size={19} strokeWidth={2} />
 	</button>
 </div>

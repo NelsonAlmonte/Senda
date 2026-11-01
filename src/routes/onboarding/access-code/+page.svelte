@@ -10,6 +10,7 @@
 	import House from '@lucide/svelte/icons/house';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import Alert from '#lib/components/ui/Alert.svelte';
@@ -299,15 +300,17 @@
 									<button
 										type="submit"
 										disabled={submitting !== null}
-										class="min-h-12 w-full cursor-pointer rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+										class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 									>
+										<ShieldCheck aria-hidden="true" size={19} strokeWidth={2} />
 										{submitting === 'accept' ? 'Activando acceso…' : 'Aceptar y monitorear'}
 									</button>
 								</form>
 								<a
 									href={resolve('/onboarding/access-code')}
-									class="inline-flex min-h-12 items-center justify-center rounded-full px-5 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/25 focus:outline-none"
+									class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/25 focus:outline-none"
 								>
+									<RotateCcw aria-hidden="true" size={19} strokeWidth={2} />
 									Usar otro código
 								</a>
 							</div>
@@ -316,8 +319,9 @@
 								type="submit"
 								form="onboarding-access-code-form"
 								disabled={submitting !== null}
-								class="min-h-12 w-full cursor-pointer rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+								class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 							>
+								<Eye aria-hidden="true" size={19} strokeWidth={2} />
 								{submitting === 'preview' ? 'Revisando código…' : 'Revisar código'}
 							</button>
 						{/if}

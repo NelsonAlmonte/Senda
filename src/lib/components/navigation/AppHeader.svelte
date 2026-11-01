@@ -9,8 +9,7 @@
 	import { onMount } from 'svelte';
 
 	type Props = { hasActiveAlert: boolean };
-	type BackTarget = { kind: 'patients' } | { kind: 'onboarding' } | { kind: 'patient'; id: string };
-	type HeaderConfig = { title: string; back?: BackTarget };
+	type HeaderConfig = { title: string; back?: true };
 
 	let { hasActiveAlert }: Props = $props();
 	let header = $derived.by(() => getHeaderConfig(page.route.id, page.data));
@@ -18,7 +17,6 @@
 	function getPatientData(data: App.PageData) {
 		const patient = (data as unknown as Record<string, unknown>).patient as
 			| {
-					id?: string;
 					firstName?: string;
 					lastName?: string;
 					first_name?: string;
@@ -29,7 +27,6 @@
 		const lastName = patient?.lastName ?? patient?.last_name ?? '';
 
 		return {
-			id: patient?.id,
 			firstName,
 			fullName: `${firstName} ${lastName}`.trim()
 		};
@@ -37,9 +34,6 @@
 
 	function getHeaderConfig(routeId: string | null, data: App.PageData): HeaderConfig {
 		const patient = getPatientData(data);
-		const patientBack: BackTarget = patient.id
-			? { kind: 'patient', id: patient.id }
-			: { kind: 'patients' };
 
 		switch (routeId) {
 			case '/dashboard':
@@ -51,41 +45,45 @@
 			case '/settings':
 				return { title: 'Perfil' };
 			case '/onboarding':
-				return { title: 'Primeros pasos', back: { kind: 'patients' } };
+				return { title: 'Primeros pasos', back: true };
 			case '/access-code':
-				return { title: 'Código de acceso', back: { kind: 'onboarding' } };
+				return { title: 'Código de acceso', back: true };
 			case '/groups':
-				return { title: 'Nuevo paciente y dispositivo', back: { kind: 'patients' } };
+				return { title: 'Nuevo paciente y dispositivo', back: true };
 			case '/patients/[id]':
-				return { title: patient.fullName || 'Paciente', back: { kind: 'patients' } };
+				return { title: patient.fullName || 'Paciente', back: true };
 			case '/patients/[id]/device':
 				return {
 					title: patient.firstName ? `Dispositivo de ${patient.firstName}` : 'Dispositivo',
-					back: patientBack
+					back: true
 				};
 			case '/patients/[id]/map':
 				return {
 					title: patient.fullName ? `Mapa de ${patient.fullName}` : 'Mapa del paciente',
-					back: patientBack
+					back: true
 				};
 			case '/patients/[id]/episodes':
 				return {
 					title: patient.firstName ? `Episodios de ${patient.firstName}` : 'Episodios',
-					back: patientBack
+					back: true
 				};
 			case '/patients/[id]/access':
 				return {
 					title: patient.firstName ? `Accesos de ${patient.firstName}` : 'Accesos del paciente',
-					back: patientBack
+					back: true
 				};
 			case '/patients/[id]/safe-zones':
 				return {
 					title: patient.fullName ? `Geocercas de ${patient.fullName}` : 'Geocercas',
-					back: patientBack
+					back: true
 				};
 			default:
 				return { title: 'Senda' };
 		}
+	}
+
+	function goBack() {
+		history.back();
 	}
 
 	onMount(() => {
@@ -127,17 +125,14 @@
 >
 	<div class="flex min-h-16 w-full items-center gap-2 px-4 sm:px-6 lg:px-4">
 		{#if header.back}
-			<a
-				href={header.back.kind === 'patients'
-					? resolve('/patients')
-					: header.back.kind === 'onboarding'
-						? resolve('/onboarding')
-						: resolve('/patients/[id]', { id: header.back.id })}
-				aria-label="Regresar"
-				class="grid size-12 shrink-0 place-items-center rounded-full text-ink transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
+			<button
+				type="button"
+				onclick={goBack}
+				aria-label="Volver a la página anterior"
+				class="grid size-12 shrink-0 cursor-pointer place-items-center rounded-full text-ink transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 			>
 				<ArrowLeft size={24} strokeWidth={2} aria-hidden="true" />
-			</a>
+			</button>
 		{/if}
 
 		<h1

@@ -3,7 +3,7 @@
 	import type { Snippet } from 'svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
-	import { presentDateTime } from '#lib/locations/presentation.js';
+	import { presentDateTime } from '#lib/utils/location-presentation.js';
 
 	type AlertEpisodeStatus = 'OPEN' | 'RESOLVED';
 

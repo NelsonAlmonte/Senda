@@ -1,14 +1,7 @@
 import { dev } from '$app/env';
 import { PUBLIC_VAPID_PUBLIC_KEY } from '$app/env/public';
 import { createBrowserSupabaseClient } from '#lib/supabase/client.js';
-
-export type PushNotificationState =
-	'CHECKING' | 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'UNSUPPORTED' | 'UNCONFIGURED' | 'ERROR';
-
-export interface PushNotificationStatus {
-	detail?: string;
-	state: PushNotificationState;
-}
+import type { PushNotificationStatus } from '#lib/types/push.js';
 
 export class PushNotificationSessionError extends Error {
 	constructor() {

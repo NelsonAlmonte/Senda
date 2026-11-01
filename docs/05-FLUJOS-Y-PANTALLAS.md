@@ -8,6 +8,8 @@
 /auth/login
 /auth/register
 /onboarding
+/onboarding/access-code
+/onboarding/groups
 /access-code
 /dashboard
 /patients
@@ -26,14 +28,14 @@
 
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
 
-**Estado reorganizado (2026-10-28; ajustado hasta el 2026-10-31):** después del registro se redirige a `/onboarding`, donde se elige entre registrar un dispositivo o monitorear mediante código. El registro usa un asistente de tres pasos en `/groups`; `/access-code` separa la entrada del código de la confirmación mínima del paciente y del alcance `MONITOR`; un `ADMIN` genera el código desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` queda como bienvenida mínima; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada y `/patients/:id/episodes` ofrece el historial paginado del paciente concreto. Esta reorganización está implementada localmente y pendiente de validación manual responsive y de datos reales.
+**Estado reorganizado (2026-10-28; ajustado hasta el 2026-10-31):** después del registro se redirige a `/onboarding`, una bienvenida enfocada sin navegación global que pregunta si la persona compró Senda o recibió un código. Estos caminos equivalentes evitan confundir la configuración inicial con la acción posterior **Agregar paciente** y no definen un tipo permanente de cuenta. El camino del código continúa en `/onboarding/access-code`; la configuración inicial continúa en `/onboarding/groups`. Ambas subrutas conservan el shell enfocado y muestran un éxito explícito antes de permitir ir a Pacientes. `/access-code` y `/groups` mantienen sus variantes dentro del área autenticada para operaciones posteriores. Los dos caminos de Grupo/Paciente/Dispositivo reutilizan el mismo asistente y la misma lógica SSR, pero cada ruta decide su orientación y destinos sin condicionales de URL dentro de los componentes. Un `ADMIN` genera códigos desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` queda como bienvenida mínima; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada y `/patients/:id/episodes` ofrece el historial paginado del paciente concreto. Esta reorganización está implementada localmente y pendiente de validación manual responsive y de datos reales.
 
 ## Flujo A — Registro e inicio de sesión
 
 ```text
 Registro → Supabase Auth → sesión → elegir acción inicial
     ├── Configurar un dispositivo
-    └── Ingresar un código de acceso
+    └── Ingresar un código → confirmar paciente → acceso activado → ir a Pacientes
 ```
 
 - Estas opciones son acciones disponibles también después del onboarding; no convierten la cuenta en un tipo fijo de propietario o monitor.
@@ -50,7 +52,7 @@ Usuario autenticado → crear o seleccionar grupo (nombre, FAMILY o CARE_CENTER)
   → si eligió después: módulo Pacientes con estado SIN DISPOSITIVO
 ```
 
-La interfaz presenta este recorrido en una sola página con tres pasos visibles: **Grupo**, **Paciente** y **Dispositivo**, y permite volver del segundo al primero. Para un centro: `type=CARE_CENTER`; para hogar: `type=FAMILY`. No añadir administración hospitalaria. Con la alternativa simple aprobada, un grupo nuevo se persiste atómicamente junto con su primer paciente; los pacientes siguientes pueden reutilizar un grupo existente. Un paciente forma parte de un contexto grupal, pero sus permisos no son heredados de todos los miembros del grupo.
+La interfaz presenta este recorrido en una sola página con tres pasos visibles: **Grupo**, **Paciente** y **Dispositivo**, y permite volver del segundo al primero. Desde el 2026-10-31 la orientación vive en una tarjeta de progreso independiente y la tarjeta principal revela solamente la etapa activa; en móvil ambas se apilan y en escritorio forman una cuadrícula asimétrica. `PatientSetupWizard` y sus secciones completas de dominio se reutilizan en `/groups` y `/onboarding/groups`: la ruta normal conserva el shell autenticado y la enfocada añade lenguaje introductorio y un resultado explícito cuando el dispositivo se configuró o se pospuso. La selección del grupo, el resumen contextual del paciente y la confirmación previa a configurar el dispositivo reducen ambigüedad sin duplicar la lógica SSR. Para un centro: `type=CARE_CENTER`; para hogar: `type=FAMILY`. No añadir administración hospitalaria. Con la alternativa simple aprobada, un grupo nuevo se persiste atómicamente junto con su primer paciente; los pacientes siguientes pueden reutilizar un grupo existente. Un paciente forma parte de un contexto grupal, pero sus permisos no son heredados de todos los miembros del grupo.
 
 En `/patients`, **Agregar paciente** abre el asistente priorizando un grupo existente, mientras **Crear grupo** prioriza un contexto nuevo. Ambas acciones conservan el alta del paciente dentro del mismo recorrido, porque el MVP no mantiene grupos vacíos. **Ingresar código** permanece como una acción independiente.
 
@@ -136,7 +138,9 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 
 | Ruta | Contenido imprescindible |
 |---|---|
-| `/onboarding` | Elección inicial entre registrar dispositivo o monitorear con un código; ambas acciones siguen disponibles después |
+| `/onboarding` | Bienvenida enfocada sin shell global; dos situaciones equivalentes: compró Senda o recibió un código; ambas acciones siguen disponibles después |
+| `/onboarding/access-code` | Continuación enfocada: entrada, vista previa mínima, aceptación `MONITOR`, confirmación de éxito y acción explícita para ir a Pacientes |
+| `/onboarding/groups` | Continuación enfocada: grupo, paciente, dispositivo opcional y confirmación explícita antes de ir a Pacientes |
 | `/access-code` | Entrada con ayuda y errores accesibles, vista previa mínima y aceptación explícita de un código `MONITOR` de un solo uso |
 | `/dashboard` | Bienvenida mínima con el nombre del usuario |
 | `/patients` | Pacientes autorizados, estado de dispositivo/ubicación, acciones de alta y navegación a sus operaciones |

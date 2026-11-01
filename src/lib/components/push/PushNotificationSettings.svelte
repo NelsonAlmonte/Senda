@@ -13,14 +13,14 @@
 	import { onMount } from 'svelte';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
+	import type { PushNotificationStatus } from '#lib/types/push.js';
 	import type { UiIcon, UiTone } from '#lib/types/ui.js';
 	import {
 		disablePushNotifications,
 		enablePushNotifications,
 		PushNotificationSessionError,
-		readPushNotificationStatus,
-		type PushNotificationStatus
-	} from './subscriptions.js';
+		readPushNotificationStatus
+	} from '#lib/utils/push-subscriptions.js';
 
 	interface StatusPresentation {
 		icon: UiIcon;

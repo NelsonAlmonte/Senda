@@ -1,2 +1,2 @@
 export { createBrowserSupabaseClient, hasSupabaseConfig } from './supabase/client';
-export { hasGoogleMapsConfig, loadMapDisplayLibraries, loadMapsLibrary } from './maps/loader';
+export { hasGoogleMapsConfig, loadMapDisplayLibraries, loadMapsLibrary } from './utils/google-maps';

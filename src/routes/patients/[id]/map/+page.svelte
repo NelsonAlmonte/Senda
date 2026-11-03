@@ -471,198 +471,37 @@
 					</p>
 				</div>
 			{:else}
-				{#key data.assignment.id}
-					<PatientLocationMap
-						latitude={mapCenter.latitude}
-						longitude={mapCenter.longitude}
-						accuracyM={latestLocation?.accuracyM ?? null}
-						{patientName}
-						{historySegments}
-						safeZones={data.safeZones}
-						hasLocation={latestLocation !== null}
-						manualLocationEnabled={data.manualLocationEnabled}
-						onManualLocationPointChange={handleManualLocationPointChange}
-						onReady={handleMapReady}
-					/>
-				{/key}
-
-				<div class="mt-6 grid items-start gap-6 xl:grid-cols-12">
-					<div class="space-y-6 xl:col-span-8">
-						<section class="rounded-2xl bg-white p-6 shadow-sm">
-							<Heading
-								icon={MapPinned}
-								title="Estado de ubicación"
-								subtitle="Estado de la salida, vigencia y relación de la última lectura con las zonas permitidas."
+				<div class="grid items-start gap-6 xl:grid-cols-12 xl:items-stretch">
+					<div class="min-w-0 xl:col-span-8 xl:h-160">
+						{#key data.assignment.id}
+							<PatientLocationMap
+								latitude={mapCenter.latitude}
+								longitude={mapCenter.longitude}
+								accuracyM={latestLocation?.accuracyM ?? null}
+								{patientName}
+								{historySegments}
+								safeZones={data.safeZones}
+								hasLocation={latestLocation !== null}
+								manualLocationEnabled={data.manualLocationEnabled}
+								onManualLocationPointChange={handleManualLocationPointChange}
+								onReady={handleMapReady}
 							/>
-							<div class="mt-6 space-y-4">
-								<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
-									<InfoItem
-										icon={activeAlertEpisode
-											? Siren
-											: alertStatus.tone === 'warning'
-												? CircleAlert
-												: BellRing}
-										title={alertStatus.title}
-										info={alertStatus.info}
-										tone={alertStatus.tone}
-									/>
-								</div>
-
-								<div class="grid gap-4 sm:grid-cols-2">
-									<InfoItem
-										icon={Clock3}
-										title={freshnessStatus.title}
-										info={freshnessStatus.info}
-										tone={freshnessStatus.tone}
-									/>
-									<InfoItem
-										icon={MapPin}
-										title={readingStatus.title}
-										info={readingStatus.info}
-										tone={readingStatus.tone}
-									/>
-								</div>
-							</div>
-							{#if latestLocation?.accuracyM !== null && latestLocation?.accuracyM !== undefined && latestLocation.accuracyM > 0}
-								<p class="mt-6 border-t border-ink/10 pt-4 text-sm leading-6 text-muted">
-									El círculo azul representa la precisión informada. No es una zona permitida.
-								</p>
-							{/if}
-						</section>
-
-						<section class="rounded-2xl bg-white p-6 shadow-sm">
-							<Heading
-								icon={ShieldCheck}
-								title="Geocercas activas"
-								subtitle="Zonas permitidas visibles sobre el mapa del paciente."
-							/>
-							<div class="mt-6">
-								{#if !data.safeZonesAvailable}
-									<Alert
-										icon={CircleAlert}
-										title="Geocercas no disponibles"
-										subtitle="La ubicación sigue disponible. Inténtalo nuevamente en unos minutos."
-										color="warning"
-									/>
-								{:else if data.safeZones.length === 0}
-									<p class="text-sm leading-6 text-muted">
-										No hay zonas activas para mostrar. Esto no significa que el paciente esté en una
-										zona segura.
-									</p>
-								{:else}
-									<ul class="flex flex-wrap gap-2" aria-label="Geocercas visibles en el mapa">
-										{#each data.safeZones as zone (zone.id)}
-											<li
-												class="rounded-full bg-surface-muted px-3 py-2 text-sm font-semibold text-ink"
-											>
-												{zone.name} · {zone.radiusM.toLocaleString('es-DO')} m
-											</li>
-										{/each}
-									</ul>
-								{/if}
-							</div>
-							<div class="mt-6 border-t border-ink/10 pt-4">
-								<a
-									href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
-									class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-								>
-									<ShieldCheck aria-hidden="true" size={19} strokeWidth={2} />
-									Configurar geocercas
-								</a>
-							</div>
-						</section>
-
-						{#if data.manualLocationEnabled}
-							<section class="rounded-2xl bg-white p-6 shadow-sm">
-								<Heading
-									icon={MapPinPlus}
-									title="Registrar ubicación manual"
-									subtitle="Selecciona directamente en el mapa el punto que deseas guardar."
-								/>
-
-								{#if !manualLocationMode}
-									<div class="mt-6 border-t border-ink/10 pt-4">
-										<button
-											type="button"
-											onclick={activateManualLocationMode}
-											disabled={!mapController}
-											class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-										>
-											<MapPinPlus aria-hidden="true" size={19} strokeWidth={2} />
-											{mapController ? 'Elegir ubicación en el mapa' : 'Esperando el mapa…'}
-										</button>
-									</div>
-								{:else}
-									<form
-										method="POST"
-										action="?/saveManualLocation"
-										use:enhance={enhanceManualLocation}
-										class="mt-6 border-t border-ink/10 pt-4"
-									>
-										<p class="text-sm leading-6 font-semibold text-ink">
-											Haz clic o toca el mapa para elegir la ubicación.
-										</p>
-										<input type="hidden" name="latitude" value={latitudeInput ?? ''} />
-										<input type="hidden" name="longitude" value={longitudeInput ?? ''} />
-
-										{#if selectedManualLocationPoint}
-											<div class="mt-3">
-												<Alert
-													icon={MapPin}
-													title="Ubicación seleccionada"
-													subtitle="Puedes guardarla o elegir otro punto en el mapa."
-												/>
-											</div>
-										{/if}
-
-										<div class="mt-4 flex flex-col gap-3 sm:flex-row">
-											<button
-												type="submit"
-												disabled={manualLocationSubmitting || !selectedManualLocationPoint}
-												class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-											>
-												<Save aria-hidden="true" size={19} strokeWidth={2} />
-												{manualLocationSubmitting ? 'Guardando ubicación…' : 'Guardar ubicación'}
-											</button>
-											<button
-												type="button"
-												onclick={cancelManualLocation}
-												disabled={manualLocationSubmitting}
-												class="min-h-12 cursor-pointer rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-											>
-												Cancelar
-											</button>
-										</div>
-									</form>
-								{/if}
-
-								{#if manualLocationFeedback}
-									<div class="mt-5">
-										<Alert
-											icon={manualLocationFeedback.kind === 'success'
-												? CircleCheckBig
-												: CircleAlert}
-											title={manualLocationFeedback.kind === 'success'
-												? 'Ubicación guardada'
-												: 'No pudimos guardar la ubicación'}
-											subtitle={manualLocationFeedback.message}
-											color={manualLocationFeedback.kind === 'success' ? 'positive' : 'danger'}
-										/>
-									</div>
-								{/if}
-							</section>
-						{/if}
+						{/key}
 					</div>
 
-					<aside class="space-y-6 xl:col-span-4">
-						<section class="rounded-2xl bg-white p-6 shadow-sm">
-							<Heading
-								icon={BellRing}
-								title="Episodios recientes"
-								subtitle="Las cinco salidas confirmadas más recientes."
-							/>
+					<aside class="min-h-0 min-w-0 overflow-hidden xl:col-span-4 xl:h-160">
+						<section
+							class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-sm"
+						>
+							<div class="shrink-0">
+								<Heading
+									icon={BellRing}
+									title="Episodios recientes"
+									subtitle="Las cinco salidas confirmadas más recientes."
+								/>
+							</div>
 							{#if !data.alertEpisodesAvailable}
-								<div class="mt-6">
+								<div class="mt-6 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pe-2">
 									<Alert
 										icon={CircleAlert}
 										title="Historial no disponible"
@@ -671,24 +510,32 @@
 									/>
 								</div>
 							{:else if alertEpisodes.length === 0}
-								<p class="mt-6 text-sm leading-6 text-muted">
+								<p class="mt-6 text-sm leading-6 text-muted xl:min-h-0 xl:flex-1">
 									Todavía no se ha confirmado ninguna salida de las zonas permitidas.
 								</p>
 							{:else}
-								<ul class="mt-6 space-y-3">
-									{#each alertEpisodes as episode (episode.id)}
-										<li>
-											<InfoItem
-												icon={episode.status === 'OPEN' ? Siren : CircleCheckBig}
-												title={episode.status === 'OPEN' ? 'Salida activa' : 'Salida resuelta'}
-												info={presentEpisodeInfo(episode)}
-												tone={episode.status === 'OPEN' ? 'danger' : 'positive'}
-											/>
-										</li>
-									{/each}
-								</ul>
+								<!-- svelte-ignore a11y_no_noninteractive_tabindex (la región desplazable necesita foco para operar con teclado) -->
+								<div
+									class="mt-6 min-h-0 overscroll-contain focus:ring-4 focus:ring-focus/30 focus:outline-none xl:flex-1 xl:overflow-y-scroll xl:pe-2"
+									role="region"
+									tabindex="0"
+									aria-label="Lista de episodios recientes"
+								>
+									<ul class="space-y-3">
+										{#each alertEpisodes as episode (episode.id)}
+											<li>
+												<InfoItem
+													icon={episode.status === 'OPEN' ? Siren : CircleCheckBig}
+													title={episode.status === 'OPEN' ? 'Salida activa' : 'Salida resuelta'}
+													info={presentEpisodeInfo(episode)}
+													tone={episode.status === 'OPEN' ? 'danger' : 'positive'}
+												/>
+											</li>
+										{/each}
+									</ul>
+								</div>
 							{/if}
-							<div class="mt-6 border-t border-ink/10 pt-4">
+							<div class="mt-6 shrink-0 border-t border-ink/10 pt-4">
 								<a
 									href={resolve('/patients/[id]/episodes', { id: data.patient.id })}
 									class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
@@ -699,6 +546,171 @@
 							</div>
 						</section>
 					</aside>
+				</div>
+
+				<div class="mt-6 grid items-start gap-6 xl:grid-cols-12">
+					<section class="rounded-2xl bg-white p-6 shadow-sm xl:col-span-6">
+						<Heading
+							icon={MapPinned}
+							title="Estado de ubicación"
+							subtitle="Estado de la salida, vigencia y relación de la última lectura con las zonas permitidas."
+						/>
+						<div class="mt-6 space-y-4">
+							<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
+								<InfoItem
+									icon={activeAlertEpisode
+										? Siren
+										: alertStatus.tone === 'warning'
+											? CircleAlert
+											: BellRing}
+									title={alertStatus.title}
+									info={alertStatus.info}
+									tone={alertStatus.tone}
+								/>
+							</div>
+
+							<div class="grid gap-4 sm:grid-cols-2">
+								<InfoItem
+									icon={Clock3}
+									title={freshnessStatus.title}
+									info={freshnessStatus.info}
+									tone={freshnessStatus.tone}
+								/>
+								<InfoItem
+									icon={MapPin}
+									title={readingStatus.title}
+									info={readingStatus.info}
+									tone={readingStatus.tone}
+								/>
+							</div>
+						</div>
+						{#if latestLocation?.accuracyM !== null && latestLocation?.accuracyM !== undefined && latestLocation.accuracyM > 0}
+							<p class="mt-6 border-t border-ink/10 pt-4 text-sm leading-6 text-muted">
+								El círculo azul representa la precisión informada. No es una zona permitida.
+							</p>
+						{/if}
+					</section>
+
+					<section class="rounded-2xl bg-white p-6 shadow-sm xl:col-span-6">
+						<Heading
+							icon={ShieldCheck}
+							title="Geocercas activas"
+							subtitle="Zonas permitidas visibles sobre el mapa del paciente."
+						/>
+						<div class="mt-6">
+							{#if !data.safeZonesAvailable}
+								<Alert
+									icon={CircleAlert}
+									title="Geocercas no disponibles"
+									subtitle="La ubicación sigue disponible. Inténtalo nuevamente en unos minutos."
+									color="warning"
+								/>
+							{:else if data.safeZones.length === 0}
+								<p class="text-sm leading-6 text-muted">
+									No hay zonas activas para mostrar. Esto no significa que el paciente esté en una
+									zona segura.
+								</p>
+							{:else}
+								<ul class="flex flex-wrap gap-2" aria-label="Geocercas visibles en el mapa">
+									{#each data.safeZones as zone (zone.id)}
+										<li
+											class="rounded-full bg-surface-muted px-3 py-2 text-sm font-semibold text-ink"
+										>
+											{zone.name} · {zone.radiusM.toLocaleString('es-DO')} m
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</div>
+						<div class="mt-6 border-t border-ink/10 pt-4">
+							<a
+								href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
+								class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
+							>
+								<ShieldCheck aria-hidden="true" size={19} strokeWidth={2} />
+								Configurar geocercas
+							</a>
+						</div>
+					</section>
+
+					{#if data.manualLocationEnabled}
+						<section class="rounded-2xl bg-white p-6 shadow-sm xl:col-span-12">
+							<Heading
+								icon={MapPinPlus}
+								title="Registrar ubicación manual"
+								subtitle="Selecciona directamente en el mapa el punto que deseas guardar."
+							/>
+
+							{#if !manualLocationMode}
+								<div class="mt-6 border-t border-ink/10 pt-4">
+									<button
+										type="button"
+										onclick={activateManualLocationMode}
+										disabled={!mapController}
+										class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										<MapPinPlus aria-hidden="true" size={19} strokeWidth={2} />
+										{mapController ? 'Elegir ubicación en el mapa' : 'Esperando el mapa…'}
+									</button>
+								</div>
+							{:else}
+								<form
+									method="POST"
+									action="?/saveManualLocation"
+									use:enhance={enhanceManualLocation}
+									class="mt-6 border-t border-ink/10 pt-4"
+								>
+									<p class="text-sm leading-6 font-semibold text-ink">
+										Haz clic o toca el mapa para elegir la ubicación.
+									</p>
+									<input type="hidden" name="latitude" value={latitudeInput ?? ''} />
+									<input type="hidden" name="longitude" value={longitudeInput ?? ''} />
+
+									{#if selectedManualLocationPoint}
+										<div class="mt-3">
+											<Alert
+												icon={MapPin}
+												title="Ubicación seleccionada"
+												subtitle="Puedes guardarla o elegir otro punto en el mapa."
+											/>
+										</div>
+									{/if}
+
+									<div class="mt-4 flex flex-col gap-3 sm:flex-row">
+										<button
+											type="submit"
+											disabled={manualLocationSubmitting || !selectedManualLocationPoint}
+											class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+										>
+											<Save aria-hidden="true" size={19} strokeWidth={2} />
+											{manualLocationSubmitting ? 'Guardando ubicación…' : 'Guardar ubicación'}
+										</button>
+										<button
+											type="button"
+											onclick={cancelManualLocation}
+											disabled={manualLocationSubmitting}
+											class="min-h-12 cursor-pointer rounded-xl border border-ink/15 bg-white px-5 font-bold text-ink transition hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+										>
+											Cancelar
+										</button>
+									</div>
+								</form>
+							{/if}
+
+							{#if manualLocationFeedback}
+								<div class="mt-5">
+									<Alert
+										icon={manualLocationFeedback.kind === 'success' ? CircleCheckBig : CircleAlert}
+										title={manualLocationFeedback.kind === 'success'
+											? 'Ubicación guardada'
+											: 'No pudimos guardar la ubicación'}
+										subtitle={manualLocationFeedback.message}
+										color={manualLocationFeedback.kind === 'success' ? 'positive' : 'danger'}
+									/>
+								</div>
+							{/if}
+						</section>
+					{/if}
 				</div>
 			{/if}
 		</section>

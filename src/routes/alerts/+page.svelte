@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { CircleAlert, CircleCheckBig, Clock3, MapPinned, UserRound } from '@lucide/svelte';
+	import { CircleAlert, CircleCheckBig, Clock3, Route, UserRound } from '@lucide/svelte';
 	import AlertEpisodeCard from '#lib/components/alerts/AlertEpisodeCard.svelte';
 	import AlertEpisodesRealtime from '#lib/components/alerts/AlertEpisodesRealtime.svelte';
 	import Alert from '#lib/components/ui/Alert.svelte';
@@ -79,11 +79,14 @@
 								{#snippet actions()}
 									<div class="flex flex-col gap-2 sm:flex-row">
 										<a
-											href={resolve('/patients/[id]/map', { id: episode.patientId })}
+											href={resolve('/patients/[id]/episodes/[episodeId]', {
+												id: episode.patientId,
+												episodeId: episode.id
+											})}
 											class="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/30 focus:outline-none"
 										>
-											<MapPinned aria-hidden="true" size={18} strokeWidth={2} />
-											Revisar ubicación
+											<Route aria-hidden="true" size={18} strokeWidth={2} />
+											Ver recorrido
 										</a>
 										<a
 											href={resolve('/patients/[id]', { id: episode.patientId })}
@@ -134,11 +137,14 @@
 							>
 								{#snippet actions()}
 									<a
-										href={resolve('/patients/[id]/map', { id: episode.patientId })}
+										href={resolve('/patients/[id]/episodes/[episodeId]', {
+											id: episode.patientId,
+											episodeId: episode.id
+										})}
 										class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
 									>
-										<MapPinned aria-hidden="true" size={18} strokeWidth={2} />
-										Ver mapa del paciente
+										<Route aria-hidden="true" size={18} strokeWidth={2} />
+										Ver recorrido
 									</a>
 								{/snippet}
 							</AlertEpisodeCard>

@@ -67,6 +67,11 @@
 					title: patient.firstName ? `Episodios de ${patient.firstName}` : 'Episodios',
 					back: true
 				};
+			case '/patients/[id]/episodes/[episodeId]':
+				return {
+					title: patient.firstName ? `Recorrido de ${patient.firstName}` : 'Recorrido del episodio',
+					back: true
+				};
 			case '/patients/[id]/access':
 				return {
 					title: patient.firstName ? `Accesos de ${patient.firstName}` : 'Accesos del paciente',

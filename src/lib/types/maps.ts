@@ -14,6 +14,15 @@ export type MapHistoryPoint = {
 
 export type MapHistorySegment = MapHistoryPoint[];
 
+export type EpisodeRoutePoint = {
+	id: number;
+	latitude: number;
+	longitude: number;
+	recordedAt: string;
+};
+
+export type EpisodeRouteSegment = EpisodeRoutePoint[];
+
 export type MapSafeZone = {
 	id: string;
 	name: string;

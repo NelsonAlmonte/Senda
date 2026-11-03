@@ -6,7 +6,7 @@
 		CircleAlert,
 		CircleCheckBig,
 		Clock3,
-		MapPinned
+		Route
 	} from '@lucide/svelte';
 	import AlertEpisodeCard from '#lib/components/alerts/AlertEpisodeCard.svelte';
 	import Alert from '#lib/components/ui/Alert.svelte';
@@ -31,11 +31,14 @@
 
 {#snippet openEpisodeActions()}
 	<a
-		href={resolve('/patients/[id]/map', { id: data.patient.id })}
+		href={resolve('/patients/[id]/episodes/[episodeId]', {
+			id: data.patient.id,
+			episodeId: data.activeEpisode?.id ?? ''
+		})}
 		class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/30 focus:outline-none"
 	>
-		<MapPinned aria-hidden="true" size={18} strokeWidth={2} />
-		Revisar ubicación actual
+		<Route aria-hidden="true" size={18} strokeWidth={2} />
+		Ver recorrido en curso
 	</a>
 {/snippet}
 
@@ -104,7 +107,20 @@
 								status={episode.status}
 								confirmedAt={episode.confirmedAt}
 								resolvedAt={episode.resolvedAt}
-							/>
+							>
+								{#snippet actions()}
+									<a
+										href={resolve('/patients/[id]/episodes/[episodeId]', {
+											id: data.patient.id,
+											episodeId: episode.id
+										})}
+										class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+									>
+										<Route aria-hidden="true" size={18} strokeWidth={2} />
+										Ver recorrido
+									</a>
+								{/snippet}
+							</AlertEpisodeCard>
 						</li>
 					{/each}
 				</ul>

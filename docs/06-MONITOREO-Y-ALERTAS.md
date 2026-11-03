@@ -80,6 +80,7 @@ El prototipo no cambia el episodio según minutos transcurridos ni distancia adi
 - Registrar el episodio dentro de la aplicación al confirmarse la salida.
 - Mostrar el episodio `OPEN` en `/alerts` para cada usuario autorizado y actualizar su apertura o resolución por Realtime.
 - Consultar todos los episodios de un paciente autorizado en `/patients/:id/episodes`, manteniendo el episodio `OPEN` separado y paginando los `RESOLVED` de doce en doce, sin confundir el mapa actual con el recorrido histórico de un episodio.
+- Consultar el trayecto exacto en `/patients/:id/episodes/:episodeId`: desde la primera lectura `OUTSIDE` hasta la segunda `INSIDE`, o hasta la lectura más reciente si permanece `OPEN`, siempre dentro del `device_assignment_id` histórico. La vista no reconstruye geocercas que no fueron versionadas. Limita el mapa a 500 lecturas y representa por separado los extremos cuando debe omitir el centro.
 - Enviar como máximo una notificación Web Push al abrir el episodio; el MVP no envía otra al resolverlo.
 - No repetir Web Push con cada nueva ubicación mientras el episodio siga `OPEN`.
 - No incluir datos personales innecesarios en el cuerpo del push.
@@ -108,6 +109,8 @@ El prototipo no cambia el episodio según minutos transcurridos ni distancia adi
 | R17 | Usuario revocado mantiene pestaña abierta | Sin lectura futura ni acceso persistente autorizado |
 | R18 | Simulación acelera el envío | Apertura y resolución correctas sin depender de esperas reales |
 | R19 | Dos posiciones con salto físicamente implausible | Marcar sospechosa/descartar según política definida |
+| R20 | Consultar el recorrido de un episodio resuelto | Mostrar solo su asignación y el intervalo inclusivo entre apertura y resolución |
+| R21 | Episodio con más de 500 lecturas | Mostrar dos tramos separados, advertir el truncamiento y no unir los puntos omitidos |
 
 ## Métricas a registrar para la tesis
 

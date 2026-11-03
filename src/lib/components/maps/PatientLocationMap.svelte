@@ -269,7 +269,7 @@
 </script>
 
 <section
-	class="relative min-h-112 overflow-hidden rounded-2xl bg-surface-muted shadow-sm sm:min-h-128 xl:min-h-144"
+	class="relative min-h-112 overflow-hidden rounded-2xl bg-surface-muted shadow-sm sm:min-h-128 xl:min-h-160"
 	aria-label={`Mapa de ubicación, recorrido reciente y geocercas activas de ${patientName}`}
 	aria-busy={mapState === 'LOADING'}
 >

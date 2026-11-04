@@ -10,6 +10,7 @@
 	import type { PatientSetupData } from '#lib/types/groups.js';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
+	import SendaMark from '#lib/components/ui/SendaMark.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -40,10 +41,7 @@
 	<div class="mx-auto w-full max-w-6xl">
 		<header class="mx-auto max-w-3xl text-center">
 			<div class="inline-flex items-center gap-3">
-				<span
-					class="grid size-11 place-items-center rounded-xl bg-ink text-lg font-bold text-white"
-					aria-hidden="true">S</span
-				>
+				<SendaMark class="size-11" />
 				<span class="text-2xl font-bold text-ink">Senda</span>
 			</div>
 

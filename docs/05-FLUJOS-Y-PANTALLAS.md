@@ -5,6 +5,7 @@
 ## Rutas previstas
 
 ```text
+/
 /auth/login
 /auth/register
 /onboarding
@@ -26,7 +27,9 @@
 /settings
 ```
 
-SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs.
+SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs. `/` es la portada pública de presentación: no usa sidebar, header del área autenticada ni barra inferior, incluso cuando existe una sesión. En ese caso ofrece **Ir al panel**; para visitantes ofrece **Registrarse** e **Iniciar sesión**. Cuando el navegador confirma que la PWA puede instalarse, el hero añade una acción secundaria **Instalar Senda**; en Safari compatible muestra **Cómo instalar Senda** y despliega la guía manual.
+
+Las rutas `/auth/*` usan un shell enfocado sin navegación modular ni promoción PWA. Login y registro conservan formularios SSR progresivamente mejorados, valores no sensibles después de fallos, errores por campo y un resumen enfocado para recuperación. Las contraseñas nunca vuelven desde el servidor; el control de visibilidad cambia únicamente su presentación local y mantiene paste, autocomplete y compatibilidad con gestores. `/auth/error` reutiliza la misma estructura y ofrece una recuperación explícita hacia login o registro. Confirmación y logout mantienen sus redirecciones server-side.
 
 **Estado reorganizado (2026-10-28; ajustado hasta el 2026-10-31):** después del registro se redirige a `/onboarding`, una bienvenida enfocada sin navegación global que pregunta si la persona compró Senda o recibió un código. Estos caminos equivalentes evitan confundir la configuración inicial con la acción posterior **Agregar paciente** y no definen un tipo permanente de cuenta. El camino del código continúa en `/onboarding/access-code`; la configuración inicial continúa en `/onboarding/groups`. Ambas subrutas conservan el shell enfocado y muestran un éxito explícito antes de permitir ir a Pacientes. `/access-code` y `/groups` mantienen sus variantes dentro del área autenticada para operaciones posteriores. Los dos caminos de Grupo/Paciente/Dispositivo reutilizan el mismo asistente y la misma lógica SSR, pero cada ruta decide su orientación y destinos sin condicionales de URL dentro de los componentes. Un `ADMIN` genera códigos desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` ofrece bienvenida, accesos rápidos y pacientes que requieren atención; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada y `/patients/:id/episodes` ofrece el historial paginado del paciente concreto. Esta reorganización quedó validada manualmente con datos reales en móvil y escritorio.
 
@@ -170,7 +173,7 @@ El header autenticado incluye el título contextual de la ruta, una campana que 
 
 Al abrirse un episodio, cada navegador suscrito de un usuario autorizado recibe como máximo una notificación titulada **Alerta de zona segura** con el texto **Posible salida de una zona segura. Abre Senda para revisar de inmediato.** El mensaje evita nombres, coordenadas y datos clínicos. Al pulsarlo abre `/alerts`, donde la sesión y RLS determinan qué episodios puede consultar la persona. El 2026-10-28 se desplegó en Supabase de desarrollo la versión 2 de `send-geofence-alert` con ese destino y se comprobó que inicia y responde; queda pendiente repetir el flujo extremo a extremo con una alerta real y el clic de la notificación.
 
-Cuando un navegador Chromium determina que la PWA es instalable, Senda muestra una acción global y descartable **Instalar Senda**. La acción conserva el evento `beforeinstallprompt` y abre el diálogo nativo únicamente como respuesta al toque o clic del usuario; se oculta al recibir `appinstalled`, después de consumir el evento o durante la navegación actual si la persona elige **Ahora no**. Una recarga completa permite que la promoción vuelva a aparecer; la elección no se guarda como rechazo permanente. En iPhone/iPad se presenta una guía para abrir la página en Safari y usar **Compartir → Añadir a pantalla de inicio**, además de **Abrir como app** cuando la opción esté disponible; en Safari para macOS Sonoma 14 o posterior se indica **Archivo → Añadir al Dock**. La guía tampoco aparece al ejecutar Senda como PWA instalada.
+Cuando un navegador Chromium determina que la PWA es instalable, Senda conserva el evento `beforeinstallprompt` y presenta **Instalar Senda**. En `/` la acción vive dentro del hero; en las rutas internas usa la promoción flotante descartable, evitando mostrar ambas simultáneamente. El diálogo nativo se abre únicamente como respuesta al toque o clic del usuario; la promoción se oculta al recibir `appinstalled`, después de consumir el evento o durante la navegación actual si la persona elige **Ahora no**. Una recarga completa permite que vuelva a aparecer; la elección no se guarda como rechazo permanente. En iPhone/iPad se presenta una guía para abrir la página en Safari y usar **Compartir → Añadir a pantalla de inicio**, además de **Abrir como app** cuando la opción esté disponible; en Safari para macOS Sonoma 14 o posterior se indica **Archivo → Añadir al Dock**. La guía tampoco aparece al ejecutar Senda como PWA instalada, y un navegador sin instalación ni guía aplicable no recibe un control inerte.
 
 ## UX indispensable
 

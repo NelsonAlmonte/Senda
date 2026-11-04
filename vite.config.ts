@@ -18,7 +18,6 @@ function createSvelteKitPwaPlugins() {
 		},
 		includeAssets: [
 			'favicon.ico',
-			'pwa-source.svg',
 			'pwa-64x64.png',
 			'pwa-192x192.png',
 			'pwa-512x512.png',

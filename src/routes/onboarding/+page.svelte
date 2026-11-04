@@ -4,6 +4,7 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Repeat2 from '@lucide/svelte/icons/repeat-2';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
+	import SendaMark from '#lib/components/ui/SendaMark.svelte';
 </script>
 
 <svelte:head>
@@ -18,10 +19,7 @@
 	<div class="w-full max-w-5xl">
 		<header class="mx-auto max-w-2xl text-center">
 			<div class="inline-flex items-center gap-3">
-				<span
-					class="grid size-11 place-items-center rounded-xl bg-ink text-lg font-bold text-white"
-					aria-hidden="true">S</span
-				>
+				<SendaMark class="size-11" />
 				<span class="text-2xl font-bold text-ink">Senda</span>
 			</div>
 

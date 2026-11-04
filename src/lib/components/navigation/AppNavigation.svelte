@@ -2,19 +2,20 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import HeartHandshake from '@lucide/svelte/icons/heart-handshake';
-	import House from '@lucide/svelte/icons/house';
+	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Siren from '@lucide/svelte/icons/siren';
 	import UserRound from '@lucide/svelte/icons/user-round';
+	import SendaMark from '#lib/components/ui/SendaMark.svelte';
 
 	type ModuleId = 'dashboard' | 'patients' | 'alerts' | 'profile';
 
 	const items = [
 		{
 			id: 'dashboard' as const,
-			label: 'Inicio',
+			label: 'Panel',
 			href: resolve('/dashboard'),
-			icon: House
+			icon: LayoutDashboard
 		},
 		{
 			id: 'patients' as const,
@@ -59,10 +60,7 @@
 		href={resolve('/dashboard')}
 		class="hidden min-h-12 items-center gap-3 rounded-2xl px-3 text-2xl font-bold text-white focus:ring-4 focus:ring-white/30 focus:outline-none lg:inline-flex"
 	>
-		<span
-			class="grid size-9 place-items-center rounded-xl bg-white text-base text-ink"
-			aria-hidden="true">S</span
-		>
+		<SendaMark class="size-9" />
 		<span>Senda</span>
 	</a>
 

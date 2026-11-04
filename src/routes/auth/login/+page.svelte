@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
-	import { resolve } from '$app/paths';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import LogIn from '@lucide/svelte/icons/log-in';
+	import Settings2 from '@lucide/svelte/icons/settings-2';
+	import Alert from '#lib/components/ui/Alert.svelte';
+	import AuthShell from '#lib/components/ui/AuthShell.svelte';
+	import PasswordField from '#lib/components/ui/PasswordField.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -28,46 +31,44 @@
 	<meta name="description" content="Accede de forma segura a tu cuenta de Senda." />
 </svelte:head>
 
-<main id="contenido-principal" class="grid min-h-dvh place-items-center px-5 py-10 sm:px-8">
-	<section class="w-full max-w-md rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
-		<a
-			href={resolve('/')}
-			class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-		>
-			<ArrowLeft aria-hidden="true" size={19} strokeWidth={2} />
-			<span class="ml-2">Volver a Senda</span>
-		</a>
-
-		<p class="mt-7 text-sm font-bold tracking-widest text-brand uppercase">Acceso seguro</p>
-		<h1 class="mt-2 text-3xl font-bold tracking-tight text-ink">Inicia sesión</h1>
-		<p class="mt-3 leading-7 text-muted">
-			Consulta únicamente los pacientes para los que tengas autorización.
-		</p>
-
+<AuthShell
+	icon={LogIn}
+	eyebrow="Acceso seguro"
+	title="Qué bueno tenerte de vuelta."
+	description="Entra para consultar las personas, ubicaciones y episodios que tienes autorizados."
+	alternatePrompt="¿Aún no tienes cuenta?"
+	alternateHref="/auth/register"
+	alternateLabel="Regístrate"
+>
+	<div class="space-y-5">
 		{#if !data.supabaseConfigured}
-			<div
-				class="mt-6 rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
-				role="status"
-			>
-				Este entorno aún no tiene configuradas las variables públicas de Supabase.
-			</div>
+			<Alert
+				title="Configuración incompleta"
+				subtitle="Este entorno aún no tiene configuradas las variables públicas de Supabase."
+				icon={Settings2}
+				color="warning"
+			/>
 		{/if}
 
 		{#if errors.form}
 			<div
 				data-form-error
 				tabindex="-1"
-				class="mt-6 rounded-2xl border border-red-700/25 bg-red-50 p-4 text-sm leading-6 text-red-950 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
-				role="alert"
+				class="rounded-2xl focus:ring-4 focus:ring-red-700/20 focus:outline-none"
 			>
-				{errors.form}
+				<Alert
+					title="No pudimos iniciar sesión"
+					subtitle={errors.form}
+					icon={CircleAlert}
+					color="danger"
+				/>
 			</div>
 		{/if}
 
 		<form
 			method="POST"
 			use:enhance={enhanceForm}
-			class="mt-7 space-y-5"
+			class="space-y-5"
 			aria-label="Formulario de inicio de sesión"
 		>
 			<div>
@@ -89,22 +90,13 @@
 					</p>{/if}
 			</div>
 
-			<div>
-				<label for="password" class="text-sm font-bold text-ink">Contraseña</label>
-				<input
-					id="password"
-					name="password"
-					type="password"
-					autocomplete="current-password"
-					required
-					aria-invalid={errors.password ? 'true' : undefined}
-					aria-describedby={errors.password ? 'password-error' : undefined}
-					class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
-				/>
-				{#if errors.password}<p id="password-error" class="mt-2 text-sm font-semibold text-red-800">
-						{errors.password}
-					</p>{/if}
-			</div>
+			<PasswordField
+				id="password"
+				name="password"
+				label="Contraseña"
+				autocomplete="current-password"
+				error={errors.password}
+			/>
 
 			<button
 				type="submit"
@@ -115,14 +107,5 @@
 				{submitting ? 'Iniciando sesión…' : 'Iniciar sesión'}
 			</button>
 		</form>
-
-		<p class="mt-7 text-center leading-7 text-muted">
-			¿Aún no tienes cuenta?
-			<a
-				href={resolve('/auth/register')}
-				class="rounded font-bold text-brand underline decoration-brand/30 underline-offset-4 focus:ring-4 focus:ring-focus/30 focus:outline-none"
-				>Regístrate</a
-			>
-		</p>
-	</section>
-</main>
+	</div>
+</AuthShell>

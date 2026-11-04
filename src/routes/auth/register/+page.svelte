@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
-	import { resolve } from '$app/paths';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import Alert from '#lib/components/ui/Alert.svelte';
+	import AuthShell from '#lib/components/ui/AuthShell.svelte';
+	import PasswordField from '#lib/components/ui/PasswordField.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -28,54 +32,46 @@
 	<meta name="description" content="Crea una cuenta para comenzar a usar Senda." />
 </svelte:head>
 
-<main id="contenido-principal" class="grid min-h-dvh place-items-center px-5 py-10 sm:px-8">
-	<section class="w-full max-w-lg rounded-3xl border border-white/80 bg-white p-6 sm:p-8">
-		<a
-			href={resolve('/')}
-			class="inline-flex min-h-12 items-center rounded-xl font-bold text-brand focus:ring-4 focus:ring-focus/30 focus:outline-none"
-		>
-			<ArrowLeft aria-hidden="true" size={19} strokeWidth={2} />
-			<span class="ml-2">Volver a Senda</span>
-		</a>
-
-		<p class="mt-7 text-sm font-bold tracking-widest text-brand uppercase">Nueva cuenta</p>
-		<h1 class="mt-2 text-3xl font-bold tracking-tight text-ink">Crea tu acceso</h1>
-		<p class="mt-3 leading-7 text-muted">
-			Después de crearla podrás registrar un dispositivo o introducir un código para monitorear.
-		</p>
-
+<AuthShell
+	icon={UserPlus}
+	eyebrow="Nueva cuenta"
+	title="Empieza a cuidar con más contexto."
+	description="Crea tu acceso y después podrás configurar Senda o ingresar el código que recibiste."
+	alternatePrompt="¿Ya tienes cuenta?"
+	alternateHref="/auth/login"
+	alternateLabel="Inicia sesión"
+>
+	<div class="space-y-5">
 		{#if !data.supabaseConfigured}
-			<div
-				class="mt-6 rounded-2xl border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
-				role="status"
-			>
-				Este entorno aún no tiene configuradas las variables públicas de Supabase.
-			</div>
+			<Alert
+				title="Configuración incompleta"
+				subtitle="Este entorno aún no tiene configuradas las variables públicas de Supabase."
+				icon={Settings2}
+				color="warning"
+			/>
 		{/if}
 
 		{#if form?.success}
-			<div
-				tabindex="-1"
-				class="mt-6 rounded-2xl border border-brand/25 bg-surface-muted p-4 text-sm leading-6 text-ink"
-				role="status"
-			>
-				{form.message}
-			</div>
+			<Alert title="Cuenta creada" subtitle={form.message} icon={CircleCheck} color="positive" />
 		{:else if errors.form}
 			<div
 				data-form-error
 				tabindex="-1"
-				class="mt-6 rounded-2xl border border-red-700/25 bg-red-50 p-4 text-sm leading-6 text-red-950 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
-				role="alert"
+				class="rounded-2xl focus:ring-4 focus:ring-red-700/20 focus:outline-none"
 			>
-				{errors.form}
+				<Alert
+					title="No pudimos crear la cuenta"
+					subtitle={errors.form}
+					icon={CircleAlert}
+					color="danger"
+				/>
 			</div>
 		{/if}
 
 		<form
 			method="POST"
 			use:enhance={enhanceForm}
-			class="mt-7 space-y-5"
+			class="space-y-5"
 			aria-label="Formulario de registro"
 		>
 			<div>
@@ -122,54 +118,24 @@
 					</p>{/if}
 			</div>
 
-			<div>
-				<label for="password" class="text-sm font-bold text-ink">Contraseña</label>
-				<p id="password-help" class="mt-1 text-sm text-muted">
-					Mínimo 8 caracteres. Puedes usar un gestor de contraseñas.
-				</p>
-				<input
-					id="password"
-					name="password"
-					type="password"
-					autocomplete="new-password"
-					minlength="8"
-					required
-					aria-invalid={errors.password ? 'true' : undefined}
-					aria-describedby={errors.password
-						? 'password-help register-password-error'
-						: 'password-help'}
-					class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
-				/>
-				{#if errors.password}<p
-						id="register-password-error"
-						class="mt-2 text-sm font-semibold text-red-800"
-					>
-						{errors.password}
-					</p>{/if}
-			</div>
+			<PasswordField
+				id="password"
+				name="password"
+				label="Contraseña"
+				autocomplete="new-password"
+				minlength={8}
+				help="Mínimo 8 caracteres. Puedes usar un gestor de contraseñas."
+				error={errors.password}
+			/>
 
-			<div>
-				<label for="passwordConfirmation" class="text-sm font-bold text-ink"
-					>Confirma la contraseña</label
-				>
-				<input
-					id="passwordConfirmation"
-					name="passwordConfirmation"
-					type="password"
-					autocomplete="new-password"
-					minlength="8"
-					required
-					aria-invalid={errors.passwordConfirmation ? 'true' : undefined}
-					aria-describedby={errors.passwordConfirmation ? 'password-confirmation-error' : undefined}
-					class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
-				/>
-				{#if errors.passwordConfirmation}<p
-						id="password-confirmation-error"
-						class="mt-2 text-sm font-semibold text-red-800"
-					>
-						{errors.passwordConfirmation}
-					</p>{/if}
-			</div>
+			<PasswordField
+				id="passwordConfirmation"
+				name="passwordConfirmation"
+				label="Confirma la contraseña"
+				autocomplete="new-password"
+				minlength={8}
+				error={errors.passwordConfirmation}
+			/>
 
 			<button
 				type="submit"
@@ -180,13 +146,5 @@
 				{submitting ? 'Creando cuenta…' : 'Crear cuenta'}
 			</button>
 		</form>
-
-		<p class="mt-7 text-center leading-7 text-muted">
-			¿Ya tienes cuenta? <a
-				href={resolve('/auth/login')}
-				class="rounded font-bold text-brand underline decoration-brand/30 underline-offset-4 focus:ring-4 focus:ring-focus/30 focus:outline-none"
-				>Inicia sesión</a
-			>
-		</p>
-	</section>
-</main>
+	</div>
+</AuthShell>

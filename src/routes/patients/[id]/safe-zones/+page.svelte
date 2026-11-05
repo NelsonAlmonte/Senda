@@ -125,6 +125,10 @@
 		centerLongitude = Number(point.longitude.toFixed(6));
 	}
 
+	function handleDraftRadiusChanged(nextRadiusM: number) {
+		radiusM = nextRadiusM;
+	}
+
 	function handleZoneSelected(zoneId: string) {
 		if (editorMode !== 'NONE') return;
 		selectedZoneId = zoneId;
@@ -222,6 +226,7 @@
 						{selectionMode}
 						onCenterSelected={handleCenterSelected}
 						onDraftCenterChanged={handleDraftCenterChanged}
+						onDraftRadiusChanged={handleDraftRadiusChanged}
 						onZoneSelected={handleZoneSelected}
 						onReady={handleMapReady}
 					/>
@@ -257,8 +262,8 @@
 							{#if selectionMode}
 								Toca o haz clic en el mapa para definir el centro de la geocerca.
 							{:else if draft}
-								Arrastra el círculo provisional para ajustar su centro o modifica el radio desde el
-								editor.
+								Arrastra el círculo para mover su centro o sus controles del borde para ajustar el
+								radio.
 							{:else if selectedZone}
 								Mostrando <strong class="text-ink">{selectedZone.name}</strong>. Las zonas inactivas
 								aparecen en el mapa solamente cuando las seleccionas.
@@ -306,7 +311,7 @@
 											<div>
 												<p class="font-bold text-ink">Ajusta el alcance</p>
 												<p class="mt-1 text-sm leading-6 text-muted">
-													Usa el control de radio y comprueba el círculo en el mapa.
+													Arrastra el borde del círculo o usa el control de radio.
 												</p>
 											</div>
 										</li>
@@ -357,7 +362,8 @@
 											</p>
 										{:else if draft}
 											<p class="mt-3 text-sm leading-6 text-muted">
-												Centro definido. Puedes arrastrar el círculo para afinarlo.
+												Centro definido. Arrastra el círculo para moverlo o su borde para cambiar el
+												tamaño.
 											</p>
 										{/if}
 									</div>
@@ -372,7 +378,7 @@
 											type="range"
 											min="50"
 											max="5000"
-											step="50"
+											step="1"
 											value={radiusM}
 											oninput={handleRadiusInput}
 											onchange={handleRadiusChange}
@@ -388,7 +394,7 @@
 												type="number"
 												min="50"
 												max="5000"
-												step="50"
+												step="1"
 												required
 												value={radiusM}
 												oninput={handleRadiusInput}

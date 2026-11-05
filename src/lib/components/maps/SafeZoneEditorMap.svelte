@@ -20,6 +20,7 @@
 		selectionMode: boolean;
 		onCenterSelected?: (point: { latitude: number; longitude: number }) => void;
 		onDraftCenterChanged?: (point: { latitude: number; longitude: number }) => void;
+		onDraftRadiusChanged?: (radiusM: number) => void;
 		onZoneSelected?: (zoneId: string) => void;
 		onReady?: (controller: SafeZoneEditorMapController | null) => void;
 	};
@@ -38,12 +39,19 @@
 		selectionMode,
 		onCenterSelected,
 		onDraftCenterChanged,
+		onDraftRadiusChanged,
 		onZoneSelected,
 		onReady
 	}: Props = $props();
 	let mapState = $state<'LOADING' | 'READY' | 'ERROR'>('LOADING');
 	let retryKey = $state(0);
 	let controller = $state.raw<SafeZoneEditorMapController | null>(null);
+	const MIN_RADIUS_M = 50;
+	const MAX_RADIUS_M = 5000;
+
+	function normalizeRadius(radiusM: number) {
+		return Math.min(MAX_RADIUS_M, Math.max(MIN_RADIUS_M, Math.round(radiusM)));
+	}
 
 	$effect(() => {
 		const currentController = controller;
@@ -100,6 +108,8 @@
 					>();
 					let draftCircle: CircleInstance | null = null;
 					let draftDragListener: Listener | null = null;
+					let draftRadiusListener: Listener | null = null;
+					let syncingDraft = false;
 					let centerSelectionEnabled = initialState.selectionMode;
 					let currentZones = initialState.zones;
 					let currentSelectedZoneId = initialState.selectedZoneId;
@@ -154,6 +164,7 @@
 							radius: nextDraft.radiusM,
 							clickable: !centerSelectionEnabled,
 							draggable: !centerSelectionEnabled,
+							editable: !centerSelectionEnabled,
 							fillColor: '#f5c451',
 							fillOpacity: 0.25,
 							strokeColor: '#92400e',
@@ -163,7 +174,9 @@
 						};
 
 						if (draftCircle) {
+							syncingDraft = true;
 							draftCircle.setOptions(options);
+							syncingDraft = false;
 						} else {
 							draftCircle = new Circle(options);
 							draftDragListener = draftCircle.addListener('dragend', () => {
@@ -175,6 +188,19 @@
 									longitude: center.lng()
 								});
 							});
+							draftRadiusListener = draftCircle.addListener('radius_changed', () => {
+								if (syncingDraft || !draftCircle) return;
+
+								const currentRadius = draftCircle.getRadius();
+								const normalizedRadius = normalizeRadius(currentRadius);
+								if (Math.abs(currentRadius - normalizedRadius) > 0.01) {
+									syncingDraft = true;
+									draftCircle.setRadius(normalizedRadius);
+									syncingDraft = false;
+								}
+
+								onDraftRadiusChanged?.(normalizedRadius);
+							});
 						}
 					};
 
@@ -184,7 +210,8 @@
 						setZones(currentZones, currentSelectedZoneId);
 						draftCircle?.setOptions({
 							clickable: !enabled,
-							draggable: !enabled
+							draggable: !enabled,
+							editable: !enabled
 						});
 					};
 
@@ -218,6 +245,7 @@
 					cleanup = () => {
 						mapClickListener.remove();
 						draftDragListener?.remove();
+						draftRadiusListener?.remove();
 						for (const entry of zoneCircles.values()) {
 							entry.listener.remove();
 							entry.circle.setMap(null);

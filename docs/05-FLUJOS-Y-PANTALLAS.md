@@ -98,7 +98,7 @@ ADMIN/MONITOR → /patients/:id/safe-zones
 
 Se permiten varias zonas activas y superpuestas. La evaluación futura usa la unión lógica: basta estar dentro de una zona activa para permanecer en un área permitida. No existe máximo artificial en la base de datos; la demostración habitual usará entre dos y cinco.
 
-El radio comienza en 250 m, admite 50–5,000 m e incrementos de 50 m. El círculo cambia durante el ajuste y, al terminar, el mapa adapta el encuadre con margen. Después de colocar el centro, el círculo provisional se puede arrastrar tanto al crear como al editar. **Cambiar centro** mantiene una alternativa por toque/click y permite elegir cualquier punto, incluso dentro de la misma geocerca o de otra existente; durante esa selección, los círculos no interceptan el toque. Latitud, longitud y radio tienen entradas numéricas como alternativa de teclado.
+El radio comienza en 250 m y admite 50–5,000 m con precisión al metro entero. El círculo cambia durante el ajuste y, al terminar, el mapa adapta el encuadre con margen. Después de colocar el centro, el círculo provisional se puede arrastrar tanto al crear como al editar. **Cambiar centro** mantiene una alternativa por toque/click y permite elegir cualquier punto, incluso dentro de la misma geocerca o de otra existente; durante esa selección, los círculos no interceptan el toque. Latitud, longitud y radio tienen entradas numéricas como alternativa de teclado.
 
 El editor usa interacción directa con el mapa: la rueda amplía sin exigir `Ctrl` en escritorio y los gestos iniciados sobre el mapa lo manipulan en móvil. El resto de la página conserva el desplazamiento normal fuera del área del mapa.
 

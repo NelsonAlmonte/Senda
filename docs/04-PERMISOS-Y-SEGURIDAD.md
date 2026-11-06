@@ -7,6 +7,8 @@
 | Ver detalles mínimos del paciente | Sí | Sí |
 | Ver ubicación e historial | Sí | Sí |
 | Ver alertas y sus estados | Sí | Sí |
+| Ver traslados planificados | Sí | Sí |
+| Crear/editar/cancelar/finalizar traslados | Sí | No |
 | Crear/editar/desactivar geocercas | Sí | Sí |
 | Editar datos del paciente | Sí | No |
 | Invitar usuarios | Sí | No |
@@ -33,8 +35,9 @@ La tabla `group_members` **no es obligatoria en la fase inicial**. Si aparece de
 8. **`patient_access SELECT`**: según necesidad de interfaz; limitar exposición de correos de terceros.
 9. **`patient_access INSERT/UPDATE/DELETE`**: prohibir CRUD abierto desde cliente; usar operación atómica autorizada.
 10. **`devices` / `device_assignments`**: vistas/operaciones específicas, no listado completo de inventario ajeno.
-9. **`push_subscriptions`**: cada usuario gestiona únicamente sus propias suscripciones mediante `SELECT`, `INSERT`, `UPDATE` y `DELETE` sujetos a `user_id = auth.uid()`. El endpoint es único para no registrar el mismo navegador bajo varias cuentas. La Edge Function autorizada consulta destinatarios por acceso activo y elimina únicamente endpoints que el proveedor reporte como permanentemente inválidos.
-10. **Entrega Web Push**: `anon`, `authenticated` y `service_role` no pueden ejecutar directamente la función de trigger. La Edge Function acepta solicitudes sin JWT de usuario porque provienen de Postgres, pero exige `SENDA_WEBHOOK_SECRET`; luego usa una clave privada de servidor para seleccionar exclusivamente usuarios con `patient_access.revoked_at is null`. Los valores VAPID privados y el secreto compartido se almacenan en Edge Function Secrets; la base de datos conserva solo el URL público del proyecto y el secreto del webhook dentro de Vault.
+11. **`push_subscriptions`**: cada usuario gestiona únicamente sus propias suscripciones mediante `SELECT`, `INSERT`, `UPDATE` y `DELETE` sujetos a `user_id = auth.uid()`. El endpoint es único para no registrar el mismo navegador bajo varias cuentas. La Edge Function autorizada consulta destinatarios por acceso activo y elimina únicamente endpoints que el proveedor reporte como permanentemente inválidos.
+12. **Entrega Web Push**: `anon`, `authenticated` y `service_role` no pueden ejecutar directamente la función de trigger. La Edge Function acepta solicitudes sin JWT de usuario porque provienen de Postgres, pero exige `SENDA_WEBHOOK_SECRET`; luego usa una clave privada de servidor para seleccionar exclusivamente usuarios con `patient_access.revoked_at is null`. Los valores VAPID privados y el secreto compartido se almacenan en Edge Function Secrets; la base de datos conserva solo el URL público del proyecto y el secreto del webhook dentro de Vault.
+13. **`planned_transfers SELECT`**: cualquier `ADMIN` o `MONITOR` con acceso activo al paciente. Las escrituras directas permanecen revocadas; las RPC exigen `ADMIN`, bloquean el paciente para serializar cambios, impiden solapamientos y conservan cancelación/finalización como auditoría en vez de borrar.
 
 Preferir RLS y constraints sobre una proliferación de Edge Functions. Las funciones SQL sensibles deben asegurar permisos de ejecución y seguridad del `search_path`; revisar especialmente cualquier `SECURITY DEFINER`.
 

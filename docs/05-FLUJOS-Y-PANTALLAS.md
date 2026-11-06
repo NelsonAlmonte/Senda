@@ -20,6 +20,8 @@
 /patients/:id
 /patients/:id/map
 /patients/:id/episodes
+/patients/:id/episodes/:episodeId
+/patients/:id/transfers
 /patients/:id/history
 /patients/:id/safe-zones
 /patients/:id/access
@@ -139,6 +141,22 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 
 **Recorrido por episodio (2026-11-03):** desde Alertas o el historial de un paciente se abre `/patients/:id/episodes/:episodeId`. La carga SSR exige acceso vigente al paciente y consulta el episodio bajo RLS. El recorrido empieza en `first_outside_location_id`, incluye la lectura que confirmó la salida y termina en `resolved_by_location_id`; si el episodio sigue `OPEN`, termina en la lectura más reciente disponible. Todas las posiciones pertenecen al `device_assignment_id` guardado en el episodio. La vista no superpone geocercas actuales porque el MVP no conserva versiones históricas de sus formas. Se muestran como máximo 500 lecturas; en recorridos mayores aparecen 250 iniciales y 250 finales como dos trazos separados y con advertencia explícita.
 
+## Flujo G — Traslado planificado
+
+```text
+ADMIN abre /patients/:id/transfers
+    → define inicio, fin (máximo 24 h) y nota
+    → durante el intervalo el dispositivo continúa enviando ubicaciones
+    → no se abren episodios nuevos con lecturas cubiertas por el traslado
+    → un episodio OPEN previo conserva su ciclo normal
+    → ADMIN puede extender dentro del máximo o finalizar antes
+    → MONITOR consulta el mismo contexto, sin editarlo
+```
+
+El traslado representa únicamente el desplazamiento. No crea una geocerca temporal ni cubre por defecto toda una estadía. Al llegar, la familia puede finalizarlo anticipadamente y configurar una geocerca normal si necesita monitorear el destino. Una cancelación solo es válida antes del inicio. Después del cierre, la confirmación de una salida exige dos lecturas nuevas no cubiertas; nunca se reutiliza una lectura del traslado para generar una alerta retroactiva.
+
+En `/patients`, un traslado aparece únicamente mientras su intervalo está activo y queda por debajo de un episodio `OPEN` y de la falta de dispositivo en la prioridad visual. El indicador breve enlaza a `/patients/:id/transfers`; una alerta activa abre directamente su recorrido, la falta de dispositivo abre su configuración para `ADMIN` y el estado sin alertas abre el mapa. Los traslados futuros permanecen fuera de la tarjeta hasta su inicio.
+
 ## Información mínima sugerida por pantalla (no UI final)
 
 | Ruta | Contenido imprescindible |
@@ -157,6 +175,7 @@ Los episodios abiertos deben mostrar cuándo comenzó y se confirmó la salida, 
 | `/patients/:id/map` | Posición, timestamp, radio/zonas, episodio actual e historial breve, modo simulación controlado |
 | `/patients/:id/episodes` | Alerta activa separada e historial autorizado del paciente, con episodios finalizados paginados de doce en doce |
 | `/patients/:id/episodes/:episodeId` | Recorrido histórico del episodio e hitos de apertura, confirmación y cierre |
+| `/patients/:id/transfers` | Traslados en curso/programados e historial; gestión solo `ADMIN`, lectura `ADMIN`/`MONITOR` |
 | `/patients/:id/history` | Recorrido consultable en intervalo, origen de datos |
 | `/patients/:id/safe-zones` | Geocercas circulares y edición por ADMIN/MONITOR |
 | `/patients/:id/access` | Personas autorizadas; invitar/revocar solo ADMIN |

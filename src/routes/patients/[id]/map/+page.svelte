@@ -2,6 +2,7 @@
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import BellRing from '@lucide/svelte/icons/bell-ring';
+	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheckBig from '@lucide/svelte/icons/circle-check-big';
 	import Clock3 from '@lucide/svelte/icons/clock-3';
@@ -65,7 +66,12 @@
 			: null
 	);
 	let alertStatus = $derived(
-		presentAlertStatus(data.alertEpisodesAvailable, activeAlertEpisode, latestLocation)
+		presentAlertStatus(
+			data.alertEpisodesAvailable,
+			activeAlertEpisode,
+			latestLocation,
+			data.activeTransfer
+		)
 	);
 	let freshnessStatus = $derived(
 		presentFreshnessStatus(latestLocation, data.manualLocationEnabled)
@@ -182,7 +188,8 @@
 	function presentAlertStatus(
 		available: boolean,
 		activeEpisode: AlertEpisode | null,
-		location: LatestLocation | null
+		location: LatestLocation | null,
+		activeTransfer: PageProps['data']['activeTransfer']
 	): StatusPresentation {
 		if (!available) {
 			return {
@@ -217,6 +224,14 @@
 				title: 'Salida confirmada activa',
 				info: `Confirmada el ${presentDateTime(activeEpisode.confirmedAt)}.${context}`,
 				tone: 'danger'
+			};
+		}
+
+		if (activeTransfer) {
+			return {
+				title: 'Traslado planificado en curso',
+				info: `${activeTransfer.note}. No se abrirán salidas nuevas hasta el ${presentDateTime(activeTransfer.endsAt)}; el dispositivo continúa registrando ubicaciones.`,
+				tone: 'warning'
 			};
 		}
 
@@ -556,13 +571,23 @@
 							subtitle="Estado de la salida, vigencia y relación de la última lectura con las zonas permitidas."
 						/>
 						<div class="mt-6 space-y-4">
+							{#if !data.activeTransferAvailable}
+								<Alert
+									icon={CircleAlert}
+									title="Traslados no disponibles"
+									subtitle="No pudimos verificar si existe un traslado en curso."
+									color="warning"
+								/>
+							{/if}
 							<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
 								<InfoItem
 									icon={activeAlertEpisode
 										? Siren
-										: alertStatus.tone === 'warning'
-											? CircleAlert
-											: BellRing}
+										: data.activeTransfer
+											? CalendarClock
+											: alertStatus.tone === 'warning'
+												? CircleAlert
+												: BellRing}
 									title={alertStatus.title}
 									info={alertStatus.info}
 									tone={alertStatus.tone}

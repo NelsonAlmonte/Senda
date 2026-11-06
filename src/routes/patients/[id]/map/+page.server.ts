@@ -17,6 +17,7 @@ export const load: PageServerLoad = async ({ depends, locals, params, url }) => 
 	}
 
 	depends('senda:patient-alerts');
+	depends('senda:patient-transfers');
 
 	const { data: access, error: accessError } = await locals.supabase
 		.from('patient_access')
@@ -34,28 +35,41 @@ export const load: PageServerLoad = async ({ depends, locals, params, url }) => 
 	if (!patient) httpError(404, 'Paciente no encontrado.');
 
 	const group = Array.isArray(patient.group) ? patient.group[0] : patient.group;
-	const [assignmentResult, safeZonesResult, alertEpisodesResult] = await Promise.all([
-		locals.supabase
-			.from('device_assignments')
-			.select('id, assigned_at, unassigned_at, device:devices!inner(id, device_kind)')
-			.eq('patient_id', params.id)
-			.order('assigned_at', { ascending: true }),
-		locals.supabase
-			.from('safe_zones')
-			.select('id, name, center_latitude, center_longitude, radius_m')
-			.eq('patient_id', params.id)
-			.eq('is_active', true)
-			.is('archived_at', null)
-			.order('name', { ascending: true }),
-		locals.supabase
-			.from('alert_episodes')
-			.select(
-				'id, patient_id, device_assignment_id, status, started_at, confirmed_at, resolved_at, first_outside_location_id, confirmed_by_location_id, resolved_by_location_id, created_at, updated_at'
-			)
-			.eq('patient_id', params.id)
-			.order('confirmed_at', { ascending: false })
-			.limit(5)
-	]);
+	const now = new Date().toISOString();
+	const [assignmentResult, safeZonesResult, alertEpisodesResult, activeTransferResult] =
+		await Promise.all([
+			locals.supabase
+				.from('device_assignments')
+				.select('id, assigned_at, unassigned_at, device:devices!inner(id, device_kind)')
+				.eq('patient_id', params.id)
+				.order('assigned_at', { ascending: true }),
+			locals.supabase
+				.from('safe_zones')
+				.select('id, name, center_latitude, center_longitude, radius_m')
+				.eq('patient_id', params.id)
+				.eq('is_active', true)
+				.is('archived_at', null)
+				.order('name', { ascending: true }),
+			locals.supabase
+				.from('alert_episodes')
+				.select(
+					'id, patient_id, device_assignment_id, status, started_at, confirmed_at, resolved_at, first_outside_location_id, confirmed_by_location_id, resolved_by_location_id, created_at, updated_at'
+				)
+				.eq('patient_id', params.id)
+				.order('confirmed_at', { ascending: false })
+				.limit(5),
+			locals.supabase
+				.from('planned_transfers')
+				.select('id, starts_at, ends_at, note')
+				.eq('patient_id', params.id)
+				.is('ended_at', null)
+				.is('cancelled_at', null)
+				.lte('starts_at', now)
+				.gt('ends_at', now)
+				.order('starts_at', { ascending: false })
+				.limit(1)
+				.maybeSingle()
+		]);
 	const { data: assignments, error: assignmentError } = assignmentResult;
 
 	if (assignmentError) httpError(500, 'No pudimos consultar el dispositivo del paciente.');
@@ -194,6 +208,15 @@ export const load: PageServerLoad = async ({ depends, locals, params, url }) => 
 		safeZonesAvailable: !safeZonesResult.error,
 		alertEpisodes,
 		alertEpisodesAvailable: !alertEpisodesResult.error,
+		activeTransfer: activeTransferResult.data
+			? {
+					id: activeTransferResult.data.id,
+					startsAt: activeTransferResult.data.starts_at,
+					endsAt: activeTransferResult.data.ends_at,
+					note: activeTransferResult.data.note
+				}
+			: null,
+		activeTransferAvailable: !activeTransferResult.error,
 		locationHistory,
 		manualLocationEnabled:
 			SENDA_ENABLE_MANUAL_LOCATION_SIMULATOR &&

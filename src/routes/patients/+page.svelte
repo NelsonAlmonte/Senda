@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
@@ -10,9 +11,11 @@
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
+	import Route from '@lucide/svelte/icons/route';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -23,6 +26,55 @@
 	function patientName(patient: Patient) {
 		return `${patient.firstName} ${patient.lastName}`.trim();
 	}
+
+	function statusHref(patient: Patient) {
+		if (!data.alertsAvailable) {
+			return resolve('/patients/[id]', { id: patient.id });
+		}
+
+		if (patient.activeAlert) {
+			return resolve('/patients/[id]/episodes/[episodeId]', {
+				id: patient.id,
+				episodeId: patient.activeAlert.id
+			});
+		}
+
+		if (!patient.assignment) {
+			return patient.accessRole === 'ADMIN'
+				? resolve('/patients/[id]/device', { id: patient.id })
+				: resolve('/patients/[id]', { id: patient.id });
+		}
+
+		if (patient.activeTransfer) {
+			return resolve('/patients/[id]/transfers', { id: patient.id });
+		}
+
+		return resolve('/patients/[id]/map', { id: patient.id });
+	}
+
+	onMount(() => {
+		let active = true;
+		let timeout: number | undefined;
+
+		function scheduleNextBoundary() {
+			const boundaryTime = Date.parse(data.nextTransferBoundary ?? '');
+			if (!Number.isFinite(boundaryTime)) return;
+
+			const maximumDelay = 2_147_483_647;
+			const delay = Math.min(Math.max(boundaryTime - Date.now() + 250, 100), maximumDelay);
+			timeout = window.setTimeout(async () => {
+				await invalidate('senda:patient-transfers');
+				if (active) scheduleNextBoundary();
+			}, delay);
+		}
+
+		scheduleNextBoundary();
+
+		return () => {
+			active = false;
+			if (timeout !== undefined) window.clearTimeout(timeout);
+		};
+	});
 </script>
 
 <svelte:head><title>Pacientes | Senda</title></svelte:head>
@@ -83,6 +135,17 @@
 			</div>
 		{/if}
 
+		{#if !data.transfersAvailable && data.patientsAvailable}
+			<div class="mb-8 max-w-2xl">
+				<Alert
+					icon={CircleAlert}
+					title="Estado de traslados no disponible"
+					subtitle="Los demás estados comprobados continúan visibles."
+					color="warning"
+				/>
+			</div>
+		{/if}
+
 		{#if !data.patientsAvailable}
 			<div class="max-w-2xl">
 				<Alert
@@ -119,24 +182,32 @@
 									</div>
 								</div>
 
-								<div class="mt-6 flex items-center gap-3">
+								<a
+									href={statusHref(patient)}
+									class={[
+										'group mt-5 flex min-h-14 items-center gap-3 rounded-2xl p-2 transition-colors focus:ring-4 focus:ring-focus/30 focus:outline-none',
+										patient.activeAlert || patient.activeTransfer
+											? 'hover:bg-amber-50'
+											: 'hover:bg-canvas'
+									]}
+								>
 									{#if !data.alertsAvailable}
 										<div
 											class="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-950"
 										>
 											<CircleHelp aria-hidden="true" size={20} strokeWidth={2} />
 										</div>
-										<div>
+										<div class="min-w-0 flex-1">
 											<p class="font-bold text-ink">Estado de alertas no disponible</p>
 											<p class="mt-1 text-sm leading-5 text-muted">Inténtalo nuevamente.</p>
 										</div>
-									{:else if patient.hasActiveAlert}
+									{:else if patient.activeAlert}
 										<div
 											class="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-950"
 										>
 											<BellRing aria-hidden="true" size={20} strokeWidth={2} />
 										</div>
-										<div>
+										<div class="min-w-0 flex-1">
 											<p class="font-bold text-amber-950">Alerta activa</p>
 											<p class="mt-1 text-sm leading-5 text-amber-950">Salida confirmada.</p>
 										</div>
@@ -146,9 +217,25 @@
 										>
 											<Smartphone aria-hidden="true" size={20} strokeWidth={2} />
 										</div>
-										<div>
+										<div class="min-w-0 flex-1">
 											<p class="font-bold text-ink">Sin dispositivo configurado</p>
-											<p class="mt-1 text-sm leading-5 text-muted">El monitoreo no está activo.</p>
+											<p class="mt-1 text-sm leading-5 text-muted">
+												{patient.accessRole === 'ADMIN'
+													? 'Configúralo para comenzar el monitoreo.'
+													: 'Un administrador debe configurarlo.'}
+											</p>
+										</div>
+									{:else if patient.activeTransfer}
+										<div
+											class="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-900"
+										>
+											<Route aria-hidden="true" size={20} strokeWidth={2} />
+										</div>
+										<div class="min-w-0 flex-1">
+											<p class="font-bold text-amber-950">Traslado en curso</p>
+											<p class="mt-1 text-sm leading-5 text-amber-950/80">
+												El trayecto está autorizado temporalmente.
+											</p>
 										</div>
 									{:else}
 										<div
@@ -156,12 +243,18 @@
 										>
 											<BellOff aria-hidden="true" size={20} strokeWidth={2} />
 										</div>
-										<div>
+										<div class="min-w-0 flex-1">
 											<p class="font-bold text-ink">Sin alertas activas</p>
 											<p class="mt-1 text-sm leading-5 text-muted">No hay episodios abiertos.</p>
 										</div>
 									{/if}
-								</div>
+									<ArrowUpRight
+										aria-hidden="true"
+										size={18}
+										strokeWidth={2}
+										class="shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+									/>
+								</a>
 							</div>
 
 							<div class="border-t border-ink/10 p-4">

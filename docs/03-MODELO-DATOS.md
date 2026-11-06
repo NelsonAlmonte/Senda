@@ -10,6 +10,7 @@ AUTH.USERS ── PROFILES
     ├── PATIENT_ACCESS ──────────────── PATIENTS ─── GROUPS
     │                                       │
     └── INVITATIONS                         ├── SAFE_ZONES
+                                            ├── PLANNED_TRANSFERS
                                             ├── ALERT_EPISODES
                                             └── DEVICE_ASSIGNMENTS ── DEVICES
                                                        │
@@ -163,7 +164,31 @@ Un único episodio `OPEN` por paciente. Dos lecturas confiables `OUTSIDE` consec
 
 **Estado completado (2026-10-25):** `20261026010952_geofence_alert_episodes.sql` crea la tabla, RLS de solo lectura por `patient_access`, publicación Realtime y procesamiento backend. `20261026012835_remove_alert_episode_severity.sql` elimina la columna de nivel que el MVP decidió no utilizar. Ambas migraciones están aplicadas en Supabase de desarrollo y los 55 casos pgTAP pasan sin dejar datos ficticios. El usuario validó manualmente apertura, actualización Realtime, reingreso e historial en la PWA.
 
-### 10. `invitations`
+### 10. `planned_transfers`
+
+```text
+id            uuid PK
+patient_id    uuid FK -> patients.id
+starts_at     timestamptz
+ends_at       timestamptz
+note          text (1..500)
+created_by    uuid FK -> auth.users.id
+updated_by    uuid FK -> auth.users.id
+ended_at      timestamptz null
+ended_by      uuid FK -> auth.users.id null
+cancelled_at  timestamptz null
+cancelled_by  uuid FK -> auth.users.id null
+created_at    timestamptz
+updated_at    timestamptz
+```
+
+Una ventana dura como máximo 24 horas y no puede superponerse con otra ventana no cancelada del mismo paciente. `ended_at` conserva una finalización anticipada; `cancelled_at` solo corresponde a un traslado que aún no inició. El estado `SCHEDULED | ACTIVE | COMPLETED | CANCELLED` se deriva de las fechas y no se duplica en una columna.
+
+Durante el intervalo efectivo el dispositivo sigue enviando ubicaciones. El trigger de episodios no abre un episodio nuevo con una pareja `OUTSIDE` cuyo intervalo intersecte el traslado, lo que impide combinar la última lectura del traslado con la primera posterior. Un episodio que ya estaba `OPEN` no se cierra al comenzar el traslado y conserva su resolución normal mediante dos lecturas `INSIDE`. Solo `ADMIN` crea, edita, cancela o finaliza; `ADMIN` y `MONITOR` leen por `patient_access`.
+
+**Estado aplicado (2026-11-06):** `20261106143537_planned_transfers.sql` crea tabla, RLS de lectura, RPC con autorización `ADMIN`, serialización por paciente, auditoría y la integración con el motor de episodios. `/patients/:id/transfers` presenta gestión y consulta; el mapa explica un traslado activo. Los 58 casos de `planned_transfers.test.sql` pasan con rollback y no dejan datos ficticios; los 55 casos históricos de episodios también continúan pasando. Los asesores no reportan hallazgos nuevos de seguridad ni salud atribuibles a la migración; sus índices de auditoría aparecen sin uso porque la tabla aún está vacía. El flujo manual permanece pendiente de validación.
+
+### 11. `invitations`
 
 ```text
 id           uuid PK
@@ -182,7 +207,7 @@ No agregar estado `EXPIRED`. El token puede representarse como código introduci
 
 **Implementado el 2026-10-24:** código manual de un solo uso con `email = null`, hash SHA-256 persistido y aceptación transaccional. La tabla no se expone directamente a `anon` ni `authenticated`; las operaciones se realizan mediante RPC con autorización interna. El envío por email, `DECLINED` y la invalidación administrativa permanecen para una historia posterior.
 
-### 11. `push_subscriptions`
+### 12. `push_subscriptions`
 
 ```text
 id          uuid PK

@@ -62,6 +62,19 @@ No se crea un episodio por cada lectura. El mismo registro permanece `OPEN` dura
 
 **Estado completado (2026-10-25):** migración, prueba pgTAP, consulta SSR, tarjeta textual, historial breve y actualización Realtime implementados. `20261026010952_geofence_alert_episodes.sql` está aplicada en Supabase de desarrollo y sus 55 casos pasan sin dejar datos ficticios. El usuario validó manualmente apertura, Realtime y resolución. El equipo decidió cerrar este motor como alcance suficiente del MVP.
 
+## Traslados planificados — historia 7J
+
+- La ventana tiene `starts_at`, `ends_at` y una nota obligatoria; dura como máximo 24 horas.
+- Solo `ADMIN` la gestiona. `MONITOR` puede verla para comprender por qué una lectura exterior no abrió una alerta.
+- El dispositivo y la clasificación por geocercas continúan funcionando. El traslado no significa “sin ubicación” ni altera conectividad/frescura.
+- Si ya existe un episodio `OPEN`, el traslado no lo cierra. Dos `INSIDE` confiables aún pueden resolverlo.
+- Sin episodio abierto, una pareja `OUTSIDE` no abre uno nuevo si el intervalo entre ambas lecturas intersecta un traslado efectivo.
+- Al finalizar, la primera lectura posterior no se combina con una lectura cubierta; hacen falta dos lecturas posteriores nuevas.
+- Una ventana futura puede cancelarse; una activa puede extenderse dentro de las 24 horas o finalizarse anticipadamente. No se borran filas.
+- El MVP no crea geocercas temporales automáticas.
+
+**Estado local (2026-11-06):** migración, RLS/RPC, integración del trigger, UI y 58 casos pgTAP escritos. Falta aplicar la migración en desarrollo, ejecutar pgTAP y validar ambos roles, estados y comportamiento temporal de extremo a extremo.
+
 ## Decisión de simplicidad del MVP
 
 El prototipo no cambia el episodio según minutos transcurridos ni distancia adicional fuera del perímetro. Los niveles `MEDIUM`, `HIGH` y `CRITICAL`, junto con umbrales como 5/15/30 minutos o 500/1000 metros, quedan explícitamente fuera del alcance. Pueden estudiarse después del MVP si pruebas con hardware real justifican esa complejidad.
@@ -111,6 +124,9 @@ El prototipo no cambia el episodio según minutos transcurridos ni distancia adi
 | R19 | Dos posiciones con salto físicamente implausible | Marcar sospechosa/descartar según política definida |
 | R20 | Consultar el recorrido de un episodio resuelto | Mostrar solo su asignación y el intervalo inclusivo entre apertura y resolución |
 | R21 | Episodio con más de 500 lecturas | Mostrar dos tramos separados, advertir el truncamiento y no unir los puntos omitidos |
+| R22 | Dos `OUTSIDE` durante un traslado activo | Guardar ubicaciones sin abrir un episodio nuevo |
+| R23 | Episodio ya `OPEN` cuando comienza el traslado | Mantenerlo abierto; resolverlo solo con reingreso confirmado |
+| R24 | Primera `OUTSIDE` después del traslado | No combinarla con una lectura cubierta; esperar otra lectura posterior |
 
 ## Métricas a registrar para la tesis
 

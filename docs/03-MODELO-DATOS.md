@@ -87,13 +87,17 @@ device_id      uuid FK -> devices.id
 patient_id     uuid FK -> patients.id
 assigned_at    timestamptz
 unassigned_at  timestamptz null
+unassigned_by  uuid null FK -> auth.users.id
 ```
 
 - Un dispositivo no puede tener dos asignaciones activas: índice único parcial por `device_id WHERE unassigned_at IS NULL`.
 - Para el MVP se confirmó un único dispositivo activo por paciente: índice único parcial por `patient_id WHERE unassigned_at IS NULL`.
 - `unassigned_at` es la fuente de verdad de activación; **no añadir `is_active` redundante** salvo necesidad demostrada.
+- Al desvincular, la asignación se conserva y registra `unassigned_at` y `unassigned_by`; las ubicaciones y episodios continúan apuntando a esa asignación histórica. El dispositivo liberado puede crear una asignación nueva con otro paciente sin transferirle el historial anterior.
 
 **Estado implementado (2026-10-24):** `devices` y `device_assignments` ya existen en Supabase de desarrollo. El registro inicial selecciona uno de tres seriales simulados preexistentes y crea la asignación mediante una RPC autorizada; no crea inventario desde el navegador.
+
+**Desvinculación implementada en desarrollo (2026-11-10):** una RPC autorizada finaliza la asignación activa sin eliminarla. Solo `ADMIN` puede ejecutarla y se rechaza mientras exista un episodio `OPEN` o un traslado activo. La migración `20261110151827_patient_device_unassignment.sql` está aplicada en Supabase de desarrollo y sus 21 casos pgTAP pasan con rollback.
 
 ### 7. `locations`
 

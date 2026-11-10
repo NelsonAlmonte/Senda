@@ -173,7 +173,7 @@ En `/patients`, un traslado aparece únicamente mientras su intervalo está acti
 | `/groups` | Asistente de grupo nuevo/existente, paciente y configuración opcional del dispositivo |
 | `/groups/:id` | Datos básicos del grupo y pacientes del contexto que el usuario está autorizado a administrar/ver |
 | `/patients/:id` | Ficha mínima, últimos indicadores y accesos a módulos |
-| `/patients/:id/device` | Estado de asignación y formulario de serial simulado; solo para `ADMIN` |
+| `/patients/:id/device` | Estado, asignación y desvinculación confirmada del dispositivo; solo para `ADMIN` |
 | `/patients/:id/map` | Posición, timestamp, radio/zonas, episodio actual e historial breve, modo simulación controlado |
 | `/patients/:id/episodes` | Alerta activa separada e historial autorizado del paciente, con episodios finalizados paginados de doce en doce |
 | `/patients/:id/episodes/:episodeId` | Recorrido histórico del episodio e hitos de apertura, confirmación y cierre |

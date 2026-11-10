@@ -3,6 +3,7 @@ import { error as httpError, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 const serialPattern = /^[A-Z0-9][A-Z0-9-]{7,63}$/;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function normalizeSerial(value: FormDataEntryValue | null): string {
 	return readText(value).toUpperCase();
@@ -34,7 +35,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	const group = Array.isArray(patient.group) ? patient.group[0] : patient.group;
 	const { data: assignment, error: assignmentError } = await locals.supabase
 		.from('device_assignments')
-		.select('id, assigned_at, device:devices!inner(id)')
+		.select('id, assigned_at, device:devices!inner(id, serial_number)')
 		.eq('patient_id', params.id)
 		.is('unassigned_at', null)
 		.maybeSingle();
@@ -59,7 +60,8 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 			assignment && device
 				? {
 						id: assignment.id,
-						assignedAt: assignment.assigned_at
+						assignedAt: assignment.assigned_at,
+						serialNumber: device.serial_number
 					}
 				: null,
 		onboarding: url.searchParams.get('onboarding') === '1'
@@ -67,7 +69,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ locals, params, request }) => {
+	assign: async ({ locals, params, request }) => {
 		if (!locals.user || !locals.supabase) {
 			redirect(303, `/auth/login?next=/patients/${params.id}/device`);
 		}
@@ -127,5 +129,67 @@ export const actions: Actions = {
 		}
 
 		redirect(303, '/patients?configured=device');
+	},
+	unassign: async ({ locals, params, request }) => {
+		if (!locals.user || !locals.supabase) {
+			redirect(303, `/auth/login?next=/patients/${params.id}/device`);
+		}
+
+		const formData = await request.formData();
+		const assignmentId = readText(formData.get('assignmentId'));
+
+		if (!uuidPattern.test(assignmentId)) {
+			return fail(400, {
+				intent: 'unassign',
+				errors: { unassign: 'No pudimos identificar la asignación activa.' }
+			});
+		}
+
+		const { error } = await locals.supabase.rpc('unassign_patient_device', {
+			p_patient_id: params.id,
+			p_assignment_id: assignmentId
+		});
+
+		if (error) {
+			if (error.message.includes('An open alert must be resolved')) {
+				return fail(409, {
+					intent: 'unassign',
+					errors: {
+						unassign: 'Resuelve la alerta activa antes de desvincular el dispositivo.'
+					}
+				});
+			}
+
+			if (error.message.includes('An active transfer must be finished')) {
+				return fail(409, {
+					intent: 'unassign',
+					errors: {
+						unassign: 'Finaliza el traslado en curso antes de desvincular el dispositivo.'
+					}
+				});
+			}
+
+			if (error.code === 'P0002') {
+				return fail(409, {
+					intent: 'unassign',
+					errors: {
+						unassign: 'La asignación ya no está activa. Actualiza la página e inténtalo nuevamente.'
+					}
+				});
+			}
+
+			if (error.code === '42501') {
+				httpError(403, 'No tienes permiso para desvincular este dispositivo.');
+			}
+
+			return fail(400, {
+				intent: 'unassign',
+				errors: {
+					unassign: 'No pudimos desvincular el dispositivo. Inténtalo nuevamente.'
+				}
+			});
+		}
+
+		return { intent: 'unassign', success: true };
 	}
 };

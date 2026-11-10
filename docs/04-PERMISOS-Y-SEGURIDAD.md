@@ -27,7 +27,7 @@ La tabla `group_members` **no es obligatoria en la fase inicial**. Si aparece de
 
 1. **`patients SELECT`**: usuarios con un `patient_access` activo para ese paciente; incluir flujo controlado de creación administrativa sin abrir lecturas globales.
 2. **`devices` y `device_assignments SELECT`**: solo si la asignación apunta a un paciente con `patient_access` activo. El inventario sin asignar no se expone.
-3. **Asignación de dispositivo**: RPC autenticada que exige `ADMIN`; el cliente no recibe permisos directos de inserción o actualización sobre inventario/asignaciones.
+3. **Asignación y desvinculación de dispositivo**: RPC autenticadas que exigen `ADMIN`; el cliente no recibe permisos directos de inserción o actualización sobre inventario/asignaciones. La desvinculación conserva la fila histórica, registra el actor y se bloquea ante un episodio `OPEN` o un traslado activo.
 4. **`locations SELECT`**: solo si la asignación histórica apunta a un paciente con acceso activo del usuario. La relación con geocercas, zona coincidente, tolerancia y distancia firmada forman parte de la misma fila y heredan exactamente este aislamiento.
 5. **`safe_zones SELECT`**: usuarios con acceso al paciente.
 6. **`safe_zones INSERT/UPDATE/DELETE`**: `ADMIN` o `MONITOR` autorizado.
@@ -93,6 +93,7 @@ La entrega por email y enlace seguro permanece como ampliación posterior. En es
 
 - Usuario A no lee mapa/historial de paciente de usuario B.
 - MONITOR no invita ni asigna dispositivo.
+- MONITOR no desvincula dispositivos; `ADMIN` tampoco puede hacerlo mientras exista una alerta abierta o un traslado activo.
 - MONITOR sí edita geocerca de un paciente autorizado; usuario externo no.
 - Invitación destinada a un correo no se acepta desde otro correo.
 - Token aceptado no puede reutilizarse.

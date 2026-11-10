@@ -155,6 +155,8 @@ ADMIN abre /patients/:id/transfers
 
 El traslado representa únicamente el desplazamiento. No crea una geocerca temporal ni cubre por defecto toda una estadía. Al llegar, la familia puede finalizarlo anticipadamente y configurar una geocerca normal si necesita monitorear el destino. Una cancelación solo es válida antes del inicio. Después del cierre, la confirmación de una salida exige dos lecturas nuevas no cubiertas; nunca se reutiliza una lectura del traslado para generar una alerta retroactiva.
 
+La edición y cancelación de un traslado programado, así como la extensión y finalización anticipada de uno activo, se gestionan en diálogos modales enfocados. Editar permite ajustar inicio, fin y nota; extender conserva el inicio y modifica la hora final o la nota. Cancelar y finalizar explican su consecuencia y exigen una confirmación explícita. Los formularios siguen usando acciones SSR con mejora progresiva y muestran sus errores dentro del mismo contexto.
+
 En `/patients`, un traslado aparece únicamente mientras su intervalo está activo y queda por debajo de un episodio `OPEN` y de la falta de dispositivo en la prioridad visual. El indicador breve enlaza a `/patients/:id/transfers`; una alerta activa abre directamente su recorrido, la falta de dispositivo abre su configuración para `ADMIN` y el estado sin alertas abre el mapa. Los traslados futuros permanecen fuera de la tarjeta hasta su inicio.
 
 ## Información mínima sugerida por pantalla (no UI final)

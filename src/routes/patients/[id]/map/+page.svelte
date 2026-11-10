@@ -504,7 +504,7 @@
 						{/key}
 					</div>
 
-					<aside class="min-h-0 min-w-0 overflow-hidden xl:col-span-4 xl:h-160">
+					<aside class="min-h-0 min-w-0 xl:col-span-4 xl:h-160">
 						<section
 							class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-sm"
 						>

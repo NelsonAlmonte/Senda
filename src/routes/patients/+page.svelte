@@ -15,6 +15,7 @@
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import { ContactRound } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
 
@@ -221,7 +222,7 @@
 											<p class="font-bold text-ink">Sin dispositivo configurado</p>
 											<p class="mt-1 text-sm leading-5 text-muted">
 												{patient.accessRole === 'ADMIN'
-													? 'Configúralo para comenzar el monitoreo.'
+													? 'Configurar el monitoreo.'
 													: 'Un administrador debe configurarlo.'}
 											</p>
 										</div>
@@ -234,7 +235,7 @@
 										<div class="min-w-0 flex-1">
 											<p class="font-bold text-amber-950">Traslado en curso</p>
 											<p class="mt-1 text-sm leading-5 text-amber-950/80">
-												El trayecto está autorizado temporalmente.
+												Trayecto está autorizado.
 											</p>
 										</div>
 									{:else}
@@ -262,8 +263,8 @@
 									href={resolve('/patients/[id]', { id: patient.id })}
 									class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/30 focus:outline-none"
 								>
+									<ContactRound aria-hidden="true" size={18} strokeWidth={2} />
 									{patient.accessRole === 'ADMIN' ? 'Administrar paciente' : 'Ver paciente'}
-									<ArrowUpRight aria-hidden="true" size={18} strokeWidth={2} />
 								</a>
 								<div class="mt-2 flex flex-wrap justify-center gap-2">
 									{#if patient.assignment}

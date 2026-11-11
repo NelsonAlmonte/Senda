@@ -86,5 +86,56 @@ export const actions: Actions = {
 		}
 
 		redirect(303, `/patients/${params.id}?restored=patient`);
+	},
+	delete: async ({ locals, params, request }) => {
+		const { supabase, accessRole, patient } = await requireArchivedPatientAccess(locals, params.id);
+		if (accessRole !== 'ADMIN') {
+			httpError(403, 'Solo un administrador puede eliminar este paciente.');
+		}
+
+		const formData = await request.formData();
+		const confirmation = String(formData.get('confirmation') ?? '').trim();
+		const expectedConfirmation = `${patient.first_name} ${patient.last_name}`.trim();
+
+		if (confirmation !== expectedConfirmation) {
+			return fail(400, {
+				action: 'delete' as const,
+				errors: {
+					confirmation: `Escribe exactamente “${expectedConfirmation}” para confirmar.`
+				}
+			});
+		}
+
+		const { error } = await supabase.rpc('delete_archived_patient', {
+			p_patient_id: params.id
+		});
+
+		if (error) {
+			console.error('delete_archived_patient failed', {
+				code: error.code,
+				message: error.message,
+				details: error.details,
+				hint: error.hint
+			});
+
+			if (error.code === '42501') {
+				httpError(403, 'No tienes permiso para eliminar este paciente.');
+			}
+
+			if (error.code === 'P0002') {
+				httpError(404, 'Paciente archivado no encontrado.');
+			}
+
+			return fail(409, {
+				action: 'delete' as const,
+				errors: {
+					delete: error.message.includes('must be archived')
+						? 'El paciente debe permanecer archivado antes de eliminarlo.'
+						: 'No pudimos eliminar el paciente. Inténtalo nuevamente.'
+				}
+			});
+		}
+
+		redirect(303, '/patients/archived?deleted=patient');
 	}
 };

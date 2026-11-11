@@ -5,6 +5,7 @@
 	import Archive from '@lucide/svelte/icons/archive';
 	import ArchiveRestore from '@lucide/svelte/icons/archive-restore';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -30,28 +31,39 @@
 
 <main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
 	<div class="w-full">
-		<div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-			<h2 id="pacientes-archivados" class="text-2xl font-bold text-ink">Pacientes archivados</h2>
+		<div class="mb-8">
+			<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+				<h2 id="pacientes-archivados" class="text-2xl font-bold text-ink">Pacientes archivados</h2>
 
-			<a
-				href={resolve('/patients')}
-				class="inline-flex min-h-12 items-center justify-center gap-2 self-start rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none lg:self-auto"
-			>
-				<ArchiveRestore aria-hidden="true" size={18} strokeWidth={2} />
-				Ver pacientes activos
-			</a>
-		</div>
-
-		{#if data.patientArchived}
-			<div class="mb-8 max-w-2xl">
-				<Alert
-					icon={Archive}
-					title="Paciente archivado"
-					subtitle="Su información, sus accesos y su historial permanecen conservados."
-					color="neutral"
-				/>
+				<a
+					href={resolve('/patients')}
+					class="inline-flex min-h-12 items-center justify-center gap-2 self-start rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none lg:self-auto"
+				>
+					<ArchiveRestore aria-hidden="true" size={18} strokeWidth={2} />
+					Ver pacientes activos
+				</a>
 			</div>
-		{/if}
+
+			{#if data.patientDeleted}
+				<div class="mt-6 max-w-2xl">
+					<Alert
+						icon={Trash2}
+						title="Paciente eliminado"
+						subtitle="Sus datos y su historial asociado se eliminaron permanentemente."
+						color="positive"
+					/>
+				</div>
+			{:else if data.patientArchived}
+				<div class="mt-6 max-w-2xl">
+					<Alert
+						icon={Archive}
+						title="Paciente archivado"
+						subtitle="Su información, sus accesos y su historial permanecen conservados."
+						color="positive"
+					/>
+				</div>
+			{/if}
+		</div>
 
 		{#if !data.patientsAvailable}
 			<div class="max-w-2xl">

@@ -12,6 +12,7 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import HeartHandshake from '@lucide/svelte/icons/heart-handshake';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import UsersRound from '@lucide/svelte/icons/users-round';
 	import type { PageProps } from './$types';
@@ -19,8 +20,17 @@
 	let { data, form }: PageProps = $props();
 	let restoreSubmitting = $state(false);
 	let restoreModalOpen = $state(false);
+	let deleteSubmitting = $state(false);
+	let deleteModalOpen = $state(false);
+	let deleteConfirmation = $state('');
 	let restoreResult = $derived(form?.action === 'restore' ? form : null);
+	let deleteResult = $derived(form?.action === 'delete' ? form : null);
 	let restoreErrors = $derived((restoreResult?.errors ?? {}) as Record<string, string>);
+	let deleteErrors = $derived((deleteResult?.errors ?? {}) as Record<string, string>);
+	let expectedDeleteConfirmation = $derived(
+		`${data.patient.firstName} ${data.patient.lastName}`.trim()
+	);
+
 	const archiveDateFormatter = new Intl.DateTimeFormat('es-DO', {
 		dateStyle: 'long',
 		timeStyle: 'short',
@@ -42,8 +52,36 @@
 		};
 	};
 
+	const enhanceDelete: SubmitFunction = () => {
+		deleteSubmitting = true;
+
+		return async ({ result, update }) => {
+			await update({ reset: false });
+			deleteSubmitting = false;
+
+			if (result.type === 'failure') {
+				requestAnimationFrame(() => {
+					(
+						document.querySelector<HTMLElement>(
+							'#delete-patient-confirmation[aria-invalid="true"]'
+						) ?? document.querySelector<HTMLElement>('[data-delete-error]')
+					)?.focus();
+				});
+			}
+		};
+	};
+
 	function closeRestoreModal() {
 		if (!restoreSubmitting) restoreModalOpen = false;
+	}
+
+	function openDeleteModal() {
+		deleteConfirmation = '';
+		deleteModalOpen = true;
+	}
+
+	function closeDeleteModal() {
+		if (!deleteSubmitting) deleteModalOpen = false;
 	}
 </script>
 
@@ -101,6 +139,90 @@
 	</form>
 {/snippet}
 
+{#snippet deleteModalContent()}
+	<Alert
+		icon={CircleAlert}
+		title="Esta acción es permanente"
+		subtitle="Se eliminarán los datos del paciente y todo su historial asociado. No podrás recuperarlos desde Senda."
+		color="danger"
+	/>
+
+	<div class="mt-4 rounded-2xl bg-surface-muted p-4">
+		<p class="font-bold text-ink">Se conservarán fuera del paciente</p>
+		<p class="mt-1 text-sm leading-6 text-muted">
+			El grupo, el dispositivo disponible para reutilizar y las cuentas de las personas autorizadas
+			no se eliminarán.
+		</p>
+	</div>
+
+	<form
+		id="delete-archived-patient-form"
+		method="POST"
+		action="?/delete"
+		use:enhance={enhanceDelete}
+		aria-busy={deleteSubmitting}
+		class="mt-6"
+	>
+		<label for="delete-patient-confirmation" class="block font-bold text-ink">
+			Escribe <span class="text-red-700">{expectedDeleteConfirmation}</span> para confirmar
+		</label>
+		<input
+			id="delete-patient-confirmation"
+			name="confirmation"
+			type="text"
+			required
+			autocomplete="off"
+			spellcheck="false"
+			bind:value={deleteConfirmation}
+			aria-invalid={deleteErrors.confirmation ? 'true' : undefined}
+			aria-describedby={deleteErrors.confirmation ? 'delete-confirmation-error' : undefined}
+			class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-ink focus:border-red-700 focus:ring-4 focus:ring-red-700/15 focus:outline-none"
+		/>
+		{#if deleteErrors.confirmation}
+			<p id="delete-confirmation-error" class="mt-2 text-sm font-semibold text-red-700">
+				{deleteErrors.confirmation}
+			</p>
+		{/if}
+	</form>
+
+	{#if deleteErrors.delete}
+		<div
+			data-delete-error
+			tabindex="-1"
+			class="mt-4 rounded-2xl focus:ring-4 focus:ring-red-700/20 focus:outline-none"
+		>
+			<Alert
+				icon={CircleAlert}
+				title="No pudimos eliminar el paciente"
+				subtitle={deleteErrors.delete}
+				color="danger"
+			/>
+		</div>
+	{/if}
+{/snippet}
+
+{#snippet deleteModalFooter()}
+	<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+		<button
+			type="button"
+			onclick={closeDeleteModal}
+			disabled={deleteSubmitting}
+			class="min-h-12 cursor-pointer rounded-full px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+		>
+			Volver
+		</button>
+		<button
+			type="submit"
+			form="delete-archived-patient-form"
+			disabled={deleteSubmitting}
+			class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-700 px-5 font-bold text-white transition hover:bg-red-800 focus:ring-4 focus:ring-red-700/25 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+		>
+			<Trash2 aria-hidden="true" size={18} strokeWidth={2} />
+			{deleteSubmitting ? 'Eliminando…' : 'Eliminar permanentemente'}
+		</button>
+	</div>
+{/snippet}
+
 <svelte:head>
 	<title>{data.patient.firstName} {data.patient.lastName} — Archivo | Senda</title>
 	<meta name="description" content="Información e historial conservado del paciente en Senda." />
@@ -114,6 +236,16 @@
 					icon={CircleAlert}
 					title="No pudimos completar la acción"
 					subtitle={restoreErrors.restore}
+					color="danger"
+				/>
+			</div>
+		{/if}
+		{#if (deleteErrors.confirmation || deleteErrors.delete) && !deleteModalOpen}
+			<div class="mb-8 max-w-3xl">
+				<Alert
+					icon={CircleAlert}
+					title="No pudimos eliminar el paciente"
+					subtitle={deleteErrors.delete ?? deleteErrors.confirmation}
 					color="danger"
 				/>
 			</div>
@@ -210,7 +342,7 @@
 						<Heading
 							icon={UserRound}
 							title="Administración"
-							subtitle="Restaura al paciente cuando sea necesario reanudar su gestión."
+							subtitle="Restaura el registro o elimínalo definitivamente."
 						/>
 
 						<button
@@ -230,6 +362,24 @@
 								</p>
 							</div>
 						</button>
+
+						<button
+							type="button"
+							onclick={openDeleteModal}
+							class="mt-3 flex min-h-24 w-full cursor-pointer items-center gap-4 rounded-2xl bg-red-50 p-4 text-left transition-colors hover:bg-red-100 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
+						>
+							<div
+								class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-red-700"
+							>
+								<Trash2 aria-hidden="true" size={20} strokeWidth={2} />
+							</div>
+							<div class="min-w-0 flex-1">
+								<h3 class="font-bold text-red-800">Eliminar paciente</h3>
+								<p class="text-sm leading-5 text-red-800/80">
+									Borra permanentemente sus datos y todo el historial asociado.
+								</p>
+							</div>
+						</button>
 					</article>
 				{/if}
 			</div>
@@ -246,4 +396,15 @@
 	children={restoreModalContent}
 	footer={restoreModalFooter}
 	onclose={closeRestoreModal}
+/>
+
+<Modal
+	id="delete-archived-patient-modal"
+	open={deleteModalOpen && data.isAdmin}
+	title="Eliminar paciente"
+	subtitle={`Confirma la eliminación permanente de ${expectedDeleteConfirmation}.`}
+	icon={Trash2}
+	children={deleteModalContent}
+	footer={deleteModalFooter}
+	onclose={closeDeleteModal}
 />

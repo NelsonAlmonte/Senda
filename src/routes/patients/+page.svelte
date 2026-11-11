@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
+	import Archive from '@lucide/svelte/icons/archive';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BellOff from '@lucide/svelte/icons/bell-off';
 	import BellRing from '@lucide/svelte/icons/bell-ring';
@@ -100,6 +101,15 @@
 					<KeyRound aria-hidden="true" size={18} strokeWidth={2} />
 					Ingresar código
 				</a>
+				{#if data.hasArchivedPatients}
+					<a
+						href={resolve('/patients/archived')}
+						class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					>
+						<Archive aria-hidden="true" size={18} strokeWidth={2} />
+						Archivados
+					</a>
+				{/if}
 			</nav>
 		</div>
 

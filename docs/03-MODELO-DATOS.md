@@ -37,10 +37,14 @@ group_id      uuid FK -> groups.id
 first_name    text
 last_name     text
 date_of_birth date null          (validar necesidad real)
+archived_at   timestamptz null
+archived_by   uuid null FK -> auth.users.id
 created_at    timestamptz
 ```
 
 Minimizar la información sensible; no construir historial clínico. El creador autorizado debe recibir `patient_access ADMIN` en la misma transacción de alta.
+
+El archivo del paciente es lógico y reversible: `archived_at` y `archived_by` se establecen o limpian juntos. Archivar no revoca `patient_access` ni elimina historial, por lo que las personas previamente autorizadas conservan lectura histórica; sí impide nuevas mutaciones operativas y oculta al paciente de las vistas activas. Solo puede archivarse sin asignación de dispositivo vigente, episodio `OPEN` ni traslado actual o programado. Restaurar no reasigna un dispositivo ni reactiva códigos invalidados.
 
 ### 3. `profiles`
 
@@ -205,11 +209,13 @@ invited_by   uuid FK -> auth.users.id
 created_at   timestamptz
 accepted_at  timestamptz null
 declined_at  timestamptz null
+invalidated_at timestamptz null
+invalidated_by uuid null FK -> auth.users.id
 ```
 
-No agregar estado `EXPIRED`. El token puede representarse como código introducido manualmente o entregarse mediante un enlace; solo se almacena su hash y se acepta una vez. El flujo inicial por código concede `MONITOR` exclusivamente sobre `patient_id` y no crea membresía del grupo. `email` es obligatorio cuando el envío sea por correo y puede ser nulo para un código compartido manualmente. Para cancelar una invitación pendiente sin alterar el vocabulario de estados, definir más adelante una invalidación controlada de token o eliminación autorizada (ver `09-DECISIONES-PENDIENTES.md`).
+No agregar estado `EXPIRED`. El token puede representarse como código introducido manualmente o entregarse mediante un enlace; solo se almacena su hash y se acepta una vez. El flujo inicial por código concede `MONITOR` exclusivamente sobre `patient_id` y no crea membresía del grupo. `email` es obligatorio cuando el envío sea por correo y puede ser nulo para un código compartido manualmente. Al archivar un paciente, sus invitaciones `PENDING` reciben `invalidated_at` e `invalidated_by`; conservan el estado acordado, pero dejan de poder previsualizarse o aceptarse y no se reactivan al restaurar.
 
-**Implementado el 2026-10-24:** código manual de un solo uso con `email = null`, hash SHA-256 persistido y aceptación transaccional. La tabla no se expone directamente a `anon` ni `authenticated`; las operaciones se realizan mediante RPC con autorización interna. El envío por email, `DECLINED` y la invalidación administrativa permanecen para una historia posterior.
+**Implementado el 2026-10-24:** código manual de un solo uso con `email = null`, hash SHA-256 persistido y aceptación transaccional. La tabla no se expone directamente a `anon` ni `authenticated`; las operaciones se realizan mediante RPC con autorización interna. La invalidación automática de códigos pendientes al archivar se versionó el 2026-11-10; el envío por email y `DECLINED` permanecen para una historia posterior.
 
 ### 12. `push_subscriptions`
 

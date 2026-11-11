@@ -4,6 +4,8 @@
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
 	import InfoItem from '#lib/components/ui/InfoItem.svelte';
+	import Modal from '#lib/components/ui/Modal.svelte';
+	import Archive from '@lucide/svelte/icons/archive';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BellRing from '@lucide/svelte/icons/bell-ring';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
@@ -23,8 +25,13 @@
 
 	let { data, form }: PageProps = $props();
 	let submitting = $state(false);
+	let archiveSubmitting = $state(false);
+	let archiveModalOpen = $state(false);
 	let updateResult = $derived(form?.action === 'update' ? form : null);
+	let archiveResult = $derived(form?.action === 'archive' ? form : null);
 	let errors = $derived((updateResult?.errors ?? {}) as Record<string, string>);
+	let archiveErrors = $derived((archiveResult?.errors ?? {}) as Record<string, string>);
+	let lifecycleError = $derived(archiveErrors.archive ?? '');
 
 	const enhanceUpdate: SubmitFunction = () => {
 		submitting = true;
@@ -40,7 +47,81 @@
 			}
 		};
 	};
+
+	const enhanceArchive: SubmitFunction = () => {
+		archiveSubmitting = true;
+
+		return async ({ result, update }) => {
+			await update({ reset: false });
+			archiveSubmitting = false;
+
+			if (result.type === 'failure') {
+				requestAnimationFrame(() => {
+					document.querySelector<HTMLElement>('[data-archive-error]')?.focus();
+				});
+			}
+		};
+	};
+
+	function closeArchiveModal() {
+		if (!archiveSubmitting) archiveModalOpen = false;
+	}
 </script>
+
+{#snippet archiveModalContent()}
+	<p class="leading-7 text-muted">
+		<strong class="text-ink">{data.patient.firstName} {data.patient.lastName}</strong> dejará de aparecer
+		entre los pacientes activos y no podrá recibir nuevas operaciones de monitoreo.
+	</p>
+	<div class="mt-4 rounded-2xl bg-surface-muted p-4">
+		<p class="font-bold text-ink">La información no se eliminará</p>
+		<p class="mt-1 text-sm leading-6 text-muted">
+			El historial, las geocercas y los accesos existentes permanecerán conservados. Los códigos
+			pendientes quedarán invalidados permanentemente.
+		</p>
+	</div>
+	{#if archiveErrors.archive}
+		<div
+			data-archive-error
+			tabindex="-1"
+			class="mt-4 rounded-2xl focus:ring-4 focus:ring-red-700/20 focus:outline-none"
+		>
+			<Alert
+				icon={CircleAlert}
+				title="No se puede archivar todavía"
+				subtitle={archiveErrors.archive}
+				color="danger"
+			/>
+		</div>
+	{/if}
+{/snippet}
+
+{#snippet archiveModalFooter()}
+	<form
+		method="POST"
+		action="?/archive"
+		use:enhance={enhanceArchive}
+		aria-busy={archiveSubmitting}
+		class="flex flex-col gap-2 sm:flex-row sm:justify-end"
+	>
+		<button
+			type="button"
+			onclick={closeArchiveModal}
+			disabled={archiveSubmitting}
+			class="min-h-12 cursor-pointer rounded-full px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+		>
+			Volver
+		</button>
+		<button
+			type="submit"
+			disabled={archiveSubmitting}
+			class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-800 px-5 font-bold text-white transition hover:bg-red-900 focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+		>
+			<Archive aria-hidden="true" size={18} strokeWidth={2} />
+			{archiveSubmitting ? 'Archivando…' : 'Archivar paciente'}
+		</button>
+	</form>
+{/snippet}
 
 <svelte:head>
 	<title>{data.patient.firstName} {data.patient.lastName} | Senda</title>
@@ -49,6 +130,28 @@
 
 <main id="contenido-principal" class="px-5 py-8 sm:px-8 lg:px-0">
 	<div class="w-full">
+		{#if data.patientRestored}
+			<div class="mb-8 max-w-3xl">
+				<Alert
+					icon={CircleCheck}
+					title="Paciente restaurado"
+					subtitle="Volvió a la lista activa. Configura un dispositivo cuando quieras reanudar el monitoreo."
+					color="positive"
+				/>
+			</div>
+		{/if}
+
+		{#if lifecycleError && !archiveModalOpen}
+			<div class="mb-8 max-w-3xl">
+				<Alert
+					icon={CircleAlert}
+					title="No pudimos completar la acción"
+					subtitle={lifecycleError}
+					color="danger"
+				/>
+			</div>
+		{/if}
+
 		{#if updateResult?.successMessage}
 			<div class="mb-8 max-w-3xl">
 				<Alert
@@ -198,7 +301,7 @@
 						tone={data.assignment ? 'positive' : 'neutral'}
 					/>
 
-					{#if data.isAdmin}
+					{#if data.activeAccessCount !== null}
 						<InfoItem
 							icon={KeyRound}
 							title="Accesos activos"
@@ -376,6 +479,26 @@
 									strokeWidth={2}
 								/>
 							</a>
+
+							{#if !data.assignment}
+								<button
+									type="button"
+									onclick={() => (archiveModalOpen = true)}
+									class="group flex min-h-24 cursor-pointer items-center gap-4 rounded-2xl bg-red-50 p-4 text-left transition-colors hover:bg-red-100 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
+								>
+									<div
+										class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-red-800"
+									>
+										<Archive aria-hidden="true" size={20} strokeWidth={2} />
+									</div>
+									<div class="min-w-0 flex-1">
+										<h4 class="font-bold text-red-950">Archivar paciente</h4>
+										<p class="text-sm leading-5 text-red-900">
+											Retíralo de la gestión activa sin borrar su historial.
+										</p>
+									</div>
+								</button>
+							{/if}
 						</nav>
 					</article>
 				{/if}
@@ -383,3 +506,14 @@
 		</section>
 	</div>
 </main>
+
+<Modal
+	id="archive-patient-modal"
+	open={archiveModalOpen && data.isAdmin && data.assignment === null}
+	title="Archivar paciente"
+	subtitle="Confirma que deseas retirar este paciente de la gestión activa."
+	icon={Archive}
+	children={archiveModalContent}
+	footer={archiveModalFooter}
+	onclose={closeArchiveModal}
+/>

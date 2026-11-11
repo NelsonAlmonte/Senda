@@ -43,6 +43,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		archivedPatients,
 		patientsAvailable: !accessResult.error,
-		patientArchived: url.searchParams.get('archived') === 'patient'
+		patientArchived: url.searchParams.get('archived') === 'patient',
+		patientDeleted: url.searchParams.get('deleted') === 'patient'
 	};
 };

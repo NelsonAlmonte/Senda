@@ -14,6 +14,8 @@
 /access-code
 /dashboard
 /patients
+/patients/archived
+/patients/archived/:id
 /alerts
 /groups
 /groups/:id
@@ -32,6 +34,8 @@
 SvelteKit puede organizar rutas en grupos de layouts o prefijos internos cuando convenga sin cambiar el significado de estas URLs. `/` es la portada pública de presentación: no usa sidebar, header del área autenticada ni barra inferior, incluso cuando existe una sesión. En ese caso ofrece **Ir al panel**; para visitantes ofrece **Registrarse** e **Iniciar sesión**. Cuando el navegador confirma que la PWA puede instalarse, el hero añade una acción secundaria **Instalar Senda**; en Safari compatible muestra **Cómo instalar Senda** y despliega la guía manual.
 
 Las rutas `/auth/*` usan un shell enfocado sin navegación modular ni promoción PWA. Login y registro conservan formularios SSR progresivamente mejorados, valores no sensibles después de fallos, errores por campo y un resumen enfocado para recuperación. Las contraseñas nunca vuelven desde el servidor; el control de visibilidad cambia únicamente su presentación local y mantiene paste, autocomplete y compatibilidad con gestores. `/auth/error` reutiliza la misma estructura y ofrece una recuperación explícita hacia login o registro. Confirmación y logout mantienen sus redirecciones server-side.
+
+`/patients/archived/:id` separa claramente restauración y eliminación permanente. La segunda solo aparece para `ADMIN`, explica qué datos desaparecen y cuáles se conservan, y exige escribir el nombre completo dentro de un modal antes de enviar la acción SSR. Al completar la transacción, regresa a `/patients/archived` con confirmación visible.
 
 **Estado reorganizado (2026-10-28; ajustado hasta el 2026-10-31):** después del registro se redirige a `/onboarding`, una bienvenida enfocada sin navegación global que pregunta si la persona compró Senda o recibió un código. Estos caminos equivalentes evitan confundir la configuración inicial con la acción posterior **Agregar paciente** y no definen un tipo permanente de cuenta. El camino del código continúa en `/onboarding/access-code`; la configuración inicial continúa en `/onboarding/groups`. Ambas subrutas conservan el shell enfocado y muestran un éxito explícito antes de permitir ir a Pacientes. `/access-code` y `/groups` mantienen sus variantes dentro del área autenticada para operaciones posteriores. Los dos caminos de Grupo/Paciente/Dispositivo reutilizan el mismo asistente y la misma lógica SSR, pero cada ruta decide su orientación y destinos sin condicionales de URL dentro de los componentes. Un `ADMIN` genera códigos desde `/patients/:id/access`. El área autenticada usa tres módulos persistentes: **Pacientes**, **Alertas** y **Perfil**. `/dashboard` ofrece bienvenida, accesos rápidos y pacientes que requieren atención; `/patients` concentra la lista autorizada y sus acciones; `/alerts` reúne episodios de todos los pacientes, con los `OPEN` primero y el historial resuelto después. `/patients/:id/map` mantiene la vista detallada autorizada y `/patients/:id/episodes` ofrece el historial paginado del paciente concreto. Esta reorganización quedó validada manualmente con datos reales en móvil y escritorio.
 

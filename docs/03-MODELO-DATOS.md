@@ -46,6 +46,8 @@ Minimizar la información sensible; no construir historial clínico. El creador 
 
 El archivo del paciente es lógico y reversible: `archived_at` y `archived_by` se establecen o limpian juntos. Archivar no revoca `patient_access` ni elimina historial, por lo que las personas previamente autorizadas conservan lectura histórica; sí impide nuevas mutaciones operativas y oculta al paciente de las vistas activas. Solo puede archivarse sin asignación de dispositivo vigente, episodio `OPEN` ni traslado actual o programado. Restaurar no reasigna un dispositivo ni reactiva códigos invalidados.
 
+La eliminación permanente es una operación posterior y distinta: solo admite un paciente ya archivado y borra en una transacción `alert_episodes`, `locations`, `device_assignments` y `planned_transfers` antes de eliminar `patients`; las FK eliminan en cascada `patient_access`, `invitations` y `safe_zones`. Se conservan `groups`, `devices` y `auth.users`, de modo que el contexto administrativo, el equipo reutilizable y las cuentas no se confunden con el expediente eliminado.
+
 ### 3. `profiles`
 
 ```text

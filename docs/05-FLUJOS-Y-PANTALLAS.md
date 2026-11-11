@@ -169,10 +169,12 @@ En `/patients`, un traslado aparece únicamente mientras su intervalo está acti
 | `/access-code` | Entrada con ayuda y errores accesibles, vista previa mínima y aceptación explícita de un código `MONITOR` de un solo uso |
 | `/dashboard` | Bienvenida mínima con el nombre del usuario |
 | `/patients` | Pacientes autorizados, estado de dispositivo/ubicación, acciones de alta y navegación a sus operaciones |
+| `/patients/archived` | Pacientes archivados autorizados; acceso a su historial y restauración exclusiva de ADMIN |
+| `/patients/archived/:id` | Ficha de archivo de solo lectura, resumen del estado archivado, historial conservado y restauración exclusiva de ADMIN |
 | `/alerts` | Episodios autorizados globales: alertas `OPEN` primero e historial `RESOLVED` después |
 | `/groups` | Asistente de grupo nuevo/existente, paciente y configuración opcional del dispositivo |
 | `/groups/:id` | Datos básicos del grupo y pacientes del contexto que el usuario está autorizado a administrar/ver |
-| `/patients/:id` | Ficha mínima, últimos indicadores y accesos a módulos |
+| `/patients/:id` | Ficha activa, últimos indicadores y accesos a módulos; Administración permite archivar sin dispositivo si el rol es ADMIN |
 | `/patients/:id/device` | Estado, asignación y desvinculación confirmada del dispositivo; solo para `ADMIN` |
 | `/patients/:id/map` | Posición, timestamp, radio/zonas, episodio actual e historial breve, modo simulación controlado |
 | `/patients/:id/episodes` | Alerta activa separada e historial autorizado del paciente, con episodios finalizados paginados de doce en doce |

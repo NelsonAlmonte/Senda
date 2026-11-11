@@ -40,6 +40,13 @@
 				return { title: 'Inicio' };
 			case '/patients':
 				return { title: 'Pacientes' };
+			case '/patients/archived':
+				return { title: 'Pacientes archivados', back: true };
+			case '/patients/archived/[id]':
+				return {
+					title: patient.firstName ? `Archivo de ${patient.firstName}` : 'Paciente archivado',
+					back: true
+				};
 			case '/alerts':
 				return { title: 'Alertas' };
 			case '/settings':

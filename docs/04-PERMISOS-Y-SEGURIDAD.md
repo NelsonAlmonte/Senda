@@ -14,6 +14,7 @@
 | Invitar usuarios | Sí | No |
 | Revocar accesos | Sí | No |
 | Asignar o retirar dispositivo simulado | Sí | No |
+| Archivar o restaurar al paciente | Sí | No |
 
 `relationship` es un dato opcional de `patient_access`, no de `groups`, y no condiciona permisos. Los flujos actuales no lo solicitan y lo conservan en `null`, por lo que la interfaz omite esa etiqueta. Si se captura en una ampliación futura, el usuario podrá describirse como cuidador profesional, pariente o externo al centro; el permiso seguirá residiendo exclusivamente en `patient_access`.
 
@@ -38,6 +39,7 @@ La tabla `group_members` **no es obligatoria en la fase inicial**. Si aparece de
 11. **`push_subscriptions`**: cada usuario gestiona únicamente sus propias suscripciones mediante `SELECT`, `INSERT`, `UPDATE` y `DELETE` sujetos a `user_id = auth.uid()`. El endpoint es único para no registrar el mismo navegador bajo varias cuentas. La Edge Function autorizada consulta destinatarios por acceso activo y elimina únicamente endpoints que el proveedor reporte como permanentemente inválidos.
 12. **Entrega Web Push**: `anon`, `authenticated` y `service_role` no pueden ejecutar directamente la función de trigger. La Edge Function acepta solicitudes sin JWT de usuario porque provienen de Postgres, pero exige `SENDA_WEBHOOK_SECRET`; luego usa una clave privada de servidor para seleccionar exclusivamente usuarios con `patient_access.revoked_at is null`. Los valores VAPID privados y el secreto compartido se almacenan en Edge Function Secrets; la base de datos conserva solo el URL público del proyecto y el secreto del webhook dentro de Vault.
 13. **`planned_transfers SELECT`**: cualquier `ADMIN` o `MONITOR` con acceso activo al paciente. Las escrituras directas permanecen revocadas; las RPC exigen `ADMIN`, bloquean el paciente para serializar cambios, impiden solapamientos y conservan cancelación/finalización como auditoría en vez de borrar.
+14. **Archivo de paciente**: RPC autenticadas exclusivas de `ADMIN`; no conceder `UPDATE` directo sobre `patients`. El archivo exige ausencia de dispositivo activo, episodio `OPEN` y traslado vigente o programado, invalida códigos pendientes y bloquea inserciones o actualizaciones operativas en accesos, invitaciones, asignaciones, geocercas y traslados. `patient_access` se conserva para autorizar la lectura histórica y la restauración no revive invitaciones.
 
 Preferir RLS y constraints sobre una proliferación de Edge Functions. Las funciones SQL sensibles deben asegurar permisos de ejecución y seguridad del `search_path`; revisar especialmente cualquier `SECURITY DEFINER`.
 
@@ -97,5 +99,7 @@ La entrega por email y enlace seguro permanece como ampliación posterior. En es
 - MONITOR sí edita geocerca de un paciente autorizado; usuario externo no.
 - Invitación destinada a un correo no se acepta desde otro correo.
 - Token aceptado no puede reutilizarse.
+- Código pendiente de un paciente archivado no puede previsualizarse ni aceptarse, tampoco después de restaurarlo.
 - Revocado no continúa consultando historial ni actualizaciones.
 - Una reasignación de dispositivo no expone ubicaciones antiguas del paciente anterior.
+- MONITOR no archiva ni restaura; ADMIN tampoco archiva con dispositivo activo, episodio abierto o traslado vigente/programado.

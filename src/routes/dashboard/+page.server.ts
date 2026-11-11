@@ -13,7 +13,9 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 		locals.supabase.from('profiles').select('full_name').eq('id', locals.user.id).maybeSingle(),
 		locals.supabase
 			.from('patient_access')
-			.select('access_role, patient:patients!inner(id, first_name, last_name, created_at)')
+			.select(
+				'access_role, patient:patients!inner(id, first_name, last_name, created_at, archived_at)'
+			)
 			.eq('user_id', locals.user.id)
 			.is('revoked_at', null)
 			.order('created_at', { referencedTable: 'patients', ascending: false })
@@ -21,7 +23,7 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 
 	const authorizedPatients = (accessResult.data ?? []).flatMap((access) => {
 		const patient = Array.isArray(access.patient) ? access.patient[0] : access.patient;
-		if (!patient) return [];
+		if (!patient || patient.archived_at !== null) return [];
 
 		return [
 			{

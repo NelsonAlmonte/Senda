@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 	const accessResult = await locals.supabase
 		.from('patient_access')
 		.select(
-			'access_role, patient:patients!inner(id, first_name, last_name, created_at, group:groups!inner(id, name, type))'
+			'access_role, patient:patients!inner(id, first_name, last_name, created_at, archived_at, group:groups!inner(id, name, type))'
 		)
 		.eq('user_id', locals.user.id)
 		.is('revoked_at', null)
@@ -29,6 +29,7 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 				id: patient.id,
 				firstName: patient.first_name,
 				lastName: patient.last_name,
+				archivedAt: patient.archived_at,
 				accessRole: access.access_role,
 				group: group
 					? {
@@ -40,8 +41,10 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 			}
 		];
 	});
+	const activePatients = authorizedPatients.filter((patient) => patient.archivedAt === null);
+	const hasArchivedPatients = authorizedPatients.some((patient) => patient.archivedAt !== null);
 
-	const patientIds = authorizedPatients.map((patient) => patient.id);
+	const patientIds = activePatients.map((patient) => patient.id);
 	const assignmentsByPatient = new Map<
 		string,
 		{
@@ -136,7 +139,7 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 		}
 	}
 
-	const patients = authorizedPatients.map((patient) => ({
+	const patients = activePatients.map((patient) => ({
 		...patient,
 		assignment: assignmentsByPatient.get(patient.id) ?? null,
 		activeAlert: activeAlertsByPatient.get(patient.id) ?? null,
@@ -145,6 +148,7 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 
 	return {
 		patients,
+		hasArchivedPatients,
 		patientsAvailable: !accessResult.error,
 		devicesAvailable,
 		alertsAvailable,

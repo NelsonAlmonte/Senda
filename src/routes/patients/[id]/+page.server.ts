@@ -8,7 +8,7 @@ async function requirePatientAccess(locals: App.Locals, patientId: string) {
 	const { data: access, error } = await locals.supabase
 		.from('patient_access')
 		.select(
-			'access_role, patient:patients!inner(id, first_name, last_name, group:groups!inner(id, name, type))'
+			'access_role, patient:patients!inner(id, first_name, last_name, archived_at, group:groups!inner(id, name, type))'
 		)
 		.eq('patient_id', patientId)
 		.eq('user_id', locals.user.id)
@@ -29,6 +29,9 @@ async function requirePatientAccess(locals: App.Locals, patientId: string) {
 
 async function requirePatientAdmin(locals: App.Locals, patientId: string) {
 	const access = await requirePatientAccess(locals, patientId);
+	if (access.patient.archived_at !== null) {
+		redirect(303, `/patients/archived/${patientId}`);
+	}
 	if (access.accessRole !== 'ADMIN') {
 		httpError(403, 'Solo un administrador puede editar los datos del paciente.');
 	}
@@ -42,6 +45,10 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	}
 
 	const { supabase, accessRole, patient } = await requirePatientAccess(locals, params.id);
+	if (patient.archived_at !== null) {
+		redirect(303, `/patients/archived/${params.id}`);
+	}
+
 	const isAdmin = accessRole === 'ADMIN';
 	const [assignmentResult, rosterResult] = await Promise.all([
 		supabase
@@ -80,6 +87,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 			id: patient.id,
 			firstName: patient.first_name,
 			lastName: patient.last_name,
+			archivedAt: patient.archived_at,
 			group: group
 				? {
 						id: group.id,
@@ -91,6 +99,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		accessRole,
 		isAdmin,
 		activeAccessCount: isAdmin ? (rosterResult?.data?.length ?? 0) : null,
+		patientRestored: url.searchParams.get('restored') === 'patient',
 		assignment:
 			assignment && device
 				? {
@@ -160,5 +169,40 @@ export const actions: Actions = {
 				lastName: data[0].last_name
 			}
 		};
+	},
+	archive: async ({ locals, params }) => {
+		const { supabase } = await requirePatientAdmin(locals, params.id);
+		const { error } = await supabase.rpc('archive_patient', { p_patient_id: params.id });
+
+		if (error) {
+			console.error('archive_patient failed', {
+				code: error.code,
+				message: error.message,
+				details: error.details,
+				hint: error.hint
+			});
+
+			if (error.code === '42501') {
+				httpError(403, 'No tienes permiso para archivar este paciente.');
+			}
+
+			let message = 'No pudimos archivar el paciente. Inténtalo nuevamente.';
+			if (error.message.includes('active device must be unassigned')) {
+				message = 'Desvincula el dispositivo antes de archivar el paciente.';
+			} else if (error.message.includes('open alert must be resolved')) {
+				message = 'Resuelve la alerta activa antes de archivar el paciente.';
+			} else if (error.message.includes('Current and scheduled transfers')) {
+				message = 'Finaliza o cancela los traslados pendientes antes de archivar el paciente.';
+			} else if (error.message.includes('already archived')) {
+				message = 'El paciente ya está archivado.';
+			}
+
+			return fail(409, {
+				action: 'archive' as const,
+				errors: { archive: message }
+			});
+		}
+
+		redirect(303, '/patients/archived?archived=patient');
 	}
 };

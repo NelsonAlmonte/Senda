@@ -55,7 +55,7 @@ export async function loadPatientSetup(event: RequestEvent): Promise<PatientSetu
 		const { data: access, error: accessError } = await supabase
 			.from('patient_access')
 			.select(
-				'access_role, patient:patients!inner(id, first_name, last_name, group:groups!inner(id, name, type))'
+				'access_role, patient:patients!inner(id, first_name, last_name, archived_at, group:groups!inner(id, name, type))'
 			)
 			.eq('patient_id', patientId)
 			.eq('user_id', user.id)
@@ -69,6 +69,7 @@ export async function loadPatientSetup(event: RequestEvent): Promise<PatientSetu
 
 		const patient = Array.isArray(access.patient) ? access.patient[0] : access.patient;
 		if (!patient) httpError(404, 'Paciente no encontrado.');
+		if (patient.archived_at !== null) httpError(409, 'El paciente está archivado.');
 		const group = Array.isArray(patient.group) ? patient.group[0] : patient.group;
 
 		const { data: assignment, error: assignmentError } = await supabase

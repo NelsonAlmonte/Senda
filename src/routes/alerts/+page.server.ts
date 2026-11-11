@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 	const result = await locals.supabase
 		.from('alert_episodes')
 		.select(
-			'id, patient_id, status, started_at, confirmed_at, resolved_at, updated_at, patient:patients!inner(id, first_name, last_name)'
+			'id, patient_id, status, started_at, confirmed_at, resolved_at, updated_at, patient:patients!inner(id, first_name, last_name, archived_at)'
 		)
 		.order('confirmed_at', { ascending: false })
 		.limit(100);
@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 	const episodes = (result.data ?? [])
 		.flatMap((episode) => {
 			const patient = Array.isArray(episode.patient) ? episode.patient[0] : episode.patient;
-			if (!patient) return [];
+			if (!patient || patient.archived_at !== null) return [];
 
 			return [
 				{

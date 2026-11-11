@@ -8,7 +8,6 @@
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Clock3 from '@lucide/svelte/icons/clock-3';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
 	import ScanBarcode from '@lucide/svelte/icons/scan-barcode';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
@@ -276,13 +275,6 @@
 							<Smartphone aria-hidden="true" size={19} strokeWidth={2} />
 							{assigning ? 'Configurando…' : 'Configurar dispositivo'}
 						</button>
-						<a
-							href={resolve('/patients')}
-							class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 font-bold text-brand transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
-						>
-							<Clock3 aria-hidden="true" size={19} strokeWidth={2} />
-							Configurar después
-						</a>
 					</div>
 				</form>
 			</section>

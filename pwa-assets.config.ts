@@ -5,10 +5,10 @@ export default defineConfig({
 		...minimal2023Preset,
 		maskable: {
 			...minimal2023Preset.maskable,
-			padding: 0.05,
+			padding: 0,
 			resizeOptions: {
 				fit: 'contain',
-				background: 'transparent'
+				background: '#0a594e'
 			}
 		},
 		apple: {

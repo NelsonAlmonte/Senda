@@ -18,6 +18,7 @@
 	import PencilLine from '@lucide/svelte/icons/pencil-line';
 	import Save from '@lucide/svelte/icons/save';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Signature from '@lucide/svelte/icons/signature';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import UsersRound from '@lucide/svelte/icons/users-round';
@@ -247,16 +248,20 @@
 							</form>
 						</div>
 					{:else}
-						<dl class="mt-8 grid gap-4 sm:grid-cols-2">
-							<div class="rounded-2xl bg-surface-muted p-4">
-								<dt class="text-sm font-semibold text-muted">Nombre</dt>
-								<dd class=" font-bold text-ink">{data.patient.firstName}</dd>
-							</div>
-							<div class="rounded-2xl bg-surface-muted p-4">
-								<dt class="text-sm font-semibold text-muted">Apellido</dt>
-								<dd class=" font-bold text-ink">{data.patient.lastName}</dd>
-							</div>
-						</dl>
+						<div class="mt-8 grid gap-4 sm:grid-cols-2">
+							<InfoItem
+								icon={UserRound}
+								title="Nombre"
+								info={data.patient.firstName}
+								tone="positive"
+							/>
+							<InfoItem
+								icon={Signature}
+								title="Apellido"
+								info={data.patient.lastName}
+								tone="positive"
+							/>
+						</div>
 					{/if}
 				</div>
 

@@ -8,7 +8,7 @@
 | Ver ubicación e historial | Sí | Sí |
 | Ver alertas y sus estados | Sí | Sí |
 | Ver traslados planificados | Sí | Sí |
-| Crear/editar/cancelar/finalizar traslados | Sí | No |
+| Crear/editar/cancelar/finalizar traslados | Sí | Sí |
 | Crear/editar/desactivar geocercas | Sí | Sí |
 | Editar datos del paciente | Sí | No |
 | Invitar usuarios | Sí | No |
@@ -40,6 +40,7 @@ La tabla `group_members` **no es obligatoria en la fase inicial**. Si aparece de
 12. **Entrega Web Push**: `anon`, `authenticated` y `service_role` no pueden ejecutar directamente la función de trigger. La Edge Function acepta solicitudes sin JWT de usuario porque provienen de Postgres, pero exige `SENDA_WEBHOOK_SECRET`; luego usa una clave privada de servidor para seleccionar exclusivamente usuarios con `patient_access.revoked_at is null`. Los valores VAPID privados y el secreto compartido se almacenan en Edge Function Secrets; la base de datos conserva solo el URL público del proyecto y el secreto del webhook dentro de Vault.
 13. **`planned_transfers SELECT`**: cualquier `ADMIN` o `MONITOR` con acceso activo al paciente. Las escrituras directas permanecen revocadas; las RPC exigen `ADMIN`, bloquean el paciente para serializar cambios, impiden solapamientos y conservan cancelación/finalización como auditoría en vez de borrar.
 14. **Archivo de paciente**: RPC autenticadas exclusivas de `ADMIN`; no conceder `UPDATE` directo sobre `patients`. El archivo exige ausencia de dispositivo activo, episodio `OPEN` y traslado vigente o programado, invalida códigos pendientes y bloquea inserciones o actualizaciones operativas en accesos, invitaciones, asignaciones, geocercas y traslados. `patient_access` se conserva para autorizar la lectura histórica y la restauración no revive invitaciones.
+15. **Gestión de traslados**: RPC autenticadas autorizan `ADMIN` y `MONITOR` únicamente si conservan un `patient_access` activo sobre el paciente concreto. La función interna rechaza pacientes archivados y no es ejecutable directamente por roles cliente; tabla y campos de auditoría siguen sin permisos directos de escritura.
 15. **Eliminación permanente de paciente**: no conceder `DELETE` directo sobre `patients` ni sus tablas históricas. La RPC `SECURITY DEFINER` exige sesión, acceso `ADMIN` activo y `archived_at` no nulo, bloquea la fila y elimina el alcance completo en una transacción. El formulario repite la autorización en servidor y exige el nombre completo, pero esa confirmación de UX nunca sustituye la comprobación de permisos en PostgreSQL.
 
 Preferir RLS y constraints sobre una proliferación de Edge Functions. Las funciones SQL sensibles deben asegurar permisos de ejecución y seguridad del `search_path`; revisar especialmente cualquier `SECURITY DEFINER`.

@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import Heading from '#lib/components/ui/Heading.svelte';
 	import Initials from '#lib/components/ui/Initials.svelte';
+	import Modal from '#lib/components/ui/Modal.svelte';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
@@ -12,11 +14,86 @@
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
+	let accessToRevoke = $state<PageProps['data']['accessRoster'][number] | null>(null);
+	let revoking = $state(false);
 	const dateFormatter = new Intl.DateTimeFormat('es-DO', {
 		dateStyle: 'medium',
 		timeZone: 'America/Santo_Domingo'
 	});
+
+	const enhanceRevoke: SubmitFunction = () => {
+		revoking = true;
+
+		return async ({ result, update }) => {
+			await update({ reset: false });
+			revoking = false;
+
+			if (result.type === 'success') accessToRevoke = null;
+		};
+	};
+
+	function closeRevokeModal() {
+		if (!revoking) accessToRevoke = null;
+	}
 </script>
+
+{#snippet revokeModalContent()}
+	{#if accessToRevoke}
+		{#if form?.error}
+			<div class="mb-5">
+				<Alert
+					icon={CircleAlert}
+					title="No pudimos revocar el acceso"
+					subtitle={form.error}
+					color="danger"
+				/>
+			</div>
+		{/if}
+
+		<p class="leading-7 text-muted">
+			<strong class="text-ink">{accessToRevoke.displayName}</strong> perderá inmediatamente el acceso
+			al paciente, su dispositivo y sus ubicaciones.
+		</p>
+
+		<div class="mt-4 rounded-2xl bg-surface-muted p-4">
+			<p class="font-bold text-ink">El acceso deberá compartirse nuevamente</p>
+			<p class="mt-1 text-sm leading-6 text-muted">
+				Si esta persona necesita volver a monitorear al paciente, tendrás que generar un código
+				nuevo.
+			</p>
+		</div>
+	{/if}
+{/snippet}
+
+{#snippet revokeModalFooter()}
+	{#if accessToRevoke}
+		<form
+			method="POST"
+			action="?/revoke"
+			use:enhance={enhanceRevoke}
+			aria-busy={revoking}
+			class="flex flex-col gap-2 sm:flex-row sm:justify-end"
+		>
+			<input type="hidden" name="accessId" value={accessToRevoke.id} />
+			<button
+				type="button"
+				onclick={closeRevokeModal}
+				disabled={revoking}
+				class="min-h-12 cursor-pointer rounded-full px-5 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				Volver
+			</button>
+			<button
+				type="submit"
+				disabled={revoking}
+				class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-800 px-5 font-bold text-white transition hover:bg-red-900 focus:ring-4 focus:ring-red-700/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				<UserMinus aria-hidden="true" size={18} strokeWidth={2} />
+				{revoking ? 'Revocando…' : 'Confirmar revocación'}
+			</button>
+		</form>
+	{/if}
+{/snippet}
 
 <svelte:head>
 	<title>Personas con acceso | Senda</title>
@@ -92,30 +169,16 @@
 
 							{#if access.role === 'MONITOR'}
 								<div class="border-t border-ink/10 p-4">
-									<details class="group">
-										<summary
-											class="flex min-h-12 w-full cursor-pointer list-none items-center justify-center gap-2 rounded-full border border-red-800/25 px-5 font-bold text-red-800 transition-colors hover:bg-red-50 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
-										>
-											<UserMinus aria-hidden="true" size={19} strokeWidth={2} />
-											Revocar acceso
-										</summary>
-										<div class="mt-3 rounded-2xl bg-red-50 p-4">
-											<p class="text-sm leading-6 text-red-950">
-												¿Revocar el acceso de <strong>{access.displayName}</strong>? Perderá
-												inmediatamente el acceso al paciente, su dispositivo y sus ubicaciones.
-											</p>
-											<form method="POST" action="?/revoke" class="mt-4">
-												<input type="hidden" name="accessId" value={access.id} />
-												<button
-													type="submit"
-													class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-red-800 px-5 font-bold text-white transition-colors hover:bg-red-900 focus:ring-4 focus:ring-red-700/30 focus:outline-none"
-												>
-													<UserMinus aria-hidden="true" size={19} strokeWidth={2} />
-													Sí, revocar acceso
-												</button>
-											</form>
-										</div>
-									</details>
+									<button
+										type="button"
+										onclick={() => (accessToRevoke = access)}
+										aria-haspopup="dialog"
+										aria-controls="revoke-access-modal"
+										class="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-red-800/25 px-5 font-bold text-red-800 transition-colors hover:bg-red-50 focus:ring-4 focus:ring-red-700/20 focus:outline-none"
+									>
+										<UserMinus aria-hidden="true" size={19} strokeWidth={2} />
+										Revocar acceso
+									</button>
 								</div>
 							{/if}
 						</li>
@@ -155,3 +218,14 @@
 		</div>
 	</div>
 </main>
+
+<Modal
+	id="revoke-access-modal"
+	open={accessToRevoke !== null}
+	title="Revocar acceso"
+	subtitle={accessToRevoke ? `Confirma la revocación de ${accessToRevoke.displayName}.` : undefined}
+	icon={UserMinus}
+	children={revokeModalContent}
+	footer={revokeModalFooter}
+	onclose={closeRevokeModal}
+/>

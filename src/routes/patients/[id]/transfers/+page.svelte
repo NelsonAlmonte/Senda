@@ -438,8 +438,8 @@
 			</div>
 		{/if}
 
-		<div class={['grid gap-6', data.isAdmin && 'xl:grid-cols-12']}>
-			{#if data.isAdmin}
+		<div class={['grid gap-6', data.canManageTransfers && 'xl:grid-cols-12']}>
+			{#if data.canManageTransfers}
 				<section class="rounded-2xl bg-white p-6 shadow-sm xl:col-span-5">
 					<Heading
 						icon={CalendarPlus}
@@ -554,7 +554,9 @@
 				</section>
 			{/if}
 
-			<section class={['rounded-2xl bg-white p-6 shadow-sm', data.isAdmin && 'xl:col-span-7']}>
+			<section
+				class={['rounded-2xl bg-white p-6 shadow-sm', data.canManageTransfers && 'xl:col-span-7']}
+			>
 				<Heading
 					icon={Route}
 					title="Traslados actuales"
@@ -566,9 +568,7 @@
 						<Alert
 							icon={CalendarClock}
 							title="No hay traslados pendientes"
-							subtitle={data.isAdmin
-								? 'Puedes programar uno cuando el paciente deba desplazarse fuera de sus zonas permitidas.'
-								: 'Un administrador puede programar un traslado cuando sea necesario.'}
+							subtitle="Puedes programar uno cuando el paciente deba desplazarse fuera de sus zonas permitidas."
 						/>
 					</div>
 				{:else}
@@ -615,7 +615,7 @@
 									</div>
 								</div>
 
-								{#if data.isAdmin}
+								{#if data.canManageTransfers}
 									<div
 										class={[
 											'flex flex-wrap gap-2 border-t p-3',

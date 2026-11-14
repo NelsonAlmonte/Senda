@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(58);
+select plan(65);
 
 select has_table('public', 'planned_transfers', 'planned transfers are persisted');
 select ok(
@@ -48,6 +48,20 @@ select has_function(
 	'end_patient_planned_transfer',
 	array['uuid', 'uuid'],
 	'the early finish RPC exists'
+);
+select has_function(
+	'private',
+	'require_patient_transfer_manager',
+	array['uuid'],
+	'the patient-scoped transfer authorization helper exists'
+);
+select ok(
+	not has_function_privilege(
+		'authenticated',
+		'private.require_patient_transfer_manager(uuid)',
+		'EXECUTE'
+	),
+	'the transfer authorization helper remains internal'
 );
 select ok(
 	has_function_privilege(
@@ -225,17 +239,17 @@ select results_eq(
 	$$values (1::bigint)$$,
 	'an authorized MONITOR can read the patient transfer'
 );
-select throws_ok(
+select lives_ok(
 	$$select * from public.save_patient_planned_transfer(
-		null,
+		current_setting('test.transfer_active_id')::uuid,
 		current_setting('test.transfer_patient_id')::uuid,
-		clock_timestamp() + interval '2 hours',
-		clock_timestamp() + interval '3 hours',
-		'Traslado no autorizado'
+		(select starts_at from public.planned_transfers
+			where id = current_setting('test.transfer_active_id')::uuid),
+		(select ends_at + interval '10 minutes' from public.planned_transfers
+			where id = current_setting('test.transfer_active_id')::uuid),
+		'Traslado actualizado por monitor'
 	)$$,
-	'42501',
-	'ADMIN access to the patient is required.',
-	'a MONITOR cannot manage transfers'
+	'a MONITOR can edit an active patient transfer'
 );
 
 select set_config('request.jwt.claim.sub', 'a3000000-0000-0000-0000-000000000003', true);
@@ -524,12 +538,79 @@ select lives_ok(
 	)$$,
 	'a cancelled window no longer blocks a replacement transfer'
 );
+select set_config(
+	'test.transfer_replacement_scheduled_id',
+	(select id::text from public.planned_transfers
+		where cancelled_at is null and starts_at > clock_timestamp()
+		order by created_at desc limit 1),
+	true
+);
 
 select set_config('request.jwt.claim.sub', 'a2000000-0000-0000-0000-000000000002', true);
 select results_eq(
 	$$select count(*) from public.planned_transfers$$,
 	$$values (4::bigint)$$,
 	'MONITOR can read active, completed, cancelled and scheduled transfer history'
+);
+select lives_ok(
+	$$select * from public.cancel_patient_planned_transfer(
+		current_setting('test.transfer_replacement_scheduled_id')::uuid,
+		current_setting('test.transfer_patient_id')::uuid
+	)$$,
+	'MONITOR can cancel a scheduled transfer'
+);
+select lives_ok(
+	$$select * from public.save_patient_planned_transfer(
+		null,
+		current_setting('test.transfer_patient_id')::uuid,
+		clock_timestamp(),
+		clock_timestamp() + interval '30 minutes',
+		'Traslado gestionado por monitor'
+	)$$,
+	'MONITOR can create an active transfer'
+);
+select set_config(
+	'test.transfer_monitor_active_id',
+	(select id::text from public.planned_transfers
+		where created_by = 'a2000000-0000-0000-0000-000000000002'
+		order by created_at desc limit 1),
+	true
+);
+select lives_ok(
+	$$select * from public.save_patient_planned_transfer(
+		current_setting('test.transfer_monitor_active_id')::uuid,
+		current_setting('test.transfer_patient_id')::uuid,
+		(select starts_at from public.planned_transfers
+			where id = current_setting('test.transfer_monitor_active_id')::uuid),
+		(select ends_at + interval '10 minutes' from public.planned_transfers
+			where id = current_setting('test.transfer_monitor_active_id')::uuid),
+		'Traslado extendido por monitor'
+	)$$,
+	'MONITOR can extend an active transfer'
+);
+select lives_ok(
+	$$select * from public.end_patient_planned_transfer(
+		current_setting('test.transfer_monitor_active_id')::uuid,
+		current_setting('test.transfer_patient_id')::uuid
+	)$$,
+	'MONITOR can finish an active transfer early'
+);
+select results_eq(
+	$$select
+		(select cancelled_by from public.planned_transfers
+			where id = current_setting('test.transfer_replacement_scheduled_id')::uuid),
+		created_by,
+		updated_by,
+		ended_by
+	from public.planned_transfers
+	where id = current_setting('test.transfer_monitor_active_id')::uuid$$,
+	$$values (
+		'a2000000-0000-0000-0000-000000000002'::uuid,
+		'a2000000-0000-0000-0000-000000000002'::uuid,
+		'a2000000-0000-0000-0000-000000000002'::uuid,
+		'a2000000-0000-0000-0000-000000000002'::uuid
+	)$$,
+	'MONITOR transfer operations keep the responsible user in the audit fields'
 );
 
 select set_config('request.jwt.claim.sub', 'a1000000-0000-0000-0000-000000000001', true);
@@ -553,7 +634,7 @@ select throws_ok(
 		current_setting('test.transfer_patient_id')::uuid
 	)$$,
 	'42501',
-	'ADMIN access to the patient is required.',
+	'Active ADMIN or MONITOR access to the patient is required.',
 	'an outsider cannot finish a patient transfer'
 );
 

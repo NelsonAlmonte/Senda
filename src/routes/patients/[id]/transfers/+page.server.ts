@@ -71,13 +71,8 @@ async function requirePatientAccess(locals: App.Locals, patientId: string) {
 	};
 }
 
-async function requirePatientAdmin(locals: App.Locals, patientId: string) {
-	const access = await requirePatientAccess(locals, patientId);
-	if (access.accessRole !== 'ADMIN') {
-		httpError(403, 'Solo un administrador puede gestionar los traslados.');
-	}
-
-	return access;
+async function requirePatientTransferManager(locals: App.Locals, patientId: string) {
+	return requirePatientAccess(locals, patientId);
 }
 
 function reportRpcError(operation: string, rpcError: unknown) {
@@ -152,7 +147,7 @@ export const load: PageServerLoad = async ({ depends, locals, params, url }) => 
 			lastName: patient.last_name,
 			accessRole
 		},
-		isAdmin: accessRole === 'ADMIN',
+		canManageTransfers: accessRole === 'ADMIN' || accessRole === 'MONITOR',
 		currentTransfers,
 		history,
 		nowInput: formatDateTimeInput(new Date())
@@ -161,7 +156,7 @@ export const load: PageServerLoad = async ({ depends, locals, params, url }) => 
 
 export const actions: Actions = {
 	save: async ({ locals, params, request }) => {
-		const { supabase } = await requirePatientAdmin(locals, params.id);
+		const { supabase } = await requirePatientTransferManager(locals, params.id);
 		const formData = await request.formData();
 		const transferId = readText(formData.get('transferId')) || null;
 		const startsAtValue = readText(formData.get('startsAt'));
@@ -224,7 +219,7 @@ export const actions: Actions = {
 	},
 
 	cancel: async ({ locals, params, request }) => {
-		const { supabase } = await requirePatientAdmin(locals, params.id);
+		const { supabase } = await requirePatientTransferManager(locals, params.id);
 		const transferId = readText((await request.formData()).get('transferId'));
 		if (!transferId) return fail(400, { action: 'cancel' as const, message: 'Traslado inválido.' });
 
@@ -246,7 +241,7 @@ export const actions: Actions = {
 	},
 
 	end: async ({ locals, params, request }) => {
-		const { supabase } = await requirePatientAdmin(locals, params.id);
+		const { supabase } = await requirePatientTransferManager(locals, params.id);
 		const transferId = readText((await request.formData()).get('transferId'));
 		if (!transferId) return fail(400, { action: 'end' as const, message: 'Traslado inválido.' });
 

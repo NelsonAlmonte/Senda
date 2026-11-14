@@ -14,7 +14,7 @@
 		"format": "prettier --write .",
 		"test:simulator": "node --test simulator/simulator-client.test.mjs",
 		"test:push-delivery": "node --test supabase/functions/send-geofence-alert/handler.test.ts",
-		"generate:pwa-assets": "pwa-assets-generator --preset minimal-2023 static/senda-logo-source.png",
+		"generate:pwa-assets": "pwa-assets-generator --config pwa-assets.config.ts",
 		"generate:vapid-keys": "node scripts/generate-vapid-keys.mjs",
 		"generate:webhook-secret": "node scripts/generate-webhook-secret.mjs",
 		"simulate:location": "node --env-file=.env simulator/send-location.mjs",

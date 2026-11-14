@@ -183,7 +183,7 @@ En `/patients`, un traslado aparece únicamente mientras su intervalo está acti
 | `/patients/:id/map` | Posición, timestamp, radio/zonas, episodio actual e historial breve, modo simulación controlado |
 | `/patients/:id/episodes` | Alerta activa separada e historial autorizado del paciente, con episodios finalizados paginados de doce en doce |
 | `/patients/:id/episodes/:episodeId` | Recorrido histórico del episodio e hitos de apertura, confirmación y cierre |
-| `/patients/:id/transfers` | Traslados en curso/programados e historial; gestión solo `ADMIN`, lectura `ADMIN`/`MONITOR` |
+| `/patients/:id/transfers` | Traslados en curso/programados e historial; gestión y lectura para `ADMIN`/`MONITOR` autorizados sobre el paciente |
 | `/patients/:id/history` | Recorrido consultable en intervalo, origen de datos |
 | `/patients/:id/safe-zones` | Geocercas circulares y edición por ADMIN/MONITOR |
 | `/patients/:id/access` | Personas autorizadas; invitar/revocar solo ADMIN |

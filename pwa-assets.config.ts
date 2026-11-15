@@ -8,7 +8,7 @@ export default defineConfig({
 			padding: 0,
 			resizeOptions: {
 				fit: 'contain',
-				background: '#0a594e'
+				background: '#f6f8f5'
 			}
 		},
 		apple: {

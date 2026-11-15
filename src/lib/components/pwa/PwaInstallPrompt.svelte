@@ -2,13 +2,13 @@
 	import Download from '@lucide/svelte/icons/download';
 	import { getPwaInstallContext, getPwaManualGuideMessage } from '#lib/utils/pwa-install.svelte.js';
 
-	type Props = { authenticated?: boolean };
+	type Props = { authenticated?: boolean; hidden?: boolean };
 
-	let { authenticated = false }: Props = $props();
+	let { authenticated = false, hidden = false }: Props = $props();
 	const install = getPwaInstallContext();
 </script>
 
-{#if !install.dismissed && (install.canInstall || install.installing || install.feedback || install.manualGuide)}
+{#if !hidden && !install.dismissed && (install.canInstall || install.installing || install.feedback || install.manualGuide)}
 	<aside
 		class={[
 			'fixed right-4 left-4 z-50 mx-auto max-w-xl rounded-2xl border border-brand/20 bg-white p-4 sm:right-6 sm:left-auto sm:w-112',

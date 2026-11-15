@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { dev } from '$app/env';
 	import { page } from '$app/state';
-	import AppHeader from '#lib/components/navigation/AppHeader.svelte';
-	import AppNavigation from '#lib/components/navigation/AppNavigation.svelte';
+	import PushNotificationPrompt from '#lib/components/push/PushNotificationPrompt.svelte';
 	import PwaInstallPrompt from '#lib/components/pwa/PwaInstallPrompt.svelte';
+	import Header from '#lib/components/ui/Header.svelte';
+	import Navigation from '#lib/components/ui/Navigation.svelte';
 	import PageLoad from '#lib/components/ui/PageLoad.svelte';
+	import type { PushNotificationPromptState } from '#lib/types/push.js';
 	import {
 		createPwaInstallController,
 		setPwaInstallContext
@@ -20,9 +22,26 @@
 	);
 	let focusedAuth = $derived(Boolean(page.route.id?.startsWith('/auth')));
 	let authenticatedShell = $derived(Boolean(data.user) && !publicLanding && !focusedOnboarding);
+	let pushPromptCheckedForUser = $state<string | null>(null);
+	let pushPromptClaimedForUser = $state<string | null>(null);
+	let pushReminderScope = $derived(
+		Boolean(data.user) && !publicLanding && !focusedOnboarding && !focusedAuth
+	);
+	let installPromptHidden = $derived(
+		pushReminderScope &&
+			(pushPromptCheckedForUser !== data.user?.id || pushPromptClaimedForUser === data.user?.id)
+	);
 	const pwaInstall = createPwaInstallController();
 
 	setPwaInstallContext(pwaInstall);
+
+	function handlePushPromptState(state: PushNotificationPromptState) {
+		const userId = data.user?.id;
+		if (!userId) return;
+
+		if (state.checked) pushPromptCheckedForUser = userId;
+		if (state.needsAttention) pushPromptClaimedForUser = userId;
+	}
 
 	onMount(() => {
 		pwaInstall.initialize();
@@ -58,9 +77,9 @@
 </a>
 
 {#if authenticatedShell}
-	<AppNavigation />
+	<Navigation />
 	<div class="min-h-dvh pt-2 pb-28 sm:pt-4 lg:pr-12 lg:pb-4 lg:pl-80">
-		<AppHeader hasActiveAlert={data.hasActiveAlert} />
+		<Header hasActiveAlert={data.hasActiveAlert} />
 		{@render children()}
 	</div>
 {:else}
@@ -68,5 +87,12 @@
 {/if}
 
 {#if !focusedOnboarding && !publicLanding && !focusedAuth}
-	<PwaInstallPrompt authenticated={Boolean(data.user)} />
+	<PwaInstallPrompt authenticated={Boolean(data.user)} hidden={installPromptHidden} />
+{/if}
+
+{#if data.user && !publicLanding && !focusedOnboarding && !focusedAuth}
+	<PushNotificationPrompt
+		suppressed={page.route.id === '/settings'}
+		onstatechange={handlePushPromptState}
+	/>
 {/if}

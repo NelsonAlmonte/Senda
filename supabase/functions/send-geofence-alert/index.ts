@@ -80,12 +80,17 @@ const deliveryHandler = supabase
 				if (error) throw new Error('Push subscriptions could not be loaded.');
 				return (data ?? []) as StoredPushSubscription[];
 			},
-			async sendPush(subscription: BrowserPushSubscription, payload: PushPayload) {
-				return sendPushNotification(subscription, payload, {
-					publicKey: configuration.vapidPublicKey!,
-					privateKey: configuration.vapidPrivateKey!,
-					subject: configuration.vapidSubject!
-				});
+			async sendPush(subscription: BrowserPushSubscription, payload: PushPayload, options) {
+				return sendPushNotification(
+					subscription,
+					payload,
+					{
+						publicKey: configuration.vapidPublicKey!,
+						privateKey: configuration.vapidPrivateKey!,
+						subject: configuration.vapidSubject!
+					},
+					options
+				);
 			},
 			async removeSubscription(subscriptionId) {
 				const { error } = await supabase

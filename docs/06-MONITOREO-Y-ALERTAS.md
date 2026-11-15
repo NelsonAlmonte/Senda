@@ -96,6 +96,7 @@ El prototipo no cambia el episodio según minutos transcurridos ni distancia adi
 - Consultar el trayecto exacto en `/patients/:id/episodes/:episodeId`: desde la primera lectura `OUTSIDE` hasta la segunda `INSIDE`, o hasta la lectura más reciente si permanece `OPEN`, siempre dentro del `device_assignment_id` histórico. La vista no reconstruye geocercas que no fueron versionadas. Limita el mapa a 500 lecturas y representa por separado los extremos cuando debe omitir el centro.
 - Enviar como máximo una notificación Web Push al abrir el episodio; el MVP no envía otra al resolverlo.
 - No repetir Web Push con cada nueva ubicación mientras el episodio siga `OPEN`.
+- Marcar la entrega Web Push con urgencia `high`, porque una salida confirmada requiere intentar despertar un dispositivo Android en reposo; esta prioridad mejora la inmediatez, pero el sistema operativo y el fabricante conservan la decisión final de entrega.
 - No incluir datos personales innecesarios en el cuerpo del push.
 - Usar **Posible salida de una zona segura. Abre Senda para revisar de inmediato.** para comunicar urgencia sin declarar una emergencia no verificada.
 

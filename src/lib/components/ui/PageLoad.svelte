@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { onNavigate } from '$app/navigation';
-	import { onMount } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
-	import { on } from 'svelte/events';
 	import { prefersReducedMotion, Tween } from 'svelte/motion';
 	import { fade } from 'svelte/transition';
 
@@ -20,13 +18,6 @@
 	let startedAt: number | null = null;
 	let linkIntentSequence = 0;
 
-	onMount(() =>
-		on(document, 'pointerdown', handleLinkIntent, {
-			capture: true,
-			passive: true
-		})
-	);
-
 	onNavigate(() => {
 		const currentSequence = ++navigationSequence;
 		navigationInProgress = true;
@@ -38,7 +29,7 @@
 		};
 	});
 
-	function handleLinkIntent(event: PointerEvent) {
+	function handleLinkActivation(event: MouseEvent) {
 		if (!isInternalNavigationLink(event)) return;
 
 		const currentIntent = ++linkIntentSequence;
@@ -51,8 +42,9 @@
 		}, LINK_INTENT_TIMEOUT_MS);
 	}
 
-	function isInternalNavigationLink(event: PointerEvent): boolean {
+	function isInternalNavigationLink(event: MouseEvent): boolean {
 		if (
+			event.defaultPrevented ||
 			event.button !== 0 ||
 			event.altKey ||
 			event.ctrlKey ||
@@ -112,6 +104,8 @@
 		}
 	}
 </script>
+
+<svelte:document onclickcapture={handleLinkActivation} />
 
 {#if isVisible}
 	<div

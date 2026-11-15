@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
 	createPushDeliveryHandler,
 	type BrowserPushSubscription,
+	type PushDeliveryOptions,
 	type PushPayload,
 	type StoredPushSubscription
 } from './handler.ts';
@@ -43,7 +44,11 @@ function subscription(id: string): StoredPushSubscription {
 
 function dependencies(overrides: {
 	getSubscriptions?: (patientId: string) => Promise<StoredPushSubscription[]>;
-	sendPush?: (subscription: BrowserPushSubscription, payload: PushPayload) => Promise<boolean>;
+	sendPush?: (
+		subscription: BrowserPushSubscription,
+		payload: PushPayload,
+		options: PushDeliveryOptions
+	) => Promise<boolean>;
 	removeSubscription?: (subscriptionId: string) => Promise<void>;
 }) {
 	return {
@@ -94,14 +99,16 @@ describe('send-geofence-alert handler', () => {
 	it('sends a generic urgent payload without patient identity or coordinates', async () => {
 		let receivedPatientId = '';
 		let receivedPayload: PushPayload | null = null;
+		let receivedOptions: PushDeliveryOptions | null = null;
 		const handler = createPushDeliveryHandler(
 			dependencies({
 				getSubscriptions: async (patientId) => {
 					receivedPatientId = patientId;
 					return [subscription('first')];
 				},
-				sendPush: async (_subscription, payload) => {
+				sendPush: async (_subscription, payload, options) => {
 					receivedPayload = payload;
+					receivedOptions = options;
 					return true;
 				}
 			})
@@ -117,6 +124,7 @@ describe('send-geofence-alert handler', () => {
 			tag: `senda-episode-${EPISODE_ID}`,
 			url: '/alerts'
 		});
+		assert.deepEqual(receivedOptions, { urgency: 'high' });
 		assert.equal(JSON.stringify(receivedPayload).includes(PATIENT_ID), false);
 		assert.deepEqual(await response.json(), { delivered: 1, removed: 0, failed: 0 });
 	});

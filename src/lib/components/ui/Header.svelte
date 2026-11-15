@@ -5,7 +5,6 @@
 	import { createBrowserSupabaseClient } from '#lib';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Bell from '@lucide/svelte/icons/bell';
-	import CircleUserRound from '@lucide/svelte/icons/circle-user-round';
 	import { onMount } from 'svelte';
 
 	type Props = { hasActiveAlert: boolean };
@@ -176,16 +175,6 @@
 						aria-hidden="true"
 					></span>
 				{/if}
-			</a>
-
-			<a
-				href={resolve('/settings')}
-				aria-label="Abrir mi perfil"
-				class={[
-					'grid size-12 place-items-center rounded-full text-ink transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none'
-				]}
-			>
-				<CircleUserRound size={24} strokeWidth={2} aria-hidden="true" />
 			</a>
 		</div>
 	</div>

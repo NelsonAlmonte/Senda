@@ -21,6 +21,10 @@ export interface PushPayload {
 	url: string;
 }
 
+export interface PushDeliveryOptions {
+	urgency: 'high';
+}
+
 interface AlertEpisodeWebhookPayload {
 	type: 'INSERT';
 	table: 'alert_episodes';
@@ -35,7 +39,11 @@ interface AlertEpisodeWebhookPayload {
 export interface DeliveryDependencies {
 	webhookSecret: string;
 	getSubscriptions(patientId: string): Promise<StoredPushSubscription[]>;
-	sendPush(subscription: BrowserPushSubscription, payload: PushPayload): Promise<boolean>;
+	sendPush(
+		subscription: BrowserPushSubscription,
+		payload: PushPayload,
+		options: PushDeliveryOptions
+	): Promise<boolean>;
 	removeSubscription(subscriptionId: string): Promise<void>;
 	logError?(message: string, error?: unknown): void;
 }
@@ -126,6 +134,7 @@ export function createPushDeliveryHandler(dependencies: DeliveryDependencies) {
 			tag: `senda-episode-${body.record.id}`,
 			url: '/alerts'
 		};
+		const deliveryOptions: PushDeliveryOptions = { urgency: 'high' };
 
 		for (const subscription of subscriptions) {
 			try {
@@ -135,7 +144,8 @@ export function createPushDeliveryHandler(dependencies: DeliveryDependencies) {
 						expirationTime: null,
 						keys: { p256dh: subscription.p256dh, auth: subscription.auth }
 					},
-					payload
+					payload,
+					deliveryOptions
 				);
 
 				if (delivered) {

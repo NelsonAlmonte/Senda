@@ -163,13 +163,13 @@
 							icon={ScanBarcode}
 							title="Serial"
 							info={data.assignment.serialNumber}
-							tone="positive"
+							tone="neutral"
 						/>
 						<InfoItem
 							icon={CalendarDays}
 							title="Asignado desde"
 							info={dateFormatter.format(new Date(data.assignment.assignedAt))}
-							tone="positive"
+							tone="neutral"
 						/>
 					</div>
 				</div>

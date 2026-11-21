@@ -253,13 +253,13 @@
 								icon={UserRound}
 								title="Nombre"
 								info={data.patient.firstName}
-								tone="positive"
+								tone="neutral"
 							/>
 							<InfoItem
 								icon={Signature}
 								title="Apellido"
 								info={data.patient.lastName}
-								tone="positive"
+								tone="neutral"
 							/>
 						</div>
 					{/if}
@@ -295,7 +295,7 @@
 							icon={UsersRound}
 							title="Grupo"
 							info={data.patient.group?.name ?? 'Sin grupo visible'}
-							tone="positive"
+							tone="neutral"
 						/>
 					</div>
 

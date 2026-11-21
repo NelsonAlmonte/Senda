@@ -39,8 +39,7 @@
 			type="button"
 			onclick={() => (visible = !visible)}
 			aria-label={visible ? `Ocultar ${label.toLowerCase()}` : `Mostrar ${label.toLowerCase()}`}
-			aria-pressed={visible}
-			class="absolute inset-y-0 right-1 my-auto grid size-10 cursor-pointer place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-ink focus:ring-4 focus:ring-focus/30 focus:outline-none"
+			class="absolute inset-y-0 right-0.5 my-auto grid size-11 cursor-pointer place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-ink focus:ring-4 focus:ring-focus/30 focus:outline-none"
 		>
 			{#if visible}
 				<EyeOff aria-hidden="true" size={20} strokeWidth={2} />

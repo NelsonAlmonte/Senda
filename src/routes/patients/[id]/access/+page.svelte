@@ -6,7 +6,9 @@
 	import Modal from '#lib/components/ui/Modal.svelte';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Check from '@lucide/svelte/icons/check';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Copy from '@lucide/svelte/icons/copy';
 	import Eye from '@lucide/svelte/icons/eye';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
@@ -16,6 +18,9 @@
 	let { data, form }: PageProps = $props();
 	let accessToRevoke = $state<PageProps['data']['accessRoster'][number] | null>(null);
 	let revoking = $state(false);
+	// Se guarda el código copiado (no un booleano) para que un código nuevo no herede "Copiado".
+	let copiedCode = $state<string | null>(null);
+	let copyFailed = $state(false);
 	const dateFormatter = new Intl.DateTimeFormat('es-DO', {
 		dateStyle: 'medium',
 		timeZone: 'America/Santo_Domingo'
@@ -31,6 +36,18 @@
 			if (result.type === 'success') accessToRevoke = null;
 		};
 	};
+
+	async function copyAccessCode(code: string) {
+		copyFailed = false;
+
+		try {
+			await navigator.clipboard.writeText(code);
+			copiedCode = code;
+		} catch {
+			// Sin permiso o sin contexto seguro: el usuario aún puede seleccionar el texto a mano.
+			copyFailed = true;
+		}
+	}
 
 	function closeRevokeModal() {
 		if (!revoking) accessToRevoke = null;
@@ -199,6 +216,24 @@
 						<p class="mt-3 font-mono text-2xl font-bold tracking-widest break-all text-brand">
 							{form.accessCode}
 						</p>
+						<button
+							type="button"
+							onclick={() => copyAccessCode(form.accessCode)}
+							class="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border border-field bg-white px-5 font-bold text-ink transition-colors hover:bg-canvas"
+						>
+							{#if copiedCode === form.accessCode}
+								<Check aria-hidden="true" size={19} strokeWidth={2} />
+								Código copiado
+							{:else}
+								<Copy aria-hidden="true" size={19} strokeWidth={2} />
+								Copiar código
+							{/if}
+						</button>
+						{#if copyFailed}
+							<p class="mt-2 text-sm font-semibold text-red-800">
+								No pudimos copiarlo automáticamente. Selecciona el código y cópialo manualmente.
+							</p>
+						{/if}
 						<p class="mt-3 text-sm leading-6 text-muted">
 							Cópialo ahora. Senda no vuelve a mostrar el código completo.
 						</p>

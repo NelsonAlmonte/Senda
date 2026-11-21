@@ -186,7 +186,7 @@
 					<form method="POST" action={resolve('/auth/logout')}>
 						<button
 							type="submit"
-							class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-800 px-6 font-bold text-white transition hover:bg-red-900 focus:ring-4 focus:ring-red-700/25 focus:outline-none"
+							class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border border-field bg-white px-6 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/25 focus:outline-none"
 						>
 							<LogOut aria-hidden="true" size={19} strokeWidth={2} />
 							Cerrar sesión

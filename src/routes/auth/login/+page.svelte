@@ -5,19 +5,25 @@
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import Alert from '#lib/components/ui/Alert.svelte';
 	import AuthShell from '#lib/components/ui/AuthShell.svelte';
+	import SubmitOverlay from '#lib/components/ui/SubmitOverlay.svelte';
 	import PasswordField from '#lib/components/ui/PasswordField.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 	let submitting = $state(false);
+	let succeeded = $state(false);
 	let errors = $derived((form?.errors ?? {}) as Record<string, string>);
 
 	const enhanceForm: SubmitFunction = () => {
 		submitting = true;
+		succeeded = false;
 
 		return async ({ result, update }) => {
+			// Un redirect es el éxito: se muestra «listo» mientras termina de cargar la pantalla siguiente.
+			if (result.type === 'redirect') succeeded = true;
 			await update({ reset: result.type === 'success' });
 			submitting = false;
+			succeeded = false;
 
 			if (result.type === 'failure') {
 				document.querySelector<HTMLElement>('[data-form-error]')?.focus();
@@ -65,47 +71,56 @@
 			</div>
 		{/if}
 
-		<form
-			method="POST"
-			use:enhance={enhanceForm}
-			class="space-y-5"
-			aria-label="Formulario de inicio de sesión"
-		>
-			<div>
-				<label for="email" class="text-sm font-bold text-ink">Correo electrónico</label>
-				<input
-					id="email"
-					name="email"
-					type="email"
-					autocomplete="email"
-					inputmode="email"
-					required
-					value={form?.email ?? ''}
-					aria-invalid={errors.email ? 'true' : undefined}
-					aria-describedby={errors.email ? 'email-error' : undefined}
-					class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
-				/>
-				{#if errors.email}<p id="email-error" class="mt-2 text-sm font-semibold text-red-800">
-						{errors.email}
-					</p>{/if}
-			</div>
-
-			<PasswordField
-				id="password"
-				name="password"
-				label="Contraseña"
-				autocomplete="current-password"
-				error={errors.password}
+		<div class="relative">
+			<SubmitOverlay
+				active={submitting}
+				{succeeded}
+				message="Verificando tus datos…"
+				successMessage="¡Bienvenido de vuelta!"
 			/>
-
-			<button
-				type="submit"
-				disabled={submitting || !data.supabaseConfigured}
-				class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+			<form
+				method="POST"
+				use:enhance={enhanceForm}
+				class="space-y-5"
+				inert={submitting}
+				aria-label="Formulario de inicio de sesión"
 			>
-				<LogIn aria-hidden="true" size={19} strokeWidth={2} />
-				{submitting ? 'Iniciando sesión…' : 'Iniciar sesión'}
-			</button>
-		</form>
+				<div>
+					<label for="email" class="text-sm font-bold text-ink">Correo electrónico</label>
+					<input
+						id="email"
+						name="email"
+						type="email"
+						autocomplete="email"
+						inputmode="email"
+						required
+						value={form?.email ?? ''}
+						aria-invalid={errors.email ? 'true' : undefined}
+						aria-describedby={errors.email ? 'email-error' : undefined}
+						class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+					/>
+					{#if errors.email}<p id="email-error" class="mt-2 text-sm font-semibold text-red-800">
+							{errors.email}
+						</p>{/if}
+				</div>
+
+				<PasswordField
+					id="password"
+					name="password"
+					label="Contraseña"
+					autocomplete="current-password"
+					error={errors.password}
+				/>
+
+				<button
+					type="submit"
+					disabled={submitting || !data.supabaseConfigured}
+					class="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					<LogIn aria-hidden="true" size={19} strokeWidth={2} />
+					{submitting ? 'Iniciando sesión…' : 'Iniciar sesión'}
+				</button>
+			</form>
+		</div>
 	</div>
 </AuthShell>

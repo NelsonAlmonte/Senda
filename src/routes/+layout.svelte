@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { dev } from '$app/env';
-	import { page } from '$app/state';
+	import { navigating, page } from '$app/state';
 	import PushNotificationPrompt from '#lib/components/push/PushNotificationPrompt.svelte';
 	import PwaInstallPrompt from '#lib/components/pwa/PwaInstallPrompt.svelte';
 	import Header from '#lib/components/ui/Header.svelte';
 	import Navigation from '#lib/components/ui/Navigation.svelte';
 	import PageLoad from '#lib/components/ui/PageLoad.svelte';
+	import PageSkeleton from '#lib/components/ui/PageSkeleton.svelte';
 	import type { PushNotificationPromptState } from '#lib/types/push.js';
 	import {
 		createPwaInstallController,
@@ -31,6 +32,25 @@
 		pushReminderScope &&
 			(pushPromptCheckedForUser !== data.user?.id || pushPromptClaimedForUser === data.user?.id)
 	);
+	// Esqueleto de carga: solo si la navegación a otra pantalla tarda más de ~250 ms, para que las
+	// navegaciones rápidas no parpadeen. Un cambio de parámetros en la misma ruta no cuenta.
+	const SKELETON_DELAY_MS = 250;
+	let showSkeleton = $state(false);
+
+	$effect(() => {
+		const target = navigating.to;
+		if (!target || target.url.pathname === page.url.pathname) {
+			showSkeleton = false;
+			return;
+		}
+
+		const timer = setTimeout(() => (showSkeleton = true), SKELETON_DELAY_MS);
+		return () => {
+			clearTimeout(timer);
+			showSkeleton = false;
+		};
+	});
+
 	const pwaInstall = createPwaInstallController();
 
 	setPwaInstallContext(pwaInstall);
@@ -80,7 +100,11 @@
 	<Navigation />
 	<div class="min-h-dvh pt-2 pb-28 sm:pt-4 lg:pr-12 lg:pb-4 lg:pl-80">
 		<Header hasActiveAlert={data.hasActiveAlert} />
-		{@render children()}
+		{#if showSkeleton}
+			<PageSkeleton />
+		{:else}
+			{@render children()}
+		{/if}
 	</div>
 {:else}
 	{@render children()}

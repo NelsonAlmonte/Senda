@@ -176,7 +176,7 @@
 			bind:value={deleteConfirmation}
 			aria-invalid={deleteErrors.confirmation ? 'true' : undefined}
 			aria-describedby={deleteErrors.confirmation ? 'delete-confirmation-error' : undefined}
-			class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-ink focus:border-red-700 focus:ring-4 focus:ring-red-700/15 focus:outline-none"
+			class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-ink focus:border-red-700 focus:ring-4 focus:ring-red-700/15 focus:outline-none"
 		/>
 		{#if deleteErrors.confirmation}
 			<p id="delete-confirmation-error" class="mt-2 text-sm font-semibold text-red-700">

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance, type SubmitFunction } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import BellRing from '@lucide/svelte/icons/bell-ring';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
@@ -21,7 +22,8 @@
 	import PatientLocationMap from '#lib/components/maps/PatientLocationMap.svelte';
 	import type {
 		LocationAlertEpisodeRealtimeRow as AlertEpisodeRealtimeRow,
-		LocationRealtimeRow
+		LocationRealtimeRow,
+		LocationRealtimeState
 	} from '#lib/types/locations.js';
 	import type {
 		MapHistorySegment,
@@ -34,6 +36,7 @@
 		presentGeofenceRelation,
 		presentLocationTime
 	} from '#lib/utils/location-presentation.js';
+	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
 
 	type LatestLocation = NonNullable<PageProps['data']['latestLocation']>;
@@ -73,9 +76,16 @@
 			data.activeTransfer
 		)
 	);
-	let freshnessStatus = $derived(
-		presentFreshnessStatus(latestLocation, data.manualLocationEnabled)
+	// Reloj de la pantalla: la antigüedad se recalcula aunque no lleguen lecturas nuevas.
+	let now = $state(Date.now());
+	let latestLocationTime = $derived(
+		latestLocation ? presentLocationTime(latestLocation.recordedAt, now) : null
 	);
+	let freshnessStatus = $derived(
+		presentFreshnessStatus(latestLocationTime, data.manualLocationEnabled)
+	);
+	let realtimeState = $state<'IDLE' | LocationRealtimeState>('IDLE');
+	let hasConnectedBefore = false;
 	let readingStatus = $derived(
 		presentReadingStatus(latestLocation, geofencePresentation, activeAlertEpisode !== null)
 	);
@@ -161,6 +171,23 @@
 			})
 			.slice(-200);
 	}
+
+	function handleRealtimeState(state: LocationRealtimeState) {
+		const previous = realtimeState;
+		realtimeState = state;
+
+		if (state !== 'CONNECTED') return;
+
+		// Tras una caída del canal se pierden los eventos intermedios: se recarga el estado real.
+		const recovered = previous === 'ERROR' || (previous === 'CONNECTING' && hasConnectedBefore);
+		hasConnectedBefore = true;
+		if (recovered) void invalidateAll();
+	}
+
+	onMount(() => {
+		const timer = setInterval(() => (now = Date.now()), 15_000);
+		return () => clearInterval(timer);
+	});
 
 	function handleRealtimeLocation(row: LocationRealtimeRow) {
 		const candidate = presentRealtimeLocation(row);
@@ -259,7 +286,7 @@
 	}
 
 	function presentFreshnessStatus(
-		location: LatestLocation | null,
+		location: ReturnType<typeof presentLocationTime> | null,
 		manualLocationEnabled: boolean
 	): StatusPresentation {
 		if (!location) {
@@ -441,6 +468,7 @@
 						patientId={data.patient.id}
 						onLocation={handleRealtimeLocation}
 						onAlertEpisode={handleRealtimeAlertEpisode}
+						onStateChange={handleRealtimeState}
 					/>
 				{/key}
 			{/if}
@@ -486,6 +514,44 @@
 					</p>
 				</div>
 			{:else}
+				{#if realtimeState === 'ERROR'}
+					<div class="mb-6 max-w-3xl">
+						<Alert
+							icon={CircleAlert}
+							title="Actualización en vivo no disponible"
+							subtitle="Intentamos reconectar. Mientras tanto, la ubicación puede no ser la más reciente."
+							color="warning"
+						/>
+					</div>
+				{/if}
+
+				<!-- Estado primero: quién, riesgo y antigüedad deben verse sin desplazarse por el mapa. -->
+				<div
+					class="mb-6 grid gap-4 md:grid-cols-2"
+					aria-label="Resumen del estado de {patientName}"
+				>
+					<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
+						<InfoItem
+							icon={activeAlertEpisode
+								? Siren
+								: data.activeTransfer
+									? CalendarClock
+									: alertStatus.tone === 'warning'
+										? CircleAlert
+										: BellRing}
+							title={alertStatus.title}
+							info={alertStatus.info}
+							tone={alertStatus.tone}
+						/>
+					</div>
+					<InfoItem
+						icon={Clock3}
+						title={freshnessStatus.title}
+						info={freshnessStatus.info}
+						tone={freshnessStatus.tone}
+					/>
+				</div>
+
 				<div class="grid items-start gap-6 xl:grid-cols-12 xl:items-stretch">
 					<div class="min-w-0 xl:col-span-8 xl:h-160">
 						{#key data.assignment.id}
@@ -568,7 +634,7 @@
 						<Heading
 							icon={MapPinned}
 							title="Estado de ubicación"
-							subtitle="Estado de la salida, vigencia y relación de la última lectura con las zonas permitidas."
+							subtitle="Relación de la última lectura con las zonas permitidas."
 						/>
 						<div class="mt-6 space-y-4">
 							{#if !data.activeTransferAvailable}
@@ -579,35 +645,12 @@
 									color="warning"
 								/>
 							{/if}
-							<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
-								<InfoItem
-									icon={activeAlertEpisode
-										? Siren
-										: data.activeTransfer
-											? CalendarClock
-											: alertStatus.tone === 'warning'
-												? CircleAlert
-												: BellRing}
-									title={alertStatus.title}
-									info={alertStatus.info}
-									tone={alertStatus.tone}
-								/>
-							</div>
-
-							<div class="grid gap-4 sm:grid-cols-2">
-								<InfoItem
-									icon={Clock3}
-									title={freshnessStatus.title}
-									info={freshnessStatus.info}
-									tone={freshnessStatus.tone}
-								/>
-								<InfoItem
-									icon={MapPin}
-									title={readingStatus.title}
-									info={readingStatus.info}
-									tone={readingStatus.tone}
-								/>
-							</div>
+							<InfoItem
+								icon={MapPin}
+								title={readingStatus.title}
+								info={readingStatus.info}
+								tone={readingStatus.tone}
+							/>
 						</div>
 						{#if latestLocation?.accuracyM !== null && latestLocation?.accuracyM !== undefined && latestLocation.accuracyM > 0}
 							<p class="mt-6 border-t border-ink/10 pt-4 text-sm leading-6 text-muted">

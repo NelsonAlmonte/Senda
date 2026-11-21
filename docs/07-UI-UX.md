@@ -28,7 +28,7 @@ Colores de referencia **propuestos**: verde salvia `#A8CBB7`, azul `#BDD8E9`, bl
 - Iconos: **`@lucide/svelte@1.63.0`**, confirmado el 2026-10-28 para la navegación. Importar cada icono por subruta, acompañarlo siempre con etiqueta textual y ocultar el SVG redundante a tecnologías de asistencia.
 - Las acciones equivalentes reutilizan el mismo símbolo en todos los módulos: `Save` para persistir cambios, `ShieldCheck` para geocercas, `Smartphone` para configurar dispositivos, `KeyRound`/`Eye` para códigos de acceso, `MapPinPlus` para registrar una ubicación y `RefreshCw` para reintentar. Los iconos de acciones visibles usan normalmente 18–19 px, trazo `2`, separación `gap-2` y `aria-hidden="true"` porque la etiqueta textual conserva el nombre accesible.
 - Marca: el emblema circular de paisaje, camino y pin aprobado el 2026-11-04 es la fuente visual de la aplicación y de sus iconos instalables. El PNG original vive centrado y recortado en `static/senda-logo-source.png`; `SendaMark` presenta la versión optimizada junto al nombre visible y `npm run generate:pwa-assets` regenera favicon, Apple Touch y variantes PWA. Los iconos PWA convencionales y Apple Touch conservan transparencia y padding reducido. La variante `maskable` es deliberadamente opaca, usa el verde oscuro del propio emblema y extiende el arte hasta los bordes: Android puede aplicar sus máscaras adaptativas sin inventar un aro blanco alrededor de una imagen transparente. No editar manualmente los derivados ni volver a duplicar el símbolo en SVG o iniciales de texto.
-- Tipografía: **Inter** o **Nunito Sans**, preferencia provisional por Inter.
+- Tipografía: **Inter** (variable, `@fontsource-variable/inter@5.3.0`, licencia OFL-1.1), decidida el 2026-11-21. Se sirve desde el propio dominio, sin consultar a terceros, y solo se carga el subconjunto latino, que cubre el español completo; así el service worker precachea un único archivo de fuente (+52 KiB). Antes la fuente estaba declarada pero no se cargaba, y el texto caía a la fuente del sistema.
 - Modo claro como enfoque inicial; no implementar tematización múltiple/dark mode sin necesidad.
 
 ## Jerarquía de información
@@ -198,6 +198,9 @@ Los episodios resueltos usan `Initials` para identificar al paciente e `InfoItem
 ## Accesibilidad
 
 - Contraste de texto y controles según WCAG AA, foco visible, navegación teclado y etiquetas de formulario.
+- **Foco:** una sola regla global `:focus-visible` en `src/routes/layout.css` (contorno sólido de 3 px, color `--color-focus`, 2 px de separación). Está fuera de las capas de Tailwind para imponerse a `focus:outline-none` y a los anillos translúcidos, cuyo contraste sobre blanco era de unos 1.55:1 (calculado). Sobre fondos oscuros se cambia con `--focus-ring` (la barra lateral usa blanco). Verificado en un navegador con el build de producción: contorno de 3 px y `rgb(31, 111, 139)` sobre un botón.
+- **Bordes de campos:** el token `--color-field` (`#7a8a8e`, unos 3.6:1 sobre blanco, calculado) sustituye a `border-ink/20` (unos 1.45:1) en todos los campos de formulario.
+- **Alerta activa:** rojo con el icono `Siren` en todas las pantallas; el ámbar con `Route` queda reservado para un traslado en curso.
 - Botones y áreas táctiles cómodos; estados de carga, sin datos, error, desconexión y permiso denegado.
 - Respetar `prefers-reduced-motion` y dimensionamiento de texto.
 - Lenguaje claro para personas no técnicas: "Última ubicación hace 4 min", no "socket disconnected".

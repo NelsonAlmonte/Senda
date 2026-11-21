@@ -146,7 +146,7 @@
 					maxlength="120"
 					aria-describedby="group-name-help"
 					placeholder="Ej. Familia Pérez"
-					class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink transition outline-none placeholder:text-muted/60 focus:border-focus focus:ring-4 focus:ring-focus/20"
+					class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink transition outline-none placeholder:text-muted/60 focus:border-focus focus:ring-4 focus:ring-focus/20"
 				/>
 				<p id="group-name-help" class="mt-2 text-sm leading-6 text-muted">
 					Usa un nombre que puedas reconocer fácilmente.

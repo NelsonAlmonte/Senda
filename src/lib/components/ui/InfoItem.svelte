@@ -6,25 +6,25 @@
 			container: 'bg-canvas',
 			icon: 'bg-white text-ink',
 			title: 'text-muted',
-			info: 'text-ink'
+			info: 'text-sm text-ink'
 		},
 		positive: {
 			container: 'bg-surface-muted',
 			icon: 'bg-white text-brand',
 			title: 'text-muted',
-			info: 'text-ink'
+			info: 'text-sm text-ink'
 		},
 		warning: {
 			container: 'bg-amber-50',
 			icon: 'bg-white text-amber-800',
 			title: 'text-amber-900',
-			info: 'text-amber-950'
+			info: 'text-base text-amber-950'
 		},
 		danger: {
 			container: 'bg-red-50',
 			icon: 'bg-white text-red-800',
 			title: 'text-red-900',
-			info: 'text-red-950'
+			info: 'text-base text-red-950'
 		}
 	} as const;
 
@@ -45,6 +45,6 @@
 	</div>
 	<div class="min-w-0">
 		<p class={['text-sm font-bold', colors.title]}>{title}</p>
-		<p class={['text-sm leading-6 font-medium wrap-break-word', colors.info]}>{info}</p>
+		<p class={['leading-6 font-medium wrap-break-word', colors.info]}>{info}</p>
 	</div>
 </div>

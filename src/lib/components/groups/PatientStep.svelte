@@ -106,7 +106,7 @@
 					aria-describedby={errors.patientFirstName ? 'patient-first-name-error' : undefined}
 					class={[
 						'mt-2 min-h-12 w-full rounded-xl border bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20',
-						errors.patientFirstName ? 'border-red-700/60' : 'border-ink/20'
+						errors.patientFirstName ? 'border-red-700/60' : 'border-field'
 					]}
 				/>
 				{#if errors.patientFirstName}
@@ -129,7 +129,7 @@
 					aria-describedby={errors.patientLastName ? 'patient-last-name-error' : undefined}
 					class={[
 						'mt-2 min-h-12 w-full rounded-xl border bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20',
-						errors.patientLastName ? 'border-red-700/60' : 'border-ink/20'
+						errors.patientLastName ? 'border-red-700/60' : 'border-field'
 					]}
 				/>
 				{#if errors.patientLastName}

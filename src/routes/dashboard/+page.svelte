@@ -140,17 +140,31 @@
 			return () => clearInterval(timeInterval);
 		}
 
+		// Este canal escucha las lecturas de todos los pacientes. Se agrupan en una sola recarga
+		// por ventana para no lanzar una consulta SSR por cada lectura entrante.
+		let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+		function scheduleRefresh() {
+			if (refreshTimer) return;
+			refreshTimer = setTimeout(() => {
+				refreshTimer = null;
+				void invalidate('senda:dashboard-attention');
+			}, 5_000);
+		}
+
 		const channel = supabase
 			.channel('dashboard-location-attention', {
 				config: { postgres_changes_options: { wait: true } }
 			})
-			.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'locations' }, () => {
-				void invalidate('senda:dashboard-attention');
-			})
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'locations' },
+				scheduleRefresh
+			)
 			.subscribe();
 
 		return () => {
 			clearInterval(timeInterval);
+			if (refreshTimer) clearTimeout(refreshTimer);
 			void supabase.removeChannel(channel);
 		};
 	});

@@ -33,7 +33,7 @@
 			spellcheck="false"
 			aria-invalid={error ? 'true' : undefined}
 			aria-describedby={describedBy}
-			class="min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 pe-14 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+			class="min-h-12 w-full rounded-xl border border-field bg-white px-4 pe-14 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 		/>
 		<button
 			type="button"

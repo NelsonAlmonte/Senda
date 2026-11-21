@@ -119,7 +119,7 @@
 				aria-describedby={errors.serialNumber ? 'serial-help serial-error' : 'serial-help'}
 				class={[
 					'mt-2 min-h-12 w-full rounded-xl border bg-white px-4 font-mono text-base text-ink uppercase transition outline-none placeholder:text-muted/60 focus:border-focus focus:ring-4 focus:ring-focus/20',
-					errors.serialNumber ? 'border-red-700/60' : 'border-ink/20'
+					errors.serialNumber ? 'border-red-700/60' : 'border-field'
 				]}
 			/>
 			<p id="serial-help" class="mt-2 text-sm leading-6 text-muted">

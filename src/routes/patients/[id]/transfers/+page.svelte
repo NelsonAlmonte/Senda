@@ -176,7 +176,7 @@
 							value={values.startsAt}
 							aria-invalid={modalErrors.startsAt ? 'true' : undefined}
 							aria-describedby={modalErrors.startsAt ? 'scheduled-transfer-start-error' : undefined}
-							class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+							class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 						/>
 						{#if modalErrors.startsAt}
 							<p
@@ -201,7 +201,7 @@
 							aria-describedby={modalErrors.endsAt
 								? 'scheduled-transfer-end-error'
 								: 'scheduled-transfer-time-help'}
-							class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+							class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 						/>
 						{#if modalErrors.endsAt}
 							<p id="scheduled-transfer-end-error" class="mt-2 text-sm font-semibold text-red-800">
@@ -225,7 +225,7 @@
 						required
 						aria-invalid={modalErrors.note ? 'true' : undefined}
 						aria-describedby={modalErrors.note ? 'scheduled-transfer-note-error' : undefined}
-						class="mt-2 w-full resize-y rounded-xl border border-ink/20 bg-white px-4 py-3 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+						class="mt-2 w-full resize-y rounded-xl border border-field bg-white px-4 py-3 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 						>{values.note}</textarea
 					>
 					{#if modalErrors.note}
@@ -283,7 +283,7 @@
 						aria-describedby={modalErrors.endsAt
 							? 'active-transfer-end-error'
 							: 'active-transfer-end-help'}
-						class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+						class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 					/>
 					{#if modalErrors.endsAt}
 						<p id="active-transfer-end-error" class="mt-2 text-sm font-semibold text-red-800">
@@ -306,7 +306,7 @@
 						required
 						aria-invalid={modalErrors.note ? 'true' : undefined}
 						aria-describedby={modalErrors.note ? 'active-transfer-note-error' : undefined}
-						class="mt-2 w-full resize-y rounded-xl border border-ink/20 bg-white px-4 py-3 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+						class="mt-2 w-full resize-y rounded-xl border border-field bg-white px-4 py-3 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 						>{values.note}</textarea
 					>
 					{#if modalErrors.note}
@@ -475,7 +475,7 @@
 									aria-describedby={!saveResult?.values?.transferId && saveErrors.startsAt
 										? 'new-start-error'
 										: undefined}
-									class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+									class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 								/>
 								{#if !saveResult?.values?.transferId && saveErrors.startsAt}
 									<p id="new-start-error" class="mt-2 text-sm font-semibold text-red-800">
@@ -499,7 +499,7 @@
 									aria-describedby={!saveResult?.values?.transferId && saveErrors.endsAt
 										? 'new-end-error'
 										: undefined}
-									class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+									class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 								/>
 								{#if !saveResult?.values?.transferId && saveErrors.endsAt}
 									<p id="new-end-error" class="mt-2 text-sm font-semibold text-red-800">
@@ -523,7 +523,7 @@
 								aria-describedby={!saveResult?.values?.transferId && saveErrors.note
 									? 'new-note-error'
 									: 'new-note-help'}
-								class="mt-2 w-full resize-y rounded-xl border border-ink/20 bg-white px-4 py-3 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+								class="mt-2 w-full resize-y rounded-xl border border-field bg-white px-4 py-3 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 								>{saveResult?.values?.transferId ? '' : (saveResult?.values?.note ?? '')}</textarea
 							>
 							{#if !saveResult?.values?.transferId && saveErrors.note}

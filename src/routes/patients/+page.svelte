@@ -6,7 +6,6 @@
 	import Archive from '@lucide/svelte/icons/archive';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BellOff from '@lucide/svelte/icons/bell-off';
-	import BellRing from '@lucide/svelte/icons/bell-ring';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
@@ -14,6 +13,7 @@
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
 	import Route from '@lucide/svelte/icons/route';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Siren from '@lucide/svelte/icons/siren';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import { ContactRound } from '@lucide/svelte';
@@ -27,6 +27,16 @@
 
 	function patientName(patient: Patient) {
 		return `${patient.firstName} ${patient.lastName}`.trim();
+	}
+
+	const timeFormatter = new Intl.DateTimeFormat('es-DO', {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: 'America/Santo_Domingo'
+	});
+
+	function presentTime(value: string) {
+		return timeFormatter.format(new Date(value));
 	}
 
 	function statusHref(patient: Patient) {
@@ -197,9 +207,11 @@
 									href={statusHref(patient)}
 									class={[
 										'group mt-5 flex min-h-14 items-center gap-3 rounded-2xl p-2 transition-colors focus:ring-4 focus:ring-focus/30 focus:outline-none',
-										patient.activeAlert || patient.activeTransfer
-											? 'hover:bg-amber-50'
-											: 'hover:bg-canvas'
+										patient.activeAlert
+											? 'hover:bg-red-50'
+											: patient.activeTransfer
+												? 'hover:bg-amber-50'
+												: 'hover:bg-canvas'
 									]}
 								>
 									{#if !data.alertsAvailable}
@@ -214,13 +226,15 @@
 										</div>
 									{:else if patient.activeAlert}
 										<div
-											class="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-950"
+											class="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-900"
 										>
-											<BellRing aria-hidden="true" size={20} strokeWidth={2} />
+											<Siren aria-hidden="true" size={20} strokeWidth={2} />
 										</div>
 										<div class="min-w-0 flex-1">
-											<p class="font-bold text-amber-950">Alerta activa</p>
-											<p class="mt-1 text-sm leading-5 text-amber-950">Salida confirmada.</p>
+											<p class="font-bold text-red-950">Alerta activa</p>
+											<p class="mt-1 text-sm leading-5 text-red-950">
+												Salida de zona segura confirmada.
+											</p>
 										</div>
 									{:else if !patient.assignment}
 										<div
@@ -245,7 +259,7 @@
 										<div class="min-w-0 flex-1">
 											<p class="font-bold text-amber-950">Traslado en curso</p>
 											<p class="mt-1 text-sm leading-5 text-amber-950/80">
-												Trayecto está autorizado.
+												Traslado autorizado hasta las {presentTime(patient.activeTransfer.endsAt)}.
 											</p>
 										</div>
 									{:else}

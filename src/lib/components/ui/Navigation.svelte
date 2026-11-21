@@ -13,7 +13,7 @@
 	const items = [
 		{
 			id: 'dashboard' as const,
-			label: 'Panel',
+			label: 'Inicio',
 			href: resolve('/dashboard'),
 			icon: LayoutDashboard
 		},
@@ -54,7 +54,7 @@
 
 <nav
 	aria-label="Módulos principales"
-	class="fixed right-2 bottom-2 left-2 z-40 rounded-2xl border border-white/80 bg-white px-2 py-2 shadow-md sm:right-4 sm:bottom-4 sm:left-4 lg:inset-y-4 lg:right-auto lg:left-4 lg:flex lg:w-64 lg:flex-col lg:border-white/10 lg:bg-ink lg:px-4 lg:py-5 lg:shadow-md"
+	class="fixed right-2 bottom-2 left-2 z-40 rounded-2xl border border-white/80 bg-white px-2 py-2 shadow-md sm:right-4 sm:bottom-4 sm:left-4 lg:inset-y-4 lg:right-auto lg:left-4 lg:flex lg:w-64 lg:flex-col lg:border-white/10 lg:bg-ink lg:px-4 lg:py-5 lg:shadow-md lg:[--focus-ring:white]"
 >
 	<a
 		href={resolve('/dashboard')}

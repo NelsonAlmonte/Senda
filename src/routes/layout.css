@@ -1,5 +1,21 @@
 @import 'tailwindcss';
 
+/*
+ * Inter variable (OFL-1.1), solo el subconjunto latino: cubre el español completo (á é í ó ú ñ ¿ ¡)
+ * y evita precachear los alfabetos que la app no usa. Se sirve desde el propio dominio.
+ */
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+		format('woff2-variations');
+	unicode-range:
+		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @theme {
 	--color-brand: #355f55;
 	--color-ink: #20373c;
@@ -9,8 +25,10 @@
 	--color-sky-soft: #bdd8e9;
 	--color-lavender: #e7e5f4;
 	--color-focus: #1f6f8b;
+	--color-field: #7a8a8e;
 	--font-sans:
-		Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+		'Segoe UI', sans-serif;
 }
 
 :root {
@@ -35,6 +53,17 @@ body {
 button,
 a {
 	touch-action: manipulation;
+}
+
+/*
+ * Indicador de foco único para teclado y tecnologías de asistencia (WCAG 2.4.7 y 1.4.11).
+ * Va fuera de @layer para imponerse a `focus:outline-none` y a los anillos translúcidos
+ * (focus:ring-*), cuyo contraste sobre blanco queda por debajo de 3:1.
+ * Sobre fondos oscuros se cambia con la variable --focus-ring.
+ */
+:focus-visible {
+	outline: 3px solid var(--focus-ring, var(--color-focus));
+	outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

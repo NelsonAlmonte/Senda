@@ -13,6 +13,7 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:auth": "node --test src/lib/server/auth.test.ts",
+		"test:patient-status": "node --test src/lib/utils/patient-status.test.ts",
 		"test:simulator": "node --test simulator/simulator-client.test.mjs",
 		"test:push-delivery": "node --test supabase/functions/send-geofence-alert/handler.test.ts",
 		"generate:pwa-assets": "pwa-assets-generator --config pwa-assets.config.ts",

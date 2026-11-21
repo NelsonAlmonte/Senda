@@ -9,6 +9,7 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
 	import Route from '@lucide/svelte/icons/route';
@@ -17,13 +18,43 @@
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import { ContactRound } from '@lucide/svelte';
-	import { onMount } from 'svelte';
+	import { presentLocationTime } from '#lib/utils/location-presentation.js';
+	import { classifyPatientStatus, rankPatientStatus } from '#lib/utils/patient-status.js';
+	import { onMount, untrack } from 'svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
-	let patients = $derived(data.patients);
+	// Lo que requiere atención va primero; a igual urgencia, por nombre. Misma regla que el panel de inicio.
+	let patients = $derived(
+		[...data.patients].sort(
+			(a, b) =>
+				rankPatientStatus(statusOf(a)) - rankPatientStatus(statusOf(b)) ||
+				patientName(a).localeCompare(patientName(b), 'es')
+		)
+	);
+	// Reloj de la pantalla: la antigüedad avanza sin recargar; si el servidor entrega un dato más
+	// reciente que el reloj local, manda el del servidor.
+	let now = $state(untrack(() => data.loadedAt));
+	let clock = $derived(Math.max(now, data.loadedAt));
 
 	type Patient = PageProps['data']['patients'][number];
+
+	function statusOf(patient: Patient) {
+		return classifyPatientStatus({
+			hasAlert: patient.activeAlert !== null,
+			hasDevice: patient.assignment !== null,
+			hasActiveTransfer: patient.activeTransfer !== null,
+			freshness: patient.latestLocationRecordedAt
+				? presentLocationTime(patient.latestLocationRecordedAt, clock).freshness
+				: null,
+			relation: patient.latestGeofenceRelation,
+			dataComplete:
+				data.devicesAvailable &&
+				data.alertsAvailable &&
+				data.transfersAvailable &&
+				data.locationsAvailable
+		});
+	}
 
 	function patientName(patient: Patient) {
 		return `${patient.firstName} ${patient.lastName}`.trim();
@@ -81,9 +112,11 @@
 		}
 
 		scheduleNextBoundary();
+		const clockTimer = setInterval(() => (now = Date.now()), 30_000);
 
 		return () => {
 			active = false;
+			clearInterval(clockTimer);
 			if (timeout !== undefined) window.clearTimeout(timeout);
 		};
 	});
@@ -280,6 +313,29 @@
 										class="shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
 									/>
 								</a>
+
+								{#if patient.assignment && data.locationsAvailable}
+									{@const time = patient.latestLocationRecordedAt
+										? presentLocationTime(patient.latestLocationRecordedAt, clock)
+										: null}
+									<p
+										class={[
+											'mt-3 flex items-center gap-2 px-2 text-sm leading-5',
+											time?.freshness === 'STALE' ? 'font-bold text-amber-900' : 'text-muted'
+										]}
+									>
+										<Clock3 aria-hidden="true" size={16} strokeWidth={2} class="shrink-0" />
+										<span>
+											{#if !time}
+												Sin lecturas recibidas todavía
+											{:else if time.freshness === 'STALE'}
+												Ubicación desactualizada: {time.ageLabel}
+											{:else}
+												Última ubicación {time.ageLabel}
+											{/if}
+										</span>
+									</p>
+								{/if}
 							</div>
 
 							<div class="border-t border-ink/10 p-4">

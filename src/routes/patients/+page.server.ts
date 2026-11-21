@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import type { LocationGeofenceRelation } from '#lib/types/locations.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ depends, locals, url }) => {
@@ -58,6 +59,11 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 		string,
 		{ id: string; startsAt: string; endsAt: string; note: string }
 	>();
+	const latestLocationByAssignment = new Map<
+		string,
+		{ recordedAt: string; relation: LocationGeofenceRelation }
+	>();
+	let locationsAvailable = true;
 	let devicesAvailable = true;
 	let alertsAvailable = true;
 	let transfersAvailable = true;
@@ -108,6 +114,24 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 			});
 		}
 
+		// Última lectura por asignación activa; sirve para mostrar "hace X min" en cada tarjeta.
+		const assignmentIds = [...assignmentsByPatient.values()].map((assignment) => assignment.id);
+		if (assignmentIds.length > 0) {
+			const locationResult = await locals.supabase
+				.from('latest_locations')
+				.select('device_assignment_id, recorded_at, geofence_relation')
+				.in('device_assignment_id', assignmentIds);
+
+			locationsAvailable = !locationResult.error;
+
+			for (const location of locationResult.data ?? []) {
+				latestLocationByAssignment.set(location.device_assignment_id, {
+					recordedAt: location.recorded_at,
+					relation: location.geofence_relation as LocationGeofenceRelation
+				});
+			}
+		}
+
 		for (const alert of alertResult.data ?? []) {
 			if (activeAlertsByPatient.has(alert.patient_id)) continue;
 			activeAlertsByPatient.set(alert.patient_id, {
@@ -143,7 +167,14 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 		...patient,
 		assignment: assignmentsByPatient.get(patient.id) ?? null,
 		activeAlert: activeAlertsByPatient.get(patient.id) ?? null,
-		activeTransfer: activeTransfersByPatient.get(patient.id) ?? null
+		activeTransfer: activeTransfersByPatient.get(patient.id) ?? null,
+		...(() => {
+			const latest = latestLocationByAssignment.get(assignmentsByPatient.get(patient.id)?.id ?? '');
+			return {
+				latestLocationRecordedAt: latest?.recordedAt ?? null,
+				latestGeofenceRelation: latest?.relation ?? null
+			};
+		})()
 	}));
 
 	return {
@@ -153,6 +184,8 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 		devicesAvailable,
 		alertsAvailable,
 		transfersAvailable,
+		locationsAvailable,
+		loadedAt: Date.now(),
 		nextTransferBoundary,
 		patientCreated: url.searchParams.get('created') === 'patient',
 		deviceConfigured: url.searchParams.get('configured') === 'device',

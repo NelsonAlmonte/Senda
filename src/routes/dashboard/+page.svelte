@@ -3,8 +3,16 @@
 	import { resolve } from '$app/paths';
 	import { createBrowserSupabaseClient } from '#lib';
 	import Alert from '#lib/components/ui/Alert.svelte';
-	import { presentDateTime, presentLocationTime } from '#lib/utils/location-presentation.js';
+	import Initials from '#lib/components/ui/Initials.svelte';
+	import type { PatientStatusKind } from '#lib/types/patient-status.js';
+	import { presentLocationTime } from '#lib/utils/location-presentation.js';
+	import {
+		classifyPatientStatus,
+		needsAttention,
+		rankPatientStatus
+	} from '#lib/utils/patient-status.js';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import Clock3 from '@lucide/svelte/icons/clock-3';
@@ -12,6 +20,8 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import MapPinOff from '@lucide/svelte/icons/map-pin-off';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
+	import Route from '@lucide/svelte/icons/route';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Siren from '@lucide/svelte/icons/siren';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
@@ -19,113 +29,232 @@
 	import type { PageProps } from './$types';
 
 	type Patient = PageProps['data']['patients'][number];
-	type AttentionKind = 'ALERT' | 'STALE' | 'NO_LOCATION' | 'NO_DEVICE';
-	type AttentionItem = {
-		kind: AttentionKind;
+	type Row = {
+		kind: PatientStatusKind;
 		patient: Patient;
+		title: string;
 		detail: string;
+		/** Lo que el usuario debe hacer a continuación. */
+		action: {
+			label: string;
+			route: 'map' | 'zones' | 'device' | 'patient';
+			icon: 'map' | 'device' | 'zones' | 'open';
+		};
 	};
+
+	const timeFormatter = new Intl.DateTimeFormat('es-DO', {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: 'America/Santo_Domingo'
+	});
 
 	let { data }: PageProps = $props();
 	let now = $state(untrack(() => data.loadedAt));
+	let clock = $derived(Math.max(now, data.loadedAt));
 	let displayName = $derived(data.profile?.full_name || data.user.email || 'Usuario de Senda');
 	let allStatesAvailable = $derived(
 		data.patientsAvailable &&
 			data.devicesAvailable &&
 			data.alertsAvailable &&
-			data.locationsAvailable
+			data.locationsAvailable &&
+			data.transfersAvailable
 	);
-	let attentionItems = $derived.by(() => {
-		const activeAlerts: AttentionItem[] = [];
-		const staleLocations: AttentionItem[] = [];
-		const missingLocations: AttentionItem[] = [];
-		const missingDevices: AttentionItem[] = [];
-
-		for (const patient of data.patients) {
-			if (patient.activeAlert) {
-				activeAlerts.push({
-					kind: 'ALERT',
-					patient,
-					detail: `Confirmada el ${presentDateTime(patient.activeAlert.confirmedAt)}.`
-				});
-				continue;
-			}
-
-			if (data.devicesAvailable && !patient.assignmentId) {
-				missingDevices.push({
-					kind: 'NO_DEVICE',
-					patient,
-					detail: 'El monitoreo de ubicación todavía no está activo.'
-				});
-				continue;
-			}
-
-			if (!patient.assignmentId || !data.locationsAvailable) continue;
-
-			if (!patient.latestLocationRecordedAt) {
-				missingLocations.push({
-					kind: 'NO_LOCATION',
-					patient,
-					detail: 'El dispositivo todavía no ha enviado una ubicación.'
-				});
-				continue;
-			}
-
-			const locationTime = presentLocationTime(patient.latestLocationRecordedAt, now);
-			if (locationTime.freshness === 'STALE') {
-				staleLocations.push({
-					kind: 'STALE',
-					patient,
-					detail: `Última ubicación ${locationTime.ageLabel}.`
-				});
-			}
-		}
-
-		return [...activeAlerts, ...staleLocations, ...missingLocations, ...missingDevices];
-	});
-	let attentionSummary = $derived.by(() => {
-		if (!data.patientsAvailable) return 'No pudimos revisar tus pacientes.';
-		if (!allStatesAvailable && attentionItems.length === 0) {
-			return 'Algunos estados de pacientes no están disponibles.';
-		}
-		if (attentionItems.length === 0) return 'No hay asuntos pendientes comprobados.';
-		if (attentionItems.length === 1) return '1 paciente requiere tu atención.';
-		return `${attentionItems.length} pacientes requieren tu atención.`;
-	});
 
 	function patientName(patient: Patient) {
 		return `${patient.firstName} ${patient.lastName}`.trim();
 	}
 
-	function attentionTitle(kind: AttentionKind) {
+	function hrefOf(row: Row) {
+		const params = { id: row.patient.id };
+		switch (row.action.route) {
+			case 'zones':
+				return resolve('/patients/[id]/safe-zones', params);
+			case 'device':
+				return resolve('/patients/[id]/device', params);
+			case 'patient':
+				return resolve('/patients/[id]', params);
+			default:
+				return resolve('/patients/[id]/map', params);
+		}
+	}
+
+	function buildRow(patient: Patient): Row {
+		const time = patient.latestLocationRecordedAt
+			? presentLocationTime(patient.latestLocationRecordedAt, clock)
+			: null;
+		const kind = classifyPatientStatus({
+			hasAlert: patient.activeAlert !== null,
+			hasDevice: patient.assignmentId !== null,
+			hasActiveTransfer: patient.activeTransferEndsAt !== null,
+			freshness: time?.freshness ?? null,
+			relation: patient.latestGeofenceRelation,
+			dataComplete: allStatesAvailable
+		});
+		const openMap = { label: 'Abrir mapa', route: 'map' as const, icon: 'map' as const };
+		const lastReading = time ? ` Última lectura ${time.ageLabel}.` : '';
+
 		switch (kind) {
-			case 'ALERT':
-				return 'Salida confirmada activa';
+			case 'ALERT': {
+				const confirmed = patient.activeAlert
+					? presentLocationTime(patient.activeAlert.confirmedAt, clock).ageLabel
+					: '';
+				return {
+					kind,
+					patient,
+					title: 'Salida confirmada activa',
+					detail: `Salida confirmada ${confirmed}.${lastReading}`,
+					action: { ...openMap, label: 'Ver ubicación ahora' }
+				};
+			}
+			case 'REVIEW': {
+				const relation = patient.latestGeofenceRelation;
+				if (relation === 'OUTSIDE') {
+					return {
+						kind,
+						patient,
+						title: 'Fuera de zona, por confirmar',
+						detail: `La lectura quedó fuera de las zonas permitidas y aún no se confirma una salida.${lastReading}`,
+						action: { ...openMap, label: 'Revisar ubicación' }
+					};
+				}
+				if (relation === 'UNCERTAIN') {
+					return {
+						kind,
+						patient,
+						title: 'Ubicación por confirmar',
+						detail: `La precisión no permite saber si está dentro o fuera.${lastReading}`,
+						action: { ...openMap, label: 'Revisar ubicación' }
+					};
+				}
+				return {
+					kind,
+					patient,
+					title: 'Sin zona permitida que evaluar',
+					detail: 'No hay una geocerca activa con la que comparar la ubicación.',
+					action: {
+						label: 'Configurar geocercas',
+						route: 'zones',
+						icon: 'zones'
+					}
+				};
+			}
 			case 'STALE':
-				return 'Ubicación desactualizada';
+				return {
+					kind,
+					patient,
+					title: 'Ubicación desactualizada',
+					detail: `Última ubicación ${time?.ageLabel ?? ''}. No representa una posición en vivo.`,
+					action: { ...openMap, label: 'Revisar ubicación' }
+				};
 			case 'NO_LOCATION':
-				return 'Sin ubicaciones recibidas';
+				return {
+					kind,
+					patient,
+					title: 'Sin ubicaciones recibidas',
+					detail: 'El dispositivo todavía no ha enviado una ubicación.',
+					action: openMap
+				};
 			case 'NO_DEVICE':
-				return 'Sin dispositivo configurado';
+				return {
+					kind,
+					patient,
+					title: 'Sin dispositivo configurado',
+					detail: 'El monitoreo de ubicación todavía no está activo.',
+					action:
+						patient.accessRole === 'ADMIN'
+							? {
+									label: 'Configurar dispositivo',
+									route: 'device',
+									icon: 'device'
+								}
+							: {
+									label: 'Ver paciente',
+									route: 'patient' as const,
+									icon: 'open'
+								}
+				};
+			case 'TRANSFER':
+				return {
+					kind,
+					patient,
+					title: 'En traslado planificado',
+					detail: `Autorizado hasta las ${timeFormatter.format(new Date(patient.activeTransferEndsAt ?? clock))}.${lastReading}`,
+					action: openMap
+				};
+			case 'OK':
+				return {
+					kind,
+					patient,
+					title: 'Dentro de una zona permitida',
+					detail: `Última ubicación ${time?.ageLabel ?? ''}.`,
+					action: openMap
+				};
+			default:
+				return {
+					kind,
+					patient,
+					title: 'Estado no disponible',
+					detail: 'No pudimos comprobar todos los datos de este paciente.',
+					action: {
+						label: 'Ver paciente',
+						route: 'patient' as const,
+						icon: 'open'
+					}
+				};
 		}
 	}
 
-	function attentionHref(item: AttentionItem) {
-		if (item.kind === 'NO_DEVICE') {
-			return item.patient.accessRole === 'ADMIN'
-				? resolve('/patients/[id]/device', { id: item.patient.id })
-				: resolve('/patients/[id]', { id: item.patient.id });
+	// Ordenado por urgencia y, a igualdad, por nombre: lo primero que se ve es lo que pide acción.
+	let rows = $derived(
+		data.patients
+			.map(buildRow)
+			.sort(
+				(a, b) =>
+					rankPatientStatus(a.kind) - rankPatientStatus(b.kind) ||
+					patientName(a.patient).localeCompare(patientName(b.patient), 'es')
+			)
+	);
+	let attentionRows = $derived(rows.filter((row) => needsAttention(row.kind)));
+	let calmRows = $derived(rows.filter((row) => row.kind === 'OK' || row.kind === 'TRANSFER'));
+	let counts = $derived({
+		alerts: rows.filter((row) => row.kind === 'ALERT').length,
+		review: rows.filter((row) => row.kind === 'REVIEW' || row.kind === 'STALE').length,
+		setup: rows.filter((row) => row.kind === 'NO_LOCATION' || row.kind === 'NO_DEVICE').length,
+		calm: calmRows.length
+	});
+	let attentionSummary = $derived.by(() => {
+		if (!data.patientsAvailable) return 'No pudimos revisar tus pacientes.';
+		if (!allStatesAvailable && attentionRows.length === 0) {
+			return 'Algunos estados de pacientes no están disponibles.';
 		}
+		if (attentionRows.length === 0) return 'No hay asuntos pendientes comprobados.';
+		if (attentionRows.length === 1) return '1 paciente requiere tu atención.';
+		return `${attentionRows.length} pacientes requieren tu atención.`;
+	});
+	let summaryItems = $derived([
+		{ key: 'alerts', label: 'Alertas activas', value: counts.alerts, tone: 'danger', icon: Siren },
+		{ key: 'review', label: 'Por revisar', value: counts.review, tone: 'warning', icon: Clock3 },
+		{
+			key: 'setup',
+			label: 'Sin configurar',
+			value: counts.setup,
+			tone: 'neutral',
+			icon: Smartphone
+		},
+		{ key: 'calm', label: 'Sin novedad', value: counts.calm, tone: 'calm', icon: CircleCheck }
+	] as const);
 
-		return resolve('/patients/[id]/map', { id: item.patient.id });
-	}
+	const toneClasses = {
+		danger: { chip: 'bg-red-50 text-red-800', title: 'text-red-900' },
+		warning: { chip: 'bg-amber-50 text-amber-800', title: 'text-amber-900' },
+		neutral: { chip: 'bg-surface-muted text-brand', title: 'text-muted' },
+		calm: { chip: 'bg-surface-muted text-brand', title: 'text-muted' }
+	} as const;
 
-	function attentionAction(item: AttentionItem) {
-		if (item.kind === 'NO_DEVICE') {
-			return item.patient.accessRole === 'ADMIN' ? 'Configurar dispositivo' : 'Ver paciente';
-		}
-
-		return item.kind === 'ALERT' || item.kind === 'STALE' ? 'Revisar ubicación' : 'Abrir mapa';
+	function toneOf(kind: PatientStatusKind) {
+		if (kind === 'ALERT') return toneClasses.danger;
+		if (kind === 'REVIEW' || kind === 'STALE' || kind === 'NO_LOCATION') return toneClasses.warning;
+		return toneClasses.neutral;
 	}
 
 	onMount(() => {
@@ -188,40 +317,68 @@
 				más frecuentes.
 			</p>
 
-			<nav class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Acciones rápidas">
+			<nav class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Acciones rápidas">
 				<a
 					href={resolve('/groups?mode=patient')}
-					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 font-bold text-brand transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-field bg-white px-4 font-bold text-ink transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
-					<UserPlus aria-hidden="true" size={18} strokeWidth={2} />
+					<UserPlus aria-hidden="true" class="text-brand" size={18} strokeWidth={2} />
 					Agregar paciente
 				</a>
 				<a
 					href={resolve('/access-code')}
-					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 font-bold text-brand transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-field bg-white px-4 font-bold text-ink transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
-					<KeyRound aria-hidden="true" size={18} strokeWidth={2} />
+					<KeyRound aria-hidden="true" class="text-brand" size={18} strokeWidth={2} />
 					Ingresar código
 				</a>
 				<a
 					href={resolve('/patients')}
-					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 font-bold text-brand transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-field bg-white px-4 font-bold text-ink transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
-					<HeartHandshake aria-hidden="true" size={18} strokeWidth={2} />
+					<HeartHandshake aria-hidden="true" class="text-brand" size={18} strokeWidth={2} />
 					Ver pacientes
 				</a>
 				<a
 					href={resolve('/alerts')}
-					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 font-bold text-brand transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-field bg-white px-4 font-bold text-ink transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none"
 				>
-					<Siren aria-hidden="true" size={18} strokeWidth={2} />
+					<Siren aria-hidden="true" class="text-brand" size={18} strokeWidth={2} />
 					Ver alertas
 				</a>
 			</nav>
 		</section>
 
-		<section class="mt-12" aria-labelledby="attention-title">
-			<h2 id="attention-title" class="mb-8 text-2xl font-bold text-ink">Requiere tu atención</h2>
+		{#if data.patientsAvailable && data.patients.length > 0}
+			<section class="mt-8" aria-labelledby="summary-title">
+				<h2 id="summary-title" class="sr-only">Resumen del estado de tus pacientes</h2>
+				<ul class="grid grid-cols-2 gap-3 2xl:grid-cols-4">
+					{#each summaryItems as item (item.key)}
+						{@const Icon = item.icon}
+						<li
+							class="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
+							aria-label={`${item.label}: ${item.value}`}
+						>
+							<div
+								class={[
+									'flex size-11 shrink-0 items-center justify-center rounded-full',
+									item.value > 0 ? toneClasses[item.tone].chip : 'bg-canvas text-muted'
+								]}
+							>
+								<Icon aria-hidden="true" size={20} strokeWidth={2} />
+							</div>
+							<div class="min-w-0">
+								<p class="text-2xl leading-7 font-bold text-ink">{item.value}</p>
+								<p class="text-sm leading-5 text-muted">{item.label}</p>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+
+		<section class="mt-10" aria-labelledby="attention-title">
+			<h2 id="attention-title" class="mb-6 text-2xl font-bold text-ink">Requiere tu atención</h2>
 
 			<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">
 				{attentionSummary}
@@ -248,26 +405,25 @@
 					</div>
 				{/if}
 
-				{#if attentionItems.length > 0}
+				{#if attentionRows.length > 0}
 					<ul class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-						{#each attentionItems as item (`${item.kind}:${item.patient.id}`)}
+						{#each attentionRows as row (`${row.kind}:${row.patient.id}`)}
+							{@const tone = toneOf(row.kind)}
 							<li class="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
 								<div class="flex flex-1 items-start gap-4 p-6">
 									<div
 										class={[
 											'flex size-12 shrink-0 items-center justify-center rounded-full',
-											item.kind === 'ALERT'
-												? 'bg-red-50 text-red-800'
-												: item.kind === 'STALE' || item.kind === 'NO_LOCATION'
-													? 'bg-amber-50 text-amber-800'
-													: 'bg-surface-muted text-brand'
+											tone.chip
 										]}
 									>
-										{#if item.kind === 'ALERT'}
+										{#if row.kind === 'ALERT'}
 											<Siren aria-hidden="true" size={22} strokeWidth={2} />
-										{:else if item.kind === 'STALE'}
+										{:else if row.kind === 'REVIEW'}
+											<CircleAlert aria-hidden="true" size={22} strokeWidth={2} />
+										{:else if row.kind === 'STALE'}
 											<Clock3 aria-hidden="true" size={22} strokeWidth={2} />
-										{:else if item.kind === 'NO_LOCATION'}
+										{:else if row.kind === 'NO_LOCATION'}
 											<MapPinOff aria-hidden="true" size={22} strokeWidth={2} />
 										{:else}
 											<Smartphone aria-hidden="true" size={22} strokeWidth={2} />
@@ -275,38 +431,29 @@
 									</div>
 
 									<div class="min-w-0">
-										<p
-											class={[
-												'text-sm font-bold',
-												item.kind === 'ALERT'
-													? 'text-red-900'
-													: item.kind === 'STALE' || item.kind === 'NO_LOCATION'
-														? 'text-amber-900'
-														: 'text-muted'
-											]}
-										>
-											{attentionTitle(item.kind)}
-										</p>
+										<p class={['text-sm font-bold', tone.title]}>{row.title}</p>
 										<h3 class="mt-1 text-xl font-bold wrap-break-word text-ink">
-											{patientName(item.patient)}
+											{patientName(row.patient)}
 										</h3>
-										<p class="mt-2 leading-6 text-muted">{item.detail}</p>
+										<p class="mt-2 leading-6 text-muted">{row.detail}</p>
 									</div>
 								</div>
 
 								<div class="border-t border-ink/10 p-4">
 									<a
-										href={attentionHref(item)}
+										href={hrefOf(row)}
 										class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition-colors hover:bg-brand/90 focus:ring-4 focus:ring-focus/30 focus:outline-none"
 									>
-										{#if item.kind === 'NO_DEVICE' && item.patient.accessRole === 'ADMIN'}
+										{#if row.action.icon === 'device'}
 											<Smartphone aria-hidden="true" size={18} strokeWidth={2} />
-										{:else if item.kind === 'NO_DEVICE'}
+										{:else if row.action.icon === 'zones'}
+											<ShieldCheck aria-hidden="true" size={18} strokeWidth={2} />
+										{:else if row.action.icon === 'open'}
 											<ArrowUpRight aria-hidden="true" size={18} strokeWidth={2} />
 										{:else}
 											<MapPinned aria-hidden="true" size={18} strokeWidth={2} />
 										{/if}
-										{attentionAction(item)}
+										{row.action.label}
 									</a>
 								</div>
 							</li>
@@ -334,5 +481,59 @@
 				{/if}
 			{/if}
 		</section>
+
+		{#if data.patientsAvailable && calmRows.length > 0}
+			<section class="mt-10" aria-labelledby="calm-title">
+				<details class="group rounded-2xl bg-white shadow-sm">
+					<summary
+						class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-6 py-4 [&::-webkit-details-marker]:hidden"
+					>
+						<h2 id="calm-title" class="text-lg font-bold text-ink">
+							Sin novedad ({calmRows.length})
+						</h2>
+						<ChevronDown
+							aria-hidden="true"
+							size={20}
+							strokeWidth={2}
+							class="shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+						/>
+					</summary>
+					<ul class="divide-y divide-ink/10 border-t border-ink/10">
+						{#each calmRows as row (row.patient.id)}
+							<li>
+								<a
+									href={hrefOf(row)}
+									class="flex min-h-16 items-center gap-4 px-6 py-3 transition-colors hover:bg-canvas focus:ring-4 focus:ring-focus/30 focus:outline-none focus:ring-inset"
+								>
+									<Initials text={patientName(row.patient)} />
+									<div class="min-w-0 flex-1">
+										<p class="font-bold wrap-break-word text-ink">{patientName(row.patient)}</p>
+										<p class="flex items-center gap-2 text-sm leading-5 text-muted">
+											{#if row.kind === 'TRANSFER'}
+												<Route aria-hidden="true" size={16} strokeWidth={2} class="shrink-0" />
+											{:else}
+												<CircleCheck
+													aria-hidden="true"
+													size={16}
+													strokeWidth={2}
+													class="shrink-0"
+												/>
+											{/if}
+											<span>{row.title}. {row.detail}</span>
+										</p>
+									</div>
+									<ArrowUpRight
+										aria-hidden="true"
+										size={18}
+										strokeWidth={2}
+										class="shrink-0 text-muted"
+									/>
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</details>
+			</section>
+		{/if}
 	</div>
 </main>

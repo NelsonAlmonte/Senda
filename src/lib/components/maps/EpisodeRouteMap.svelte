@@ -1,5 +1,5 @@
 <script lang="ts">
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import MapStatusOverlay from '#lib/components/maps/MapStatusOverlay.svelte';
 	import type { EpisodeRouteSegment } from '#lib/types/maps.js';
 	import { loadMapDisplayLibraries } from '#lib/utils/google-maps.js';
 	import { untrack } from 'svelte';
@@ -231,39 +231,12 @@
 		aria-label={`Google Maps con el recorrido registrado durante el episodio de ${patientName}`}
 	></div>
 
-	{#if mapState === 'LOADING'}
-		<div
-			class="absolute inset-0 grid place-items-center bg-surface-muted p-6 text-center"
-			role="status"
-		>
-			<div>
-				<div
-					class="mx-auto size-9 animate-spin rounded-full border-4 border-brand/20 border-t-brand motion-reduce:animate-none"
-					aria-hidden="true"
-				></div>
-				<p class="mt-4 font-bold text-ink">Cargando recorrido…</p>
-				<p class="mt-1 text-sm leading-6 text-muted">Preparando el historial del episodio.</p>
-			</div>
-		</div>
-	{:else if mapState === 'ERROR'}
-		<div
-			class="absolute inset-0 grid place-items-center bg-surface-muted p-6 text-center"
-			role="alert"
-		>
-			<div class="max-w-sm">
-				<p class="font-bold text-ink">No pudimos cargar el recorrido</p>
-				<p class="mt-2 text-sm leading-6 text-muted">
-					Comprueba tu conexión y vuelve a intentarlo. El resumen temporal sigue disponible.
-				</p>
-				<button
-					type="button"
-					onclick={() => (retryKey += 1)}
-					class="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-				>
-					<RefreshCw aria-hidden="true" size={19} strokeWidth={2} />
-					Reintentar
-				</button>
-			</div>
-		</div>
-	{/if}
+	<MapStatusOverlay
+		status={mapState}
+		loadingTitle="Cargando recorrido…"
+		loadingSubtitle="Preparando el historial del episodio."
+		errorTitle="No pudimos cargar el recorrido"
+		errorHint="Comprueba tu conexión y vuelve a intentarlo. El resumen temporal sigue disponible."
+		onretry={() => (retryKey += 1)}
+	/>
 </section>

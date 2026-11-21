@@ -5,6 +5,11 @@ declare global {
 		prompt(): Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 	}
 
+	interface Window {
+		/** Callback global que Google Maps invoca cuando rechaza la clave de API. */
+		gm_authFailure?: () => void;
+	}
+
 	interface WindowEventMap {
 		beforeinstallprompt: SendaBeforeInstallPromptEvent;
 		appinstalled: Event;

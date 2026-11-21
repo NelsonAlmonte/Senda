@@ -150,7 +150,7 @@
 
 {#if isVisible}
 	<aside
-		class="fixed right-4 bottom-24 left-4 z-50 mx-auto max-w-xl rounded-2xl border border-brand/20 bg-white p-4 sm:right-6 sm:left-auto sm:w-112 lg:bottom-6"
+		class="fixed right-4 bottom-24 left-4 z-50 mx-auto max-w-xl rounded-2xl border border-brand/20 bg-white p-4 shadow-lg sm:right-6 sm:left-auto sm:w-112 lg:bottom-6"
 		aria-labelledby="push-notification-prompt-title"
 		aria-live={confirmation || feedback ? 'polite' : undefined}
 	>

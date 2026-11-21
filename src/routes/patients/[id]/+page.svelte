@@ -164,6 +164,56 @@
 			</div>
 		{/if}
 
+		<!-- Acción principal primero: lo que más se hace con un paciente es ver dónde está. -->
+		{#if data.assignment}
+			<section
+				aria-label="Acciones principales"
+				class="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm"
+			>
+				<div class="min-w-0 flex-1 basis-56">
+					<p class="font-bold text-ink">Monitoreo de {data.patient.firstName}</p>
+					<p class="mt-1 text-sm leading-6 text-muted">
+						Consulta dónde está y si existe una salida confirmada.
+					</p>
+				</div>
+				<div class="flex flex-wrap gap-3">
+					<a
+						href={resolve('/patients/[id]/map', { id: data.patient.id })}
+						class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold whitespace-nowrap text-white transition hover:bg-brand/90"
+					>
+						<Map aria-hidden="true" size={19} strokeWidth={2} />
+						Ver mapa
+					</a>
+					<a
+						href={resolve('/patients/[id]/episodes', { id: data.patient.id })}
+						class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-field bg-white px-6 font-bold whitespace-nowrap text-ink transition hover:bg-canvas"
+					>
+						<BellRing aria-hidden="true" size={19} strokeWidth={2} />
+						Ver episodios
+					</a>
+				</div>
+			</section>
+		{:else if data.isAdmin}
+			<section
+				aria-label="Acciones principales"
+				class="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm"
+			>
+				<div class="min-w-0 flex-1 basis-56">
+					<p class="font-bold text-ink">Falta configurar el dispositivo</p>
+					<p class="mt-1 text-sm leading-6 text-muted">
+						Sin un dispositivo asignado no se puede ver la ubicación de {data.patient.firstName}.
+					</p>
+				</div>
+				<a
+					href={resolve('/patients/[id]/device', { id: data.patient.id })}
+					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold whitespace-nowrap text-white transition hover:bg-brand/90"
+				>
+					<Smartphone aria-hidden="true" size={19} strokeWidth={2} />
+					Configurar dispositivo
+				</a>
+			</section>
+		{/if}
+
 		<div class="max-w-3xl">
 			<h2 id="patient-data-title" class="mb-8 text-2xl font-bold text-ink">Datos del paciente</h2>
 		</div>
@@ -172,8 +222,8 @@
 				<div class="p-6">
 					<Heading
 						icon={PencilLine}
-						title="Datos del paciente"
-						subtitle="Datos identificativos del paciente."
+						title="Datos identificativos"
+						subtitle="Nombre y apellido con los que Senda identifica al paciente."
 					/>
 
 					{#if data.isAdmin}
@@ -303,7 +353,7 @@
 						icon={Smartphone}
 						title="Dispositivo"
 						info={data.assignment ? data.assignment.device.serialNumber : 'Sin configurar'}
-						tone={data.assignment ? 'positive' : 'neutral'}
+						tone="neutral"
 					/>
 
 					{#if data.activeAccessCount !== null}
@@ -311,7 +361,7 @@
 							icon={KeyRound}
 							title="Accesos activos"
 							info={String(data.activeAccessCount)}
-							tone={data.activeAccessCount > 0 ? 'positive' : 'neutral'}
+							tone="neutral"
 						/>
 					{/if}
 				</div>

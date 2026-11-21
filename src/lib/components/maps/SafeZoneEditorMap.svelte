@@ -1,5 +1,5 @@
 <script lang="ts">
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import MapStatusOverlay from '#lib/components/maps/MapStatusOverlay.svelte';
 	import type {
 		SafeZoneDraft,
 		SafeZoneEditorMapController,
@@ -279,39 +279,12 @@
 		aria-label={`Google Maps para configurar las geocercas de ${patientName}`}
 	></div>
 
-	{#if mapState === 'LOADING'}
-		<div
-			class="absolute inset-0 grid place-items-center bg-surface-muted p-6 text-center"
-			role="status"
-		>
-			<div>
-				<div
-					class="mx-auto size-9 animate-spin rounded-full border-4 border-brand/20 border-t-brand motion-reduce:animate-none"
-					aria-hidden="true"
-				></div>
-				<p class="mt-4 font-bold text-ink">Cargando mapa…</p>
-				<p class="mt-1 text-sm leading-6 text-muted">Preparando el editor de geocercas.</p>
-			</div>
-		</div>
-	{:else if mapState === 'ERROR'}
-		<div
-			class="absolute inset-0 grid place-items-center bg-surface-muted p-6 text-center"
-			role="alert"
-		>
-			<div class="max-w-sm">
-				<p class="font-bold text-ink">No pudimos cargar Google Maps</p>
-				<p class="mt-2 text-sm leading-6 text-muted">
-					Comprueba tu conexión y vuelve a intentarlo. Tus geocercas guardadas no se modificaron.
-				</p>
-				<button
-					type="button"
-					onclick={() => (retryKey += 1)}
-					class="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand px-5 font-bold text-white transition hover:bg-brand/90 focus:ring-4 focus:ring-focus/35 focus:outline-none"
-				>
-					<RefreshCw aria-hidden="true" size={19} strokeWidth={2} />
-					Reintentar
-				</button>
-			</div>
-		</div>
-	{/if}
+	<MapStatusOverlay
+		status={mapState}
+		loadingTitle="Cargando mapa…"
+		loadingSubtitle="Preparando el editor de geocercas."
+		errorTitle="No pudimos cargar Google Maps"
+		errorHint="Comprueba tu conexión y vuelve a intentarlo. Tus geocercas guardadas no se modificaron."
+		onretry={() => (retryKey += 1)}
+	/>
 </section>

@@ -506,12 +506,26 @@
 					</a>
 				</div>
 			{:else if !latestLocation && !data.manualLocationEnabled && data.safeZones.length === 0}
-				<div class="rounded-2xl bg-white p-6 shadow-sm">
-					<h2 class="text-xl font-bold text-ink">Aún no hay ubicaciones</h2>
-					<p class="mt-2 max-w-2xl leading-7 text-muted">
-						El dispositivo está configurado, pero todavía no ha enviado una ubicación. Esta pantalla
-						la mostrará cuando llegue la primera lectura.
-					</p>
+				<div class="max-w-3xl rounded-2xl bg-white p-6 shadow-sm">
+					<Heading
+						icon={MapPin}
+						title="Aún no hay ubicaciones"
+						subtitle="El dispositivo está configurado, pero todavía no ha enviado una lectura. Esta pantalla se actualizará sola cuando llegue la primera."
+					/>
+					<div class="mt-6 rounded-2xl bg-surface-muted p-4">
+						<p class="font-bold text-ink">Mientras tanto, puedes prepararte</p>
+						<p class="mt-1 text-sm leading-6 text-muted">
+							Define al menos una zona permitida. Sin ella, Senda no puede decir si una lectura está
+							dentro o fuera.
+						</p>
+					</div>
+					<a
+						href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
+						class="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold whitespace-nowrap text-white transition hover:bg-brand/90"
+					>
+						<ShieldCheck aria-hidden="true" size={19} strokeWidth={2} />
+						Configurar geocercas
+					</a>
 				</div>
 			{:else}
 				{#if realtimeState === 'ERROR'}

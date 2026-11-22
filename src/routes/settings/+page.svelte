@@ -112,7 +112,7 @@
 									value={form?.fullName ?? data.profile?.full_name ?? ''}
 									aria-invalid={form?.error ? 'true' : undefined}
 									aria-describedby={form?.error ? 'profile-name-error' : undefined}
-									class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+									class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 								/>
 								{#if form?.error}
 									<p id="profile-name-error" class="mt-2 text-sm font-semibold text-red-800">
@@ -186,7 +186,7 @@
 					<form method="POST" action={resolve('/auth/logout')}>
 						<button
 							type="submit"
-							class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border border-field bg-white px-6 font-bold text-ink transition hover:bg-canvas focus:ring-4 focus:ring-focus/25 focus:outline-none"
+							class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-800 px-6 font-bold text-white transition hover:bg-red-900 focus:ring-4 focus:ring-red-700/25 focus:outline-none"
 						>
 							<LogOut aria-hidden="true" size={19} strokeWidth={2} />
 							Cerrar sesión

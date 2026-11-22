@@ -97,7 +97,7 @@
 						value={form?.email ?? ''}
 						aria-invalid={errors.email ? 'true' : undefined}
 						aria-describedby={errors.email ? 'email-error' : undefined}
-						class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+						class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 					/>
 					{#if errors.email}<p id="email-error" class="mt-2 text-sm font-semibold text-red-800">
 							{errors.email}

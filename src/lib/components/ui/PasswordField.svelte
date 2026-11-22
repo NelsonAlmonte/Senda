@@ -33,13 +33,14 @@
 			spellcheck="false"
 			aria-invalid={error ? 'true' : undefined}
 			aria-describedby={describedBy}
-			class="min-h-12 w-full rounded-xl border border-field bg-white px-4 pe-14 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+			class="min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 pe-14 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 		/>
 		<button
 			type="button"
 			onclick={() => (visible = !visible)}
 			aria-label={visible ? `Ocultar ${label.toLowerCase()}` : `Mostrar ${label.toLowerCase()}`}
-			class="absolute inset-y-0 right-0.5 my-auto grid size-11 cursor-pointer place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-ink focus:ring-4 focus:ring-focus/30 focus:outline-none"
+			aria-pressed={visible}
+			class="absolute inset-y-0 right-1 my-auto grid size-10 cursor-pointer place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-ink focus:ring-4 focus:ring-focus/30 focus:outline-none"
 		>
 			{#if visible}
 				<EyeOff aria-hidden="true" size={20} strokeWidth={2} />

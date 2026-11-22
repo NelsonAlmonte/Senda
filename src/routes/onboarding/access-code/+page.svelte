@@ -247,7 +247,7 @@
 										: 'onboarding-code-help'}
 									class={[
 										'mt-2 min-h-12 w-full rounded-xl border bg-white px-4 font-mono text-base tracking-wider text-ink uppercase transition outline-none placeholder:text-muted/60 focus:border-focus focus:ring-4 focus:ring-focus/20',
-										errors.code ? 'border-red-700/60' : 'border-field'
+										errors.code ? 'border-red-700/60' : 'border-ink/20'
 									]}
 								/>
 								<p id="onboarding-code-help" class="mt-2 text-sm leading-6 text-muted">

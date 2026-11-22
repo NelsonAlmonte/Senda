@@ -100,7 +100,7 @@
 						value={form?.values?.fullName ?? ''}
 						aria-invalid={errors.fullName ? 'true' : undefined}
 						aria-describedby={errors.fullName ? 'full-name-error' : undefined}
-						class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+						class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 					/>
 					{#if errors.fullName}<p
 							id="full-name-error"
@@ -122,7 +122,7 @@
 						value={form?.values?.email ?? ''}
 						aria-invalid={errors.email ? 'true' : undefined}
 						aria-describedby={errors.email ? 'register-email-error' : undefined}
-						class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+						class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 					/>
 					{#if errors.email}<p
 							id="register-email-error"

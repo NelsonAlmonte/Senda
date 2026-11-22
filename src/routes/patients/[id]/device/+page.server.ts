@@ -88,10 +88,13 @@ export const actions: Actions = {
 			});
 		}
 
-		const { error } = await locals.supabase.rpc('assign_simulated_device', {
-			p_patient_id: params.id,
-			p_serial_number: serialNumber
-		});
+		const assignment = { p_patient_id: params.id, p_serial_number: serialNumber };
+		let { error } = await locals.supabase.rpc('assign_simulated_device', assignment);
+
+		// Inventory serials are unique, so a serial unknown to the simulated flow may be a physical tracker.
+		if (error?.message.includes('Serial is not registered.')) {
+			({ error } = await locals.supabase.rpc('assign_physical_device', assignment));
+		}
 
 		if (error) {
 			if (error.message.includes('Serial is not registered.')) {

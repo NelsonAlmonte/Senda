@@ -53,7 +53,7 @@ El botón/click de simulación no puede aceptar coordenadas de un paciente ajeno
 - Verificar identidad y privilegios en Supabase antes de guardar.
 - Validar el identificador de asignación activa del dispositivo simulado en servidor.
 - El script Node.js usa credenciales de prueba en variables de entorno, no en el repositorio; no utilizar `service_role` dentro de la PWA.
-- Producción futura con hardware utilizará autenticación de dispositivo separada de Supabase Auth de los familiares.
+- El hardware físico no usa Supabase Auth de los familiares. Traccar reenvía cada posición por HTTPS a la Edge Function `ingest-device-location`, que exige un secreto compartido (`SENDA_INGEST_SECRET`, mínimo 32 caracteres, distinto de `SENDA_WEBHOOK_SECRET`) en la cabecera `x-senda-ingest-secret` o `Authorization: Bearer`, y llama con la clave de servicio a una RPC exclusiva de `service_role`. La función se despliega con `Verify JWT` desactivado porque Traccar no puede enviar un JWT; la autenticación es el secreto. El paciente se deriva de la asignación activa del dispositivo, nunca de datos del cliente, y una lectura anterior al inicio de la asignación se descarta para no filtrarla al paciente actual. Limitación conocida: la autenticación individual por dispositivo (claim/pairing) sigue aplazada, y un único secreto compartido protege el endpoint.
 
 **Decisión MVP (2026-10-24):** la ingestión simulada inicial usa una RPC autenticada que exige acceso `ADMIN` activo al paciente y una asignación simulada vigente. `authenticated` solo recibe `SELECT` sobre `locations`; no puede insertar directamente. `MONITOR` puede leer las ubicaciones autorizadas, pero no simularlas. La autenticación independiente del hardware permanece aplazada.
 

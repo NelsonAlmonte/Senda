@@ -79,11 +79,13 @@ revoked_at   timestamptz null
 ```text
 id             uuid PK
 serial_number  text UNIQUE
-device_kind    SIMULATED | PHYSICAL (PHYSICAL reservado para futuro)
+device_kind    SIMULATED | PHYSICAL
 created_at     timestamptz
 ```
 
-**No implementar aún** hardware_id, credenciales reales ni el ciclo físico completo de claim/pairing. El onboarding puede simular el registro de una unidad mediante un identificador de prueba y crear su asignación al paciente. Un paciente puede existir sin asignación activa y completar esta configuración más adelante.
+El onboarding puede simular el registro de una unidad mediante un identificador de prueba y crear su asignación al paciente. Un paciente puede existir sin asignación activa y completar esta configuración más adelante.
+
+**Dispositivos físicos (migración `20261121171531_physical_device_ingestion.sql`).** El identificador que el rastreador reporta (el IMEI) no vive en `devices`, cuyo `serial_number` es público para quien tenga acceso al paciente. Se guarda en `private.device_hardware_ids (device_id PK → devices.id, hardware_id UNIQUE)`, con RLS activada y sin ningún privilegio para `anon`, `authenticated` ni `service_role`: solo lo leen las funciones `SECURITY DEFINER`. Un operador con `service_role` registra el equipo con `register_physical_device`; un `ADMIN` del paciente lo asigna con `assign_physical_device`. El claim/pairing físico completo (autenticación propia del dispositivo, aprovisionamiento) sigue aplazado. Las lecturas se guardan con `source = 'DEVICE'` mediante `ingest_device_location`, que solo ejecuta `service_role`.
 
 ### 6. `device_assignments`
 

@@ -1,0 +1,17 @@
+# Traccar receiver for the Mictrack MT710L-LA. Run on a host with a public IPv4 address.
+# Pinned by digest: tag "latest" was resolved to Traccar 6.17.0 on 2026-11-21.
+services:
+  traccar:
+    image: traccar/traccar@sha256:b32d9346adf46df7c33c58577e17ad60f6feadd1f3cd87c876041f6c79317ef1
+    container_name: senda-traccar
+    restart: unless-stopped
+    ports:
+      # Traccar lists the MT710 under two protocols; open both and configure the tracker with one.
+      - '5030:5030' # protocol tlt2h
+      - '5191:5191' # protocol mictrack
+      # Admin UI: localhost only. Reach it through an SSH tunnel, never expose it publicly.
+      - '127.0.0.1:8082:8082'
+    volumes:
+      - ./conf/traccar.xml:/opt/traccar/conf/traccar.xml:ro
+      - ./data:/opt/traccar/data
+      - ./logs:/opt/traccar/logs

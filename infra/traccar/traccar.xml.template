@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE properties SYSTEM 'http://java.sun.com/dtd/properties.dtd'>
+<!-- Rendered by render-config.sh. Never commit the rendered conf/traccar.xml: it holds the ingest secret. -->
+<properties>
+	<entry key='config.default'>./conf/default.xml</entry>
+
+	<entry key='database.driver'>org.h2.Driver</entry>
+	<entry key='database.url'>jdbc:h2:./data/database</entry>
+	<entry key='database.user'>sa</entry>
+	<entry key='database.password'></entry>
+
+	<!-- Senda's device registry is the authority; unknown IMEIs are rejected by the ingestion RPC. -->
+	<entry key='database.registerUnknown'>true</entry>
+
+	<!-- Forward every decoded position to the Supabase Edge Function. -->
+	<entry key='forward.url'>${SENDA_INGEST_URL}</entry>
+	<entry key='forward.type'>json</entry>
+	<entry key='forward.header'>x-senda-ingest-secret: ${SENDA_INGEST_SECRET}</entry>
+	<entry key='forward.retry.enable'>true</entry>
+</properties>

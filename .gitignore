@@ -25,3 +25,8 @@ vite.config.ts.timestamp-*
 
 # Supabase CLI
 /supabase/.temp/
+
+# Traccar lab (rendered config, data, logs)
+/infra/traccar/conf/
+/infra/traccar/data/
+/infra/traccar/logs/

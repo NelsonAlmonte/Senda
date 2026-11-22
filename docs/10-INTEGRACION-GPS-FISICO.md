@@ -134,6 +134,9 @@ Marca cada caso con fecha, hora y evidencia. No registres un resultado que no se
 - **R02:** las tramas llegan con estado `A` (válido) cada 60 s, con el equipo a cielo abierto. Evidencia: el mismo log.
 - **R03 (parcial):** tras asignar el equipo a un paciente de prueba, la pantalla `/patients/<id>/map` pasó sola de «Aún no hay ubicaciones» a «Lectura recibida hace menos de 1 minuto». No se consultó `locations` por SQL (§10) y no se midió la latencia.
 - Las lecturas enviadas antes de asignar el equipo no se guardaron (`UNKNOWN_DEVICE` o `NO_ACTIVE_ASSIGNMENT`), como está previsto.
+- **R04 (parcial):** con la clave de Maps puesta, el mapa del paciente mostró el marcador y el recorrido. El mapa se ve con la marca «For development purposes only» y el error `BillingNotEnabledMapError`, porque el proyecto de Google Cloud no tiene la facturación activa.
+- **R05, R06 y R08 (observados a escala de minutos):** con una geocerca de 100 m centrada en el equipo, una salida a pie y en vehículo y el regreso, el registro de Traccar mostró la primera lectura a más de 100 m a las 18:19:57 UTC y la segunda a las 18:20:58. La app registró el episodio «Confirmada 2:20 p. m.» (hora local, UTC-4) y lo resolvió a las 2:42 p. m., tras volver dentro de la zona (primera lectura dentro 18:41:06, segunda 18:42:07). El episodio aparece en `/alerts` como «Episodio finalizado». La distancia máxima fue de unos 2,5 km. **No se midió la latencia** entre la lectura y el episodio (no se ejecutó la consulta de §10) y no se vio el episodio abierto en vivo, solo ya resuelto.
+- **R07 (Web Push), R09, R10, R11 y R12:** no se probaron. En el navegador usado no había una suscripción de notificaciones activa.
 
 ## 10. Consultas de evidencia y latencia (editor SQL, solo lectura)
 

@@ -1,4 +1,5 @@
 import { readText } from '#lib/server/auth.js';
+import { assignDeviceBySerial } from '#lib/server/device-assignment.js';
 import { error as httpError, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -88,13 +89,7 @@ export const actions: Actions = {
 			});
 		}
 
-		const assignment = { p_patient_id: params.id, p_serial_number: serialNumber };
-		let { error } = await locals.supabase.rpc('assign_simulated_device', assignment);
-
-		// Inventory serials are unique, so a serial unknown to the simulated flow may be a physical tracker.
-		if (error?.message.includes('Serial is not registered.')) {
-			({ error } = await locals.supabase.rpc('assign_physical_device', assignment));
-		}
+		const error = await assignDeviceBySerial(locals.supabase, params.id, serialNumber);
 
 		if (error) {
 			if (error.message.includes('Serial is not registered.')) {

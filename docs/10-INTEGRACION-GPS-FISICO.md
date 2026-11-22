@@ -97,7 +97,7 @@ reset role;
 commit;
 ```
 
-Luego, en la app, un `ADMIN` del paciente abre `/patients/<id>/device` y asigna `SENDA-GPS-001`; después crea una geocerca en `/patients/<id>/safe-zones`. Comprueba el estado sin escribir datos:
+Luego, en la app, un `ADMIN` del paciente asigna `SENDA-GPS-001` desde `/patients/<id>/device` o desde el paso 3 del asistente de alta (ambos prueban primero el inventario simulado y después el físico). Un equipo solo puede tener un paciente activo: si ya está asignado, hay que desasignarlo antes; después crea una geocerca en `/patients/<id>/safe-zones`. Comprueba el estado sin escribir datos:
 
 ```sh
 npm run check:gps-readiness -- --hardware-id <IMEI>

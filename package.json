@@ -16,6 +16,7 @@
 		"test:patient-status": "node --test src/lib/utils/patient-status.test.ts",
 		"test:simulator": "node --test simulator/simulator-client.test.mjs",
 		"test:push-delivery": "node --test supabase/functions/send-geofence-alert/handler.test.ts",
+		"test:device-assignment": "node --test src/lib/server/device-assignment.test.ts",
 		"test:device-ingest": "node --test supabase/functions/ingest-device-location/handler.test.ts",
 		"generate:pwa-assets": "pwa-assets-generator --config pwa-assets.config.ts",
 		"generate:vapid-keys": "node scripts/generate-vapid-keys.mjs",

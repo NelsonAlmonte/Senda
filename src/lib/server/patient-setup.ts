@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { PatientSetupData, SetupPatient } from '#lib/types/groups.js';
 import { readText } from '#lib/server/auth.js';
+import { assignDeviceBySerial } from '#lib/server/device-assignment.js';
 import { error as httpError, fail, redirect, type RequestEvent } from '@sveltejs/kit';
 
 const groupTypes = ['FAMILY', 'CARE_CENTER'] as const;
@@ -233,15 +234,12 @@ export async function assignSetupDevice(event: RequestEvent, options: PatientSet
 		});
 	}
 
-	const { error } = await supabase.rpc('assign_simulated_device', {
-		p_patient_id: patientId,
-		p_serial_number: serialNumber
-	});
+	const error = await assignDeviceBySerial(supabase, patientId, serialNumber);
 
 	if (error) {
 		let message = 'No pudimos configurar el dispositivo. Revisa el serial e inténtalo nuevamente.';
 		if (error.message.includes('Serial is not registered.')) {
-			message = 'Ese serial no está registrado en el inventario simulado de Senda.';
+			message = 'Ese serial no está registrado en el inventario de Senda.';
 		} else if (error.message.includes('Patient already has an active device.')) {
 			message = 'Este paciente ya tiene un dispositivo activo.';
 		} else if (error.message.includes('Device already has an active patient.')) {

@@ -163,13 +163,13 @@
 							icon={ScanBarcode}
 							title="Serial"
 							info={data.assignment.serialNumber}
-							tone="neutral"
+							tone="positive"
 						/>
 						<InfoItem
 							icon={CalendarDays}
 							title="Asignado desde"
 							info={dateFormatter.format(new Date(data.assignment.assignedAt))}
-							tone="neutral"
+							tone="positive"
 						/>
 					</div>
 				</div>
@@ -256,7 +256,7 @@
 								value={form?.values?.serialNumber ?? ''}
 								aria-invalid={errors.serialNumber ? 'true' : undefined}
 								aria-describedby={errors.serialNumber ? 'serial-help serial-error' : 'serial-help'}
-								class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 font-mono text-base text-ink uppercase transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+								class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 font-mono text-base text-ink uppercase transition outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 							/>
 							{#if errors.serialNumber}
 								<p id="serial-error" class="mt-2 text-sm font-semibold text-red-800">

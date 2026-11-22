@@ -219,7 +219,7 @@
 						<button
 							type="button"
 							onclick={() => copyAccessCode(form.accessCode)}
-							class="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border border-field bg-white px-5 font-bold text-ink transition-colors hover:bg-canvas"
+							class="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border border-ink/15 bg-white px-5 font-bold text-ink transition-colors hover:bg-canvas"
 						>
 							{#if copiedCode === form.accessCode}
 								<Check aria-hidden="true" size={19} strokeWidth={2} />

@@ -164,56 +164,6 @@
 			</div>
 		{/if}
 
-		<!-- Acción principal primero: lo que más se hace con un paciente es ver dónde está. -->
-		{#if data.assignment}
-			<section
-				aria-label="Acciones principales"
-				class="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm"
-			>
-				<div class="min-w-0 flex-1 basis-56">
-					<p class="font-bold text-ink">Monitoreo de {data.patient.firstName}</p>
-					<p class="mt-1 text-sm leading-6 text-muted">
-						Consulta dónde está y si existe una salida confirmada.
-					</p>
-				</div>
-				<div class="flex flex-wrap gap-3">
-					<a
-						href={resolve('/patients/[id]/map', { id: data.patient.id })}
-						class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold whitespace-nowrap text-white transition hover:bg-brand/90"
-					>
-						<Map aria-hidden="true" size={19} strokeWidth={2} />
-						Ver mapa
-					</a>
-					<a
-						href={resolve('/patients/[id]/episodes', { id: data.patient.id })}
-						class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-field bg-white px-6 font-bold whitespace-nowrap text-ink transition hover:bg-canvas"
-					>
-						<BellRing aria-hidden="true" size={19} strokeWidth={2} />
-						Ver episodios
-					</a>
-				</div>
-			</section>
-		{:else if data.isAdmin}
-			<section
-				aria-label="Acciones principales"
-				class="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm"
-			>
-				<div class="min-w-0 flex-1 basis-56">
-					<p class="font-bold text-ink">Falta configurar el dispositivo</p>
-					<p class="mt-1 text-sm leading-6 text-muted">
-						Sin un dispositivo asignado no se puede ver la ubicación de {data.patient.firstName}.
-					</p>
-				</div>
-				<a
-					href={resolve('/patients/[id]/device', { id: data.patient.id })}
-					class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold whitespace-nowrap text-white transition hover:bg-brand/90"
-				>
-					<Smartphone aria-hidden="true" size={19} strokeWidth={2} />
-					Configurar dispositivo
-				</a>
-			</section>
-		{/if}
-
 		<div class="max-w-3xl">
 			<h2 id="patient-data-title" class="mb-8 text-2xl font-bold text-ink">Datos del paciente</h2>
 		</div>
@@ -222,8 +172,8 @@
 				<div class="p-6">
 					<Heading
 						icon={PencilLine}
-						title="Datos identificativos"
-						subtitle="Nombre y apellido con los que Senda identifica al paciente."
+						title="Datos del paciente"
+						subtitle="Datos identificativos del paciente."
 					/>
 
 					{#if data.isAdmin}
@@ -264,7 +214,7 @@
 											value={updateResult?.values?.firstName ?? data.patient.firstName}
 											aria-invalid={errors.firstName ? 'true' : undefined}
 											aria-describedby={errors.firstName ? 'first-name-error' : undefined}
-											class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+											class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 										/>
 										{#if errors.firstName}
 											<p id="first-name-error" class="mt-2 text-sm font-semibold text-red-800">
@@ -286,7 +236,7 @@
 											value={updateResult?.values?.lastName ?? data.patient.lastName}
 											aria-invalid={errors.lastName ? 'true' : undefined}
 											aria-describedby={errors.lastName ? 'last-name-error' : undefined}
-											class="mt-2 min-h-12 w-full rounded-xl border border-field bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
+											class="mt-2 min-h-12 w-full rounded-xl border border-ink/20 bg-white px-4 text-base text-ink outline-none focus:border-focus focus:ring-4 focus:ring-focus/20"
 										/>
 										{#if errors.lastName}
 											<p id="last-name-error" class="mt-2 text-sm font-semibold text-red-800">
@@ -303,13 +253,13 @@
 								icon={UserRound}
 								title="Nombre"
 								info={data.patient.firstName}
-								tone="neutral"
+								tone="positive"
 							/>
 							<InfoItem
 								icon={Signature}
 								title="Apellido"
 								info={data.patient.lastName}
-								tone="neutral"
+								tone="positive"
 							/>
 						</div>
 					{/if}
@@ -345,7 +295,7 @@
 							icon={UsersRound}
 							title="Grupo"
 							info={data.patient.group?.name ?? 'Sin grupo visible'}
-							tone="neutral"
+							tone="positive"
 						/>
 					</div>
 
@@ -353,7 +303,7 @@
 						icon={Smartphone}
 						title="Dispositivo"
 						info={data.assignment ? data.assignment.device.serialNumber : 'Sin configurar'}
-						tone="neutral"
+						tone={data.assignment ? 'positive' : 'neutral'}
 					/>
 
 					{#if data.activeAccessCount !== null}
@@ -361,7 +311,7 @@
 							icon={KeyRound}
 							title="Accesos activos"
 							info={String(data.activeAccessCount)}
-							tone="neutral"
+							tone={data.activeAccessCount > 0 ? 'positive' : 'neutral'}
 						/>
 					{/if}
 				</div>
@@ -390,7 +340,7 @@
 						{#if data.assignment}
 							<a
 								href={resolve('/patients/[id]/map', { id: data.patient.id })}
-								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-sky-soft/50 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 							>
 								<div
 									class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
@@ -412,7 +362,7 @@
 
 						<a
 							href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
-							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-sky-soft/50 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 						>
 							<div
 								class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
@@ -433,7 +383,7 @@
 
 						<a
 							href={resolve('/patients/[id]/episodes', { id: data.patient.id })}
-							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-sky-soft/50 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 						>
 							<div
 								class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
@@ -454,7 +404,7 @@
 
 						<a
 							href={resolve('/patients/[id]/transfers', { id: data.patient.id })}
-							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-sky-soft/50 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+							class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 						>
 							<div
 								class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
@@ -488,7 +438,7 @@
 						<nav class="mt-6 grid gap-3" aria-label="Operaciones administrativas">
 							<a
 								href={resolve('/patients/[id]/access', { id: data.patient.id })}
-								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-sky-soft/50 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 							>
 								<div
 									class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"
@@ -512,7 +462,7 @@
 
 							<a
 								href={resolve('/patients/[id]/device', { id: data.patient.id })}
-								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-sky-soft/50 focus:ring-4 focus:ring-focus/30 focus:outline-none"
+								class="group flex min-h-24 items-center gap-4 rounded-2xl bg-surface-muted p-4 transition-colors hover:bg-surface-muted focus:ring-4 focus:ring-focus/30 focus:outline-none"
 							>
 								<div
 									class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-brand"

@@ -506,26 +506,12 @@
 					</a>
 				</div>
 			{:else if !latestLocation && !data.manualLocationEnabled && data.safeZones.length === 0}
-				<div class="max-w-3xl rounded-2xl bg-white p-6 shadow-sm">
-					<Heading
-						icon={MapPin}
-						title="Aún no hay ubicaciones"
-						subtitle="El dispositivo está configurado, pero todavía no ha enviado una lectura. Esta pantalla se actualizará sola cuando llegue la primera."
-					/>
-					<div class="mt-6 rounded-2xl bg-surface-muted p-4">
-						<p class="font-bold text-ink">Mientras tanto, puedes prepararte</p>
-						<p class="mt-1 text-sm leading-6 text-muted">
-							Define al menos una zona permitida. Sin ella, Senda no puede decir si una lectura está
-							dentro o fuera.
-						</p>
-					</div>
-					<a
-						href={resolve('/patients/[id]/safe-zones', { id: data.patient.id })}
-						class="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 font-bold whitespace-nowrap text-white transition hover:bg-brand/90"
-					>
-						<ShieldCheck aria-hidden="true" size={19} strokeWidth={2} />
-						Configurar geocercas
-					</a>
+				<div class="rounded-2xl bg-white p-6 shadow-sm">
+					<h2 class="text-xl font-bold text-ink">Aún no hay ubicaciones</h2>
+					<p class="mt-2 max-w-2xl leading-7 text-muted">
+						El dispositivo está configurado, pero todavía no ha enviado una ubicación. Esta pantalla
+						la mostrará cuando llegue la primera lectura.
+					</p>
 				</div>
 			{:else}
 				{#if realtimeState === 'ERROR'}
@@ -538,33 +524,6 @@
 						/>
 					</div>
 				{/if}
-
-				<!-- Estado primero: quién, riesgo y antigüedad deben verse sin desplazarse por el mapa. -->
-				<div
-					class="mb-6 grid gap-4 md:grid-cols-2"
-					aria-label="Resumen del estado de {patientName}"
-				>
-					<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
-						<InfoItem
-							icon={activeAlertEpisode
-								? Siren
-								: data.activeTransfer
-									? CalendarClock
-									: alertStatus.tone === 'warning'
-										? CircleAlert
-										: BellRing}
-							title={alertStatus.title}
-							info={alertStatus.info}
-							tone={alertStatus.tone}
-						/>
-					</div>
-					<InfoItem
-						icon={Clock3}
-						title={freshnessStatus.title}
-						info={freshnessStatus.info}
-						tone={freshnessStatus.tone}
-					/>
-				</div>
 
 				<div class="grid items-start gap-6 xl:grid-cols-12 xl:items-stretch">
 					<div class="min-w-0 xl:col-span-8 xl:h-160">
@@ -648,7 +607,7 @@
 						<Heading
 							icon={MapPinned}
 							title="Estado de ubicación"
-							subtitle="Relación de la última lectura con las zonas permitidas."
+							subtitle="Estado de la salida, vigencia y relación de la última lectura con las zonas permitidas."
 						/>
 						<div class="mt-6 space-y-4">
 							{#if !data.activeTransferAvailable}
@@ -659,12 +618,35 @@
 									color="warning"
 								/>
 							{/if}
-							<InfoItem
-								icon={MapPin}
-								title={readingStatus.title}
-								info={readingStatus.info}
-								tone={readingStatus.tone}
-							/>
+							<div role={!data.alertEpisodesAvailable ? 'alert' : 'status'} aria-live="polite">
+								<InfoItem
+									icon={activeAlertEpisode
+										? Siren
+										: data.activeTransfer
+											? CalendarClock
+											: alertStatus.tone === 'warning'
+												? CircleAlert
+												: BellRing}
+									title={alertStatus.title}
+									info={alertStatus.info}
+									tone={alertStatus.tone}
+								/>
+							</div>
+
+							<div class="grid gap-4 sm:grid-cols-2">
+								<InfoItem
+									icon={Clock3}
+									title={freshnessStatus.title}
+									info={freshnessStatus.info}
+									tone={freshnessStatus.tone}
+								/>
+								<InfoItem
+									icon={MapPin}
+									title={readingStatus.title}
+									info={readingStatus.info}
+									tone={readingStatus.tone}
+								/>
+							</div>
 						</div>
 						{#if latestLocation?.accuracyM !== null && latestLocation?.accuracyM !== undefined && latestLocation.accuracyM > 0}
 							<p class="mt-6 border-t border-ink/10 pt-4 text-sm leading-6 text-muted">

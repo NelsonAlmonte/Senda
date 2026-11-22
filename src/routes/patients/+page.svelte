@@ -6,15 +6,14 @@
 	import Archive from '@lucide/svelte/icons/archive';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BellOff from '@lucide/svelte/icons/bell-off';
+	import BellRing from '@lucide/svelte/icons/bell-ring';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
-	import Clock3 from '@lucide/svelte/icons/clock-3';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import MapPinned from '@lucide/svelte/icons/map-pinned';
 	import Route from '@lucide/svelte/icons/route';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Siren from '@lucide/svelte/icons/siren';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import { ContactRound } from '@lucide/svelte';
@@ -58,16 +57,6 @@
 
 	function patientName(patient: Patient) {
 		return `${patient.firstName} ${patient.lastName}`.trim();
-	}
-
-	const timeFormatter = new Intl.DateTimeFormat('es-DO', {
-		hour: '2-digit',
-		minute: '2-digit',
-		timeZone: 'America/Santo_Domingo'
-	});
-
-	function presentTime(value: string) {
-		return timeFormatter.format(new Date(value));
 	}
 
 	function statusHref(patient: Patient) {
@@ -240,11 +229,9 @@
 									href={statusHref(patient)}
 									class={[
 										'group mt-5 flex min-h-14 items-center gap-3 rounded-2xl p-2 transition-colors focus:ring-4 focus:ring-focus/30 focus:outline-none',
-										patient.activeAlert
-											? 'hover:bg-red-50'
-											: patient.activeTransfer
-												? 'hover:bg-amber-50'
-												: 'hover:bg-canvas'
+										patient.activeAlert || patient.activeTransfer
+											? 'hover:bg-amber-50'
+											: 'hover:bg-canvas'
 									]}
 								>
 									{#if !data.alertsAvailable}
@@ -259,15 +246,13 @@
 										</div>
 									{:else if patient.activeAlert}
 										<div
-											class="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-900"
+											class="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-950"
 										>
-											<Siren aria-hidden="true" size={20} strokeWidth={2} />
+											<BellRing aria-hidden="true" size={20} strokeWidth={2} />
 										</div>
 										<div class="min-w-0 flex-1">
-											<p class="font-bold text-red-950">Alerta activa</p>
-											<p class="mt-1 text-sm leading-5 text-red-950">
-												Salida de zona segura confirmada.
-											</p>
+											<p class="font-bold text-amber-950">Alerta activa</p>
+											<p class="mt-1 text-sm leading-5 text-amber-950">Salida confirmada.</p>
 										</div>
 									{:else if !patient.assignment}
 										<div
@@ -292,7 +277,7 @@
 										<div class="min-w-0 flex-1">
 											<p class="font-bold text-amber-950">Traslado en curso</p>
 											<p class="mt-1 text-sm leading-5 text-amber-950/80">
-												Traslado autorizado hasta las {presentTime(patient.activeTransfer.endsAt)}.
+												Trayecto está autorizado.
 											</p>
 										</div>
 									{:else}
@@ -313,29 +298,6 @@
 										class="shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
 									/>
 								</a>
-
-								{#if patient.assignment && data.locationsAvailable}
-									{@const time = patient.latestLocationRecordedAt
-										? presentLocationTime(patient.latestLocationRecordedAt, clock)
-										: null}
-									<p
-										class={[
-											'mt-3 flex items-center gap-2 px-2 text-sm leading-5',
-											time?.freshness === 'STALE' ? 'font-bold text-amber-900' : 'text-muted'
-										]}
-									>
-										<Clock3 aria-hidden="true" size={16} strokeWidth={2} class="shrink-0" />
-										<span>
-											{#if !time}
-												Sin lecturas recibidas todavía
-											{:else if time.freshness === 'STALE'}
-												Ubicación desactualizada: {time.ageLabel}
-											{:else}
-												Última ubicación {time.ageLabel}
-											{/if}
-										</span>
-									</p>
-								{/if}
 							</div>
 
 							<div class="border-t border-ink/10 p-4">

@@ -9,6 +9,15 @@
 - **Mobile-first**, con adaptación a tablet y escritorio.
 - La interfaz debe transmitir **calma, confianza, claridad y protección**, sin ocultar urgencias.
 
+## Línea base visual congelada
+
+- La presentación y la estructura visual correspondientes al corte Git `9080299`, restauradas y validadas nuevamente el 2026-11-22, constituyen la **línea base autoritativa** de la interfaz.
+- No cambiar sin aprobación explícita del usuario la composición de las páginas, distribución de regiones, jerarquía de información, navegación, colores, tipografía, tamaños, espaciados, bordes, radios, sombras, superficies ni apariencia de los componentes compartidos.
+- Las nuevas funcionalidades deben integrarse dentro de la estructura existente con el menor impacto visual posible. Una necesidad lógica o técnica no autoriza por sí sola a rediseñar, reorganizar o añadir bloques visibles a una pantalla.
+- Si una funcionalidad no puede incorporarse respetando la estructura actual, presentar primero las alternativas, el impacto visual de cada una y una recomendación; esperar aprobación antes de modificar la UI.
+- Las capturas de referencia sirven para comprobar el resultado, pero el código del corte Git indicado es la fuente principal para recuperar clases, estructura y comportamiento responsivo.
+- Los ajustes correctivos de accesibilidad pueden realizarse cuando no alteren la presentación normal. Si cambian de forma perceptible el diseño o la interacción, requieren la misma aprobación previa.
+
 ## Estética orientativa (no paleta definitiva)
 
 - Pasteles sobrios: verde salvia, azul suave, lavanda pálida, blanco cálido.
@@ -28,7 +37,7 @@ Colores de referencia **propuestos**: verde salvia `#A8CBB7`, azul `#BDD8E9`, bl
 - Iconos: **`@lucide/svelte@1.63.0`**, confirmado el 2026-10-28 para la navegación. Importar cada icono por subruta, acompañarlo siempre con etiqueta textual y ocultar el SVG redundante a tecnologías de asistencia.
 - Las acciones equivalentes reutilizan el mismo símbolo en todos los módulos: `Save` para persistir cambios, `ShieldCheck` para geocercas, `Smartphone` para configurar dispositivos, `KeyRound`/`Eye` para códigos de acceso, `MapPinPlus` para registrar una ubicación y `RefreshCw` para reintentar. Los iconos de acciones visibles usan normalmente 18–19 px, trazo `2`, separación `gap-2` y `aria-hidden="true"` porque la etiqueta textual conserva el nombre accesible.
 - Marca: el emblema circular de paisaje, camino y pin aprobado el 2026-11-04 es la fuente visual de la aplicación y de sus iconos instalables. El PNG original vive centrado y recortado en `static/senda-logo-source.png`; `SendaMark` presenta la versión optimizada junto al nombre visible y `npm run generate:pwa-assets` regenera favicon, Apple Touch y variantes PWA. Los iconos PWA convencionales y Apple Touch conservan transparencia y padding reducido. La variante `maskable` es deliberadamente opaca, usa el verde oscuro del propio emblema y extiende el arte hasta los bordes: Android puede aplicar sus máscaras adaptativas sin inventar un aro blanco alrededor de una imagen transparente. No editar manualmente los derivados ni volver a duplicar el símbolo en SVG o iniciales de texto.
-- Tipografía: **Inter** (variable, `@fontsource-variable/inter@5.3.0`, licencia OFL-1.1), decidida el 2026-11-21. Se sirve desde el propio dominio, sin consultar a terceros, y solo se carga el subconjunto latino, que cubre el español completo; así el service worker precachea un único archivo de fuente (+52 KiB). Antes la fuente estaba declarada pero no se cargaba, y el texto caía a la fuente del sistema.
+- Tipografía: conservar la pila de sistema usada en el corte visual `9080299`, encabezada por `Inter` cuando esté disponible localmente y seguida por `ui-sans-serif`, `system-ui`, `-apple-system`, `BlinkMacSystemFont` y `Segoe UI`. No se distribuye una fuente web propia ni se añade su archivo al precache de la PWA.
 - Modo claro como enfoque inicial; no implementar tematización múltiple/dark mode sin necesidad.
 
 ## Jerarquía de información
@@ -87,7 +96,7 @@ No usar únicamente un punto verde/rojo para comunicar estado; incluir texto. El
 
 ### Dirección visual de la portada pública
 
-El 2026-11-04 `/` adoptó una composición editorial asimétrica inspirada en patrones de **Product Storytelling** y **Editorial Grid** consultados mediante UI UX Pro Max. Las referencias externas aportan ritmo, escala y contraste entre bloques, pero no su paleta ni contenido. La portada conserva los tokens actuales de Senda, Inter y la escala estándar de Tailwind; las decisiones definitivas de color y tipografía permanecen abiertas.
+El 2026-11-04 `/` adoptó una composición editorial asimétrica inspirada en patrones de **Product Storytelling** y **Editorial Grid** consultados mediante UI UX Pro Max. Las referencias externas aportan ritmo, escala y contraste entre bloques, pero no su paleta ni contenido. La portada conserva los tokens actuales de Senda, la pila tipográfica del sistema y la escala estándar de Tailwind; las decisiones definitivas de color y tipografía permanecen abiertas.
 
 El hero combina una promesa breve con una visualización propia del producto construida con iconos Lucide y formas vectoriales, sin imágenes de stock, métricas, testimonios ni funciones inventadas. La autenticación aparece exclusivamente en el encabezado público para evitar CTA repetidos. La instalación ocupa una acción secundaria dentro del hero solamente cuando `beforeinstallprompt` está disponible; Safari recibe **Cómo instalar Senda** y su guía contextual. La promoción flotante no se renderiza en `/`, de modo que nunca compite con esta acción. Una sección oscura y asimétrica explica el flujo **Ubica → Comprende → Actúa** mediante tres superficies suaves desplazadas; después, dos tarjetas neutrales comunican la autorización por paciente y el vínculo histórico de las ubicaciones. Estas regiones no usan líneas superiores como separadores; el único `border-top` de la portada pertenece al footer. No existe un CTA final redundante. La página mantiene objetivos táctiles de 48 px, foco visible, headings semánticos y adaptación mobile-first. Queda pendiente validar visualmente la composición y la instalación contextual en móvil y escritorio.
 

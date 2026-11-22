@@ -153,7 +153,7 @@
 
 		<h1
 			class={[
-				'line-clamp-2 min-w-0 flex-1 text-lg leading-6 font-bold text-ink sm:text-xl',
+				'min-w-0 flex-1 truncate text-lg font-bold text-ink sm:text-xl',
 				!header.back && 'ms-2'
 			]}
 		>

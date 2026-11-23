@@ -36,6 +36,8 @@ La prioridad al evaluar múltiples zonas es `INSIDE` → `UNCERTAIN` → `OUTSID
 
 **Conectividad / frescura**: `FRESH`, `STALE`, `NO_DATA` (terminología de implementación propuesta, se puede ajustar).
 
+**Conexión del equipo** (2026-11-22): es una tercera señal, distinta de la frescura de la ubicación. Un rastreador sin fix GPS sigue reportándose; Senda guarda la hora del último reporte (`devices.last_seen_at`) y la presenta como «equipo conectado» sin convertirla en ubicación, sin evaluar geocercas con ella y sin crear alertas. Ver `docs/10-INTEGRACION-GPS-FISICO.md` §14.
+
 Si no hay coordenadas recientes, no afirmar que el paciente se encuentra a salvo. Si no hay geocerca configurada o la lectura GPS es inválida, no clasificar forzosamente `NORMAL`.
 
 ## Modelo de episodios

@@ -182,7 +182,7 @@ Limitaciones de la medición: `recorded_at` es la hora GPS del equipo y `receive
 | `NO_ACTIVE_ASSIGNMENT`                                   | El equipo no está asignado a un paciente                                                                                                     |
 | `PREDATES_ASSIGNMENT`                                    | Lectura capturada antes de la asignación; es el comportamiento esperado para proteger el historial                                           |
 | `401` en la función                                      | El secreto de Traccar no coincide con `SENDA_INGEST_SECRET`; vuelve a renderizar la configuración                                            |
-| La posición no aparece (`valid = false`)                 | Sin fix GPS: la función la ignora con `202 IGNORED`. Sácalo a cielo abierto                                                                  |
+| La posición no aparece (`valid = false`)                 | Sin fix GPS: la función la ignora con `202 IGNORED` (y registra que el equipo sigue conectado, §14). Sácalo a cielo abierto                  |
 | Hay posiciones pero no alerta                            | Revisa que exista una geocerca activa y dos lecturas `OUTSIDE` consecutivas con precisión nula o de hasta 100 m                              |
 
 ## 12. Seguridad y reversión
@@ -199,3 +199,23 @@ Senda **no muestra ni guarda la batería del rastreador**. Se había escrito una
 - **Por qué:** el protocolo oficial del MT710/MT710L (`Mictrack Communication Protocol for MT710 / MT710L V1.0`) informa la batería como **voltaje de respaldo en milivoltios** (`Backup Voltage`; por ejemplo `3815` significa 3,815 V), no como porcentaje. En las tramas reales recibidas por Traccar el 2026-11-22 el valor estuvo entre 3935 y 4093.
 - **Evento disponible:** el protocolo define el estado `BLP` («backup battery low voltage») y los estados de carga `PLUG`, `UNPLUG` y `FULL`. No se comprobó si Traccar los reenvía ni con qué nombre de atributo.
 - **Si se retoma:** debería partir del voltaje o del evento `BLP`, no de un porcentaje. Convertir voltaje en porcentaje sin datos de descarga reales no es fiable.
+
+## 14. Conectividad del equipo, separada de la ubicación (2026-11-22)
+
+**Problema observado:** bajo techo el equipo sigue conectado y reporta cada minuto, pero solo envía tramas `$WIFI` sin fix GPS. Traccar repite la última posición con su hora original, así que Senda no recibe ninguna lectura nueva y la ubicación se ve desactualizada aunque el equipo esté vivo.
+
+**Qué hace Senda (a petición del usuario, opción 2 de la verificación previa):**
+
+- La Edge Function `ingest-device-location` registra un **latido** por cada reenvío autenticado de Traccar, con o sin fix GPS (`valid = false` también cuenta). Lo hace con la RPC `record_device_heartbeat(hardware_id)`, solo `service_role`, que guarda la hora **del servidor** en `devices.last_seen_at`. Un identificador desconocido no produce ningún efecto. Si el latido falla, la lectura se guarda igual y Traccar no reintenta.
+- `last_seen_at` es solo conectividad: **no crea ubicaciones, no entra al clasificador de geocercas y no genera alertas**.
+- La PWA considera el equipo **conectado** si reportó hace 3 minutos o menos (el mismo umbral que la ubicación obsoleta). En el mapa muestra «Equipo conectado, sin ubicación nueva» con la antigüedad de la última posición; y si el equipo tampoco reporta, el texto lo dice. El mapa consulta el latido cada 60 s mientras la pestaña está visible. `/patients` y `/dashboard` no lo muestran: la lista de pacientes volvió al diseño de la tesis, sin la línea de última ubicación.
+- El estado del paciente (`STALE`) no cambia: una ubicación vieja nunca se presenta como «en orden», aunque el equipo esté conectado. `/patients` y `/dashboard` no muestran el estado de conexión.
+
+**Verificado (2026-11-22):** 20 pruebas unitarias de la función (4 nuevas del latido), 3 de presentación, `svelte-check` y ESLint sin errores, y 12 casos pgTAP nuevos con la base local (más los de ingestión física y onboarding, 90 en total).
+
+**Producción (2026-11-22, 22:06 hora local):** la migración `20261122150000_device_last_seen.sql` se aplicó en el Supabase de producción desde el editor SQL (columna creada; `service_role` puede ejecutar la RPC y `authenticated` y `anon` no) y la Edge Function `ingest-device-location` se desplegó desde el editor del panel con `handler.ts` e `index.ts` idénticos a los del repositorio (comparados por hash SHA-256). Con el equipo real ya con fix GPS, `devices.last_seen_at` se llenó con la hora del reenvío y avanzó (reporte de hace 28 s en la consulta de comprobación). Antes del despliegue, el panel mostraba 60 invocaciones de la función en la última hora sin errores, es decir, Traccar reenvía cada minuto.
+
+**Sin verificar:**
+
+- El caso que motivó el cambio: el equipo **sin fix GPS** (tramas `$WIFI`). Cuando se probó el latido, el equipo ya había recuperado el GPS, así que esa ruta solo está cubierta por pruebas unitarias. No se comprobó qué reenvía Traccar para una trama `$WIFI` (si repite la posición con `valid = true` y hora antigua o con `valid = false`); en ambos casos el latido se registra.
+- La pantalla del mapa en producción mostrando «Equipo conectado»: el código de la PWA **aún no está en `main` ni desplegado** en Netlify.

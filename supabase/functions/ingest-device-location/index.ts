@@ -86,6 +86,12 @@ const ingestHandler = supabase
 
 				return { outcome, locationId: row.location_id ?? null };
 			},
+			async recordHeartbeat(hardwareId) {
+				const { error } = await supabase.rpc('record_device_heartbeat', {
+					p_hardware_id: hardwareId
+				});
+				if (error) throw new Error(`Heartbeat RPC failed (${error.code ?? 'unknown'}).`);
+			},
 			log(message) {
 				console.log(message);
 			},

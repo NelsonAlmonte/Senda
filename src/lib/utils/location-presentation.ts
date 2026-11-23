@@ -35,6 +35,19 @@ export function presentLocationTime(recordedAt: string, now = Date.now()) {
 	};
 }
 
+/**
+ * Conectividad del equipo, independiente de la vigencia de la ubicación: un rastreador sin fix GPS
+ * sigue reportándose. `null` significa que Senda nunca ha recibido un reporte de ese equipo.
+ */
+export function presentDeviceConnection(lastSeenAt: string | null, now = Date.now()) {
+	if (!lastSeenAt) return null;
+
+	return {
+		connected: now - Date.parse(lastSeenAt) <= staleAfterMilliseconds,
+		ageLabel: formatLocationAge(lastSeenAt, now)
+	};
+}
+
 export function presentDateTime(value: string): string {
 	return locationDateFormatter.format(new Date(value));
 }

@@ -26,6 +26,11 @@ export class ReadingRejectedError extends Error {}
 export interface IngestDependencies {
 	ingestSecret: string;
 	ingest(reading: DeviceReading): Promise<IngestResult>;
+	/**
+	 * Marks the tracker as heard from, with or without a GPS fix. Best effort: a failure here must
+	 * never prevent a reading from being stored or make Traccar retry the forward.
+	 */
+	recordHeartbeat?(hardwareId: string): Promise<void>;
 	now?(): Date;
 	log?(message: string): void;
 	logError?(message: string, error?: unknown): void;
@@ -43,7 +48,7 @@ type ParsedReading =
 			accuracyM: number | null;
 			recordedAt: Date;
 	  }
-	| { kind: 'ignored'; reason: 'NO_GPS_FIX' }
+	| { kind: 'ignored'; reason: 'NO_GPS_FIX'; hardwareId: string | null }
 	| { kind: 'invalid'; reason: string };
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -114,12 +119,20 @@ export function parseDeviceReading(body: unknown): ParsedReading {
 	const rawHardwareId = device ? device.uniqueId : root.hardwareId;
 	const source = position ?? root;
 
-	if (position && position.valid === false) return { kind: 'ignored', reason: 'NO_GPS_FIX' };
-
 	const hardwareId =
 		typeof rawHardwareId === 'string' || typeof rawHardwareId === 'number'
 			? String(rawHardwareId).trim().toUpperCase()
 			: '';
+
+	// A forward without a GPS fix stores no location, but it still proves the tracker is online.
+	if (position && position.valid === false) {
+		return {
+			kind: 'ignored',
+			reason: 'NO_GPS_FIX',
+			hardwareId: HARDWARE_ID_PATTERN.test(hardwareId) ? hardwareId : null
+		};
+	}
+
 	if (!HARDWARE_ID_PATTERN.test(hardwareId)) {
 		return { kind: 'invalid', reason: 'Hardware identifier is missing or malformed.' };
 	}
@@ -183,6 +196,16 @@ export async function deriveEventId(
 export function createDeviceIngestHandler(dependencies: IngestDependencies) {
 	const now = dependencies.now ?? (() => new Date());
 
+	async function recordHeartbeat(hardwareId: string | null): Promise<void> {
+		if (!hardwareId || !dependencies.recordHeartbeat) return;
+
+		try {
+			await dependencies.recordHeartbeat(hardwareId);
+		} catch (error) {
+			dependencies.logError?.('Device heartbeat could not be recorded.', error);
+		}
+	}
+
 	return async function handleRequest(request: Request): Promise<Response> {
 		if (request.method !== 'POST') {
 			return Response.json(
@@ -218,6 +241,7 @@ export function createDeviceIngestHandler(dependencies: IngestDependencies) {
 		const parsed = parseDeviceReading(body);
 		if (parsed.kind === 'invalid') return jsonResponse({ error: parsed.reason }, 400);
 		if (parsed.kind === 'ignored') {
+			await recordHeartbeat(parsed.hardwareId);
 			dependencies.log?.('ingest outcome=IGNORED reason=NO_GPS_FIX');
 			return jsonResponse({ outcome: 'IGNORED', reason: parsed.reason }, 202);
 		}
@@ -229,6 +253,8 @@ export function createDeviceIngestHandler(dependencies: IngestDependencies) {
 			parsed.longitude
 		);
 		const receivedAt = now();
+
+		await recordHeartbeat(parsed.hardwareId);
 
 		try {
 			const result = await dependencies.ingest({

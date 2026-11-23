@@ -40,7 +40,9 @@ export const load: PageServerLoad = async ({ depends, locals, params, url }) => 
 		await Promise.all([
 			locals.supabase
 				.from('device_assignments')
-				.select('id, assigned_at, unassigned_at, device:devices!inner(id, device_kind)')
+				.select(
+					'id, assigned_at, unassigned_at, device:devices!inner(id, device_kind, last_seen_at)'
+				)
 				.eq('patient_id', params.id)
 				.order('assigned_at', { ascending: true }),
 			locals.supabase
@@ -198,7 +200,8 @@ export const load: PageServerLoad = async ({ depends, locals, params, url }) => 
 						assignedAt: assignment.assigned_at,
 						device: {
 							id: device.id,
-							kind: device.device_kind
+							kind: device.device_kind,
+							lastSeenAt: device.last_seen_at
 						}
 					}
 				: null,

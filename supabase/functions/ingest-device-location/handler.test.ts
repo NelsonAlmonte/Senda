@@ -41,8 +41,12 @@ function request(
 	});
 }
 
-function createHarness(result: IngestResult | Error = { outcome: 'CREATED', locationId: 42 }) {
+function createHarness(
+	result: IngestResult | Error = { outcome: 'CREATED', locationId: 42 },
+	heartbeatFailure: Error | null = null
+) {
 	const readings: DeviceReading[] = [];
+	const heartbeats: string[] = [];
 	const logs: string[] = [];
 	const errors: string[] = [];
 
@@ -54,12 +58,16 @@ function createHarness(result: IngestResult | Error = { outcome: 'CREATED', loca
 			if (result instanceof Error) throw result;
 			return result;
 		},
+		async recordHeartbeat(hardwareId) {
+			heartbeats.push(hardwareId);
+			if (heartbeatFailure) throw heartbeatFailure;
+		},
 		log: (message) => logs.push(message),
 		logError: (message, error) =>
 			errors.push(`${message} ${error instanceof Error ? error.message : ''}`)
 	});
 
-	return { handler, readings, logs, errors };
+	return { handler, readings, heartbeats, logs, errors };
 }
 
 describe('ingest-device-location handler', () => {
@@ -207,6 +215,46 @@ describe('ingest-device-location handler', () => {
 		assert.equal((await response.json()).outcome, 'IGNORED');
 		assert.equal(readings.length, 0);
 		assert.deepEqual(logs, ['ingest outcome=IGNORED reason=NO_GPS_FIX']);
+	});
+
+	it('records a heartbeat for a position without a GPS fix', async () => {
+		const { handler, readings, heartbeats } = createHarness();
+		const response = await handler(request(traccarBody({ valid: false })));
+
+		assert.equal(response.status, 202);
+		assert.equal(readings.length, 0);
+		assert.deepEqual(heartbeats, [HARDWARE_ID]);
+	});
+
+	it('records a heartbeat for every stored or repeated reading', async () => {
+		for (const outcome of ['CREATED', 'DUPLICATE'] as const) {
+			const { handler, heartbeats } = createHarness({ outcome, locationId: 42 });
+			await handler(request(traccarBody()));
+
+			assert.deepEqual(heartbeats, [HARDWARE_ID]);
+		}
+	});
+
+	it('records no heartbeat for unauthorized or malformed requests', async () => {
+		const { handler, heartbeats } = createHarness();
+
+		await handler(request(traccarBody(), {}));
+		await handler(request(traccarBody({ latitude: 91 })));
+		await handler(request({ device: { uniqueId: 'abc' }, position: { valid: false } }));
+
+		assert.deepEqual(heartbeats, []);
+	});
+
+	it('still stores the reading when the heartbeat cannot be recorded', async () => {
+		const { handler, readings, errors } = createHarness(
+			{ outcome: 'CREATED', locationId: 42 },
+			new Error('database unavailable')
+		);
+		const response = await handler(request(traccarBody()));
+
+		assert.equal(response.status, 201);
+		assert.equal(readings.length, 1);
+		assert.match(errors[0], /Device heartbeat could not be recorded/);
 	});
 
 	it('rejects malformed readings before ingestion', async () => {

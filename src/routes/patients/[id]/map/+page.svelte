@@ -33,6 +33,7 @@
 	import type { UiTone } from '#lib/types/ui.js';
 	import {
 		presentDateTime,
+		presentDeviceConnection,
 		presentGeofenceRelation,
 		presentLocationTime
 	} from '#lib/utils/location-presentation.js';
@@ -81,8 +82,11 @@
 	let latestLocationTime = $derived(
 		latestLocation ? presentLocationTime(latestLocation.recordedAt, now) : null
 	);
+	let deviceConnection = $derived(
+		data.assignment ? presentDeviceConnection(data.assignment.device.lastSeenAt, now) : null
+	);
 	let freshnessStatus = $derived(
-		presentFreshnessStatus(latestLocationTime, data.manualLocationEnabled)
+		presentFreshnessStatus(latestLocationTime, deviceConnection, data.manualLocationEnabled)
 	);
 	let realtimeState = $state<'IDLE' | LocationRealtimeState>('IDLE');
 	let hasConnectedBefore = false;
@@ -186,7 +190,15 @@
 
 	onMount(() => {
 		const timer = setInterval(() => (now = Date.now()), 15_000);
-		return () => clearInterval(timer);
+		// Un rastreador sin GPS no inserta lecturas, así que su último reporte se consulta aparte.
+		const connectionTimer = setInterval(() => {
+			if (data.assignment?.device.kind === 'PHYSICAL' && !document.hidden) void invalidateAll();
+		}, 60_000);
+
+		return () => {
+			clearInterval(timer);
+			clearInterval(connectionTimer);
+		};
 	});
 
 	function handleRealtimeLocation(row: LocationRealtimeRow) {
@@ -287,9 +299,18 @@
 
 	function presentFreshnessStatus(
 		location: ReturnType<typeof presentLocationTime> | null,
+		connection: ReturnType<typeof presentDeviceConnection>,
 		manualLocationEnabled: boolean
 	): StatusPresentation {
 		if (!location) {
+			if (connection?.connected) {
+				return {
+					title: 'Equipo conectado, sin ubicación',
+					info: `El equipo reportó ${connection.ageLabel}, pero todavía no obtuvo una posición GPS. Suele ocurrir bajo techo.`,
+					tone: 'neutral'
+				};
+			}
+
 			return {
 				title: 'Última actualización',
 				info: manualLocationEnabled
@@ -300,9 +321,19 @@
 		}
 
 		if (location.freshness === 'STALE') {
+			if (connection?.connected) {
+				return {
+					title: 'Equipo conectado, sin ubicación nueva',
+					info: `El equipo reportó ${connection.ageLabel}, pero no obtuvo una posición GPS nueva. La última ubicación fue ${location.ageLabel} y no representa una posición en vivo.`,
+					tone: 'warning'
+				};
+			}
+
 			return {
 				title: 'Ubicación desactualizada',
-				info: `La última lectura fue ${location.ageLabel}. No representa una posición en vivo.`,
+				info: connection
+					? `La última lectura fue ${location.ageLabel}. El equipo no reporta desde ${connection.ageLabel}. No representa una posición en vivo.`
+					: `La última lectura fue ${location.ageLabel}. No representa una posición en vivo.`,
 				tone: 'warning'
 			};
 		}
